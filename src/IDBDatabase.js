@@ -3,6 +3,7 @@ const Core = require('Core/foreign');
 
 const noOp2 = Core.noOp2;
 const errorHandler = Core.errorHandler;
+const successHandler = Core.successHandler;
 const eventHandler = Core.eventHandler;
 
 exports._open = function _open(name, mver, req) {
@@ -12,8 +13,9 @@ exports._open = function _open(name, mver, req) {
         const request = indexedDB.open(name, ver);
 
         request.onerror = errorHandler(error);
+        request.onsuccess = successHandler(success);
+
         request.onblocked = eventHandler(Maybe.fromMaybe(noOp2)(req.onBlocked));
-        request.onsuccess = eventHandler(Maybe.fromMaybe(noOp2)(req.onSuccess));
         request.onupgradeneeded = eventHandler(Maybe.fromMaybe(noOp2)(req.onUpgradeNeeded));
     };
 };

@@ -13,13 +13,14 @@ const noOp2 = function noOp2() {
 
 
 const errorHandler = function errorHandler(cb) {
-    return function _handler(e) {
+    return function _autruche(e) {
+        console.log("ERROR");
         cb(new Error(e.errorCode));
     };
 };
 
 const eventHandler = function eventHandler(cb) {
-    return function _handler(e) {
+    return function _patate(e) {
         cb(e.target.result)();
     };
 };

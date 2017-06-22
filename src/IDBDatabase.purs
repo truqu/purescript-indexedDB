@@ -17,9 +17,9 @@ foreign import _open
     String
     (Maybe Int)
     (IDBOpenRequest eff)
-    (Aff (idb :: INDEXED_DB | eff) Unit)
+    (Aff (idb :: INDEXED_DB | eff) IDBDatabase)
 
-open :: forall eff. String -> Maybe Int -> (IDBOpenRequest eff) -> Aff (idb :: INDEXED_DB | eff) Unit
+open :: forall eff. String -> Maybe Int -> (IDBOpenRequest eff) -> Aff (idb :: INDEXED_DB | eff) IDBDatabase
 open name mver req =
   Fn.runFn3 _open name mver req
 

@@ -14,6 +14,5 @@ foreign import data IDBDatabase :: Type
 
 type IDBOpenRequest eff =
   { onBlocked       :: Maybe (IDBDatabase -> Eff eff Unit)
-  , onSuccess       :: Maybe (IDBDatabase -> Eff eff Unit)
   , onUpgradeNeeded :: Maybe (IDBDatabase -> Eff eff Unit)
   }
