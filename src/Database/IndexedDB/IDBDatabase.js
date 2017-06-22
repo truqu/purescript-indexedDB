@@ -1,14 +1,15 @@
 const Maybe = require('Data.Maybe');
-const Core = require('Core/foreign');
+const Core = require('Database.IndexedDB.Core');
+const $Core = require('Database.IndexedDB.Core/foreign');
 
-const toArray = Core.toArray;
-const noOp2 = Core.noOp2;
-const errorHandler = Core.errorHandler;
-const eventHandler = Core.eventHandler;
+const toArray = $Core.toArray;
+const noOp2 = $Core.noOp2;
+const errorHandler = $Core.errorHandler;
+const eventHandler = $Core.eventHandler;
 
 
 exports.close = function close(db) {
-    return function effects() {
+    return function eff() {
         try {
             db.close();
         } catch (e) {
@@ -21,7 +22,7 @@ exports._createObjectStore = function _createObjectStore(db, name, opts) {
     const keyPath = Maybe.fromMaybe(undefined)(opts.keyPath);
     const autoIncrement = opts.autoIncrement;
 
-    return function effects() {
+    return function eff() {
         try {
             return db.createObjectStore(name, {
                 keyPath: keyPath,
@@ -34,7 +35,7 @@ exports._createObjectStore = function _createObjectStore(db, name, opts) {
 };
 
 exports._deleteObjectStore = function _deleteObjectStore(db, name) {
-    return function effects() {
+    return function eff() {
         try {
             db.deleteObjectStore(name);
         } catch (e) {
@@ -44,7 +45,7 @@ exports._deleteObjectStore = function _deleteObjectStore(db, name) {
 };
 
 exports.deleteDatabase = function deleteDatabase(name) {
-    return function callback(success, error) {
+    return function aff(success, error) {
         const request = indexedDB.deleteDatabase(name);
 
         request.onsuccess = function onSuccess(e) {
@@ -55,10 +56,18 @@ exports.deleteDatabase = function deleteDatabase(name) {
     };
 };
 
+exports.name = function name(db) {
+    return db.name;
+};
+
+exports.objectStoreNames = function objectStoreNames(db) {
+    return toArray(db.objectStoreNames);
+};
+
 exports._open = function _open(name, mver, req) {
     const ver = Maybe.fromMaybe(undefined)(mver);
 
-    return function callback(success, error) {
+    return function aff(success, error) {
         const request = indexedDB.open(name, ver);
         request.onsuccess = function onSuccess(e) {
             success(e.target.result);
@@ -70,14 +79,25 @@ exports._open = function _open(name, mver, req) {
     };
 };
 
-exports.name = function name(db) {
-    return db.name;
+exports._transaction = function _transaction(db, stores, mode) {
+    return function eff() {
+        var mode_;
+        try {
+            if (mode instanceof Core.ReadOnly) {
+                mode_ = 'readonly';
+            } else if (mode instanceof Core.ReadWrite) {
+                mode_ = 'readwrite';
+            } else {
+                mode_ = 'versionchange';
+            }
+
+            return db.transaction(stores, mode_);
+        } catch (e) {
+            throw new Error(e.name);
+        }
+    };
 };
 
 exports.version = function version(db) {
     return db.version;
-};
-
-exports.objectStoreNames = function objectStoreNames(db) {
-    return toArray(db.objectStoreNames);
 };

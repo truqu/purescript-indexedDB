@@ -1,4 +1,4 @@
-module IDBDatabase where
+module Database.IndexedDB.IDBDatabase where
 
 import Prelude
 
@@ -10,7 +10,7 @@ import Data.Function.Uncurried as Fn
 import Data.Function.Uncurried(Fn2, Fn3)
 import Data.Maybe(Maybe)
 
-import Core
+import Database.IndexedDB.Core
 
 
 type IDBOpenRequest eff =
@@ -47,6 +47,12 @@ foreign import _open :: forall eff. Fn3 String (Maybe Int) (IDBOpenRequest eff) 
 open :: forall eff .  String -> Maybe Int -> IDBOpenRequest eff -> Aff (idb :: INDEXED_DB | eff) IDBDatabase
 open name mver req =
   Fn.runFn3 _open name mver req
+
+
+foreign import _transaction :: forall eff. Fn3 IDBDatabase (Array String) IDBTransactionMode (Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) IDBTransaction)
+transaction :: forall eff. IDBDatabase -> Array String -> IDBTransactionMode -> Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) IDBTransaction
+transaction db stores mode =
+  Fn.runFn3 _transaction db stores mode
 
 
 foreign import version :: IDBDatabase -> Int

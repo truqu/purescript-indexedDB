@@ -32,11 +32,19 @@ exports._showIDBDatabase = function _showIDBDatabase(db) {
         ' })';
 };
 
-exports._showObjectStore = function _showObjectStore(store) {
+exports._showIDBObjectStore = function _showIDBObjectStore(store) {
     return '(IDBObjectStore ' +
         '{ autoIncrement: ' + store.autoIncrement +
         ', indexNames: [' + exports.toArray(store.indexNames).join(', ') + ']' +
         ', keyPath: ' + store.keyPath +
         ', name: ' + store.name +
+        ' })';
+};
+
+exports._showIDBTransaction = function _showIDBTransaction(tx) {
+    return '(IDBTransaction ' +
+        '{ error: ' + tx.error +
+        ', mode: ' + tx.mode +
+        ', objectStoreNames: [' + exports.toArray(tx.objectStoreNames).join(', ') + ']' +
         ' })';
 };
