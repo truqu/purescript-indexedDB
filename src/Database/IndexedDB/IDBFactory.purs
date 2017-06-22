@@ -3,7 +3,7 @@ module Database.IndexedDB.IDBFactory where
 import Prelude
 
 import Control.Monad.Aff(Aff)
-import Control.Monad.Eff(kind Effect, Eff)
+import Control.Monad.Eff(Eff)
 import Control.Monad.Eff.Exception(EXCEPTION)
 import Data.Function.Uncurried as Fn
 import Data.Function.Uncurried(Fn3)

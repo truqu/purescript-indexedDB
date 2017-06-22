@@ -45,6 +45,5 @@ exports._showIDBTransaction = function _showIDBTransaction(tx) {
     return '(IDBTransaction ' +
         '{ error: ' + tx.error +
         ', mode: ' + tx.mode +
-        ', objectStoreNames: [' + exports.toArray(tx.objectStoreNames).join(', ') + ']' +
         ' })';
 };
