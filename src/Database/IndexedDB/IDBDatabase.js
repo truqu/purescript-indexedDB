@@ -3,9 +3,6 @@ const Core = require('Database.IndexedDB.Core');
 const $Core = require('Database.IndexedDB.Core/foreign');
 
 const toArray = $Core.toArray;
-const noOp2 = $Core.noOp2;
-const errorHandler = $Core.errorHandler;
-const eventHandler = $Core.eventHandler;
 
 
 exports.close = function close(db) {
@@ -44,39 +41,12 @@ exports._deleteObjectStore = function _deleteObjectStore(db, name) {
     };
 };
 
-exports.deleteDatabase = function deleteDatabase(name) {
-    return function aff(success, error) {
-        const request = indexedDB.deleteDatabase(name);
-
-        request.onsuccess = function onSuccess(e) {
-            success(e.oldVersion);
-        };
-
-        request.onerror = errorHandler(error);
-    };
-};
-
 exports.name = function name(db) {
     return db.name;
 };
 
 exports.objectStoreNames = function objectStoreNames(db) {
     return toArray(db.objectStoreNames);
-};
-
-exports._open = function _open(name, mver, req) {
-    const ver = Maybe.fromMaybe(undefined)(mver);
-
-    return function aff(success, error) {
-        const request = indexedDB.open(name, ver);
-        request.onsuccess = function onSuccess(e) {
-            success(e.target.result);
-        };
-
-        request.onerror = errorHandler(error);
-        request.onblocked = eventHandler(Maybe.fromMaybe(noOp2)(req.onBlocked));
-        request.onupgradeneeded = eventHandler(Maybe.fromMaybe(noOp2)(req.onUpgradeNeeded));
-    };
 };
 
 exports._transaction = function _transaction(db, stores, mode) {
