@@ -1,0 +1,16 @@
+{
+    "extends": "airbnb",
+    "env": {
+        "commonjs": true
+    },
+    "globals": {
+        "indexedDB": true,
+        "PS": true
+    },
+    "rules": {
+        "indent": ["error", 4],
+        "no-param-reassign": 0,
+        "import/no-unresolved": 0,
+        "no-underscore-dangle": 0
+    }
+}
