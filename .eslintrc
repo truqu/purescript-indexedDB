@@ -15,6 +15,7 @@
         "no-param-reassign": 0,
         "import/no-unresolved": 0,
         "no-underscore-dangle": 0,
-        "prefer-template": 0
+        "prefer-template": 0,
+        "object-shorthand": 0
     }
 }

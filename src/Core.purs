@@ -12,16 +12,14 @@ foreign import data INDEXED_DB :: Effect
 foreign import data IDBDatabase :: Type
 
 
-foreign import _showIDBDatabase
-    :: forall eff
-    .  IDBDatabase
-    -> String
-
+foreign import _showIDBDatabase :: forall eff. IDBDatabase -> String
 instance showIDBDatabase :: Show IDBDatabase where
-    show db = _showIDBDatabase db
+  show = _showIDBDatabase
 
 
-type IDBOpenRequest eff =
-  { onBlocked       :: Maybe (IDBDatabase -> Eff eff Unit)
-  , onUpgradeNeeded :: Maybe (IDBDatabase -> Eff eff Unit)
-  }
+foreign import data IDBObjectStore :: Type
+
+
+foreign import _showObjectStore :: forall eff. IDBObjectStore -> String
+instance showIDBObjectStore :: Show IDBObjectStore where
+  show = _showObjectStore

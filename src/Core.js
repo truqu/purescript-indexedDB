@@ -27,7 +27,16 @@ exports.eventHandler = function eventHandler(cb) {
 exports._showIDBDatabase = function _showIDBDatabase(db) {
     return '(IDBDatabase ' +
         '{ name: ' + db.name +
-        ', objectStoreNames: [' + exports.toArray(db.objectStoreNames).join(',') + ']' +
+        ', objectStoreNames: [' + exports.toArray(db.objectStoreNames).join(', ') + ']' +
         ', version: ' + db.version +
+        ' })';
+};
+
+exports._showObjectStore = function _showObjectStore(store) {
+    return '(IDBObjectStore ' +
+        '{ autoIncrement: ' + store.autoIncrement +
+        ', indexNames: [' + exports.toArray(store.indexNames).join(', ') + ']' +
+        ', keyPath: ' + store.keyPath +
+        ', name: ' + store.name +
         ' })';
 };
