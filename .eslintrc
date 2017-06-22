@@ -3,6 +3,9 @@
     "env": {
         "commonjs": true
     },
+    "parserOptions": {
+        "ecmaVersion": 5
+    },
     "globals": {
         "indexedDB": true,
         "PS": true
@@ -11,6 +14,7 @@
         "indent": ["error", 4],
         "no-param-reassign": 0,
         "import/no-unresolved": 0,
-        "no-underscore-dangle": 0
+        "no-underscore-dangle": 0,
+        "prefer-template": 0
     }
 }
