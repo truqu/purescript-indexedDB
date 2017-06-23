@@ -1,7 +1,16 @@
 const $Core = require('Database.IndexedDB.Core/foreign');
 
 const toArray = $Core.toArray;
+const errorHandler = $Core.errorHandler;
+const successHandler = $Core.successHandler;
 
+exports._add = function _add(store, value, key) {
+    return function aff(success, error) {
+        const request = store.add(value, key || undefined);
+        request.onsuccess = successHandler(success);
+        request.onerror = errorHandler(error);
+    };
+};
 
 exports.autoIncrement = function autoIncrement(store) {
     return store.autoIncrement;
@@ -19,7 +28,7 @@ exports.keyPath = function keyPath(store) {
     }
 
     if (typeof path === 'string') {
-        return path.split(':');
+        return path.split('.');
     }
 
     return [];
