@@ -1,4 +1,3 @@
-const Maybe = require('Data.Maybe');
 const $Core = require('Database.IndexedDB.Core/foreign');
 
 const noOp2 = $Core.noOp2;
@@ -18,8 +17,8 @@ exports.deleteDatabase = function deleteDatabase(name) {
     };
 };
 
-exports._open = function _open(name, mver, req) {
-    const ver = Maybe.fromMaybe(undefined)(mver);
+exports._open = function _open(fromMaybe, name, mver, req) {
+    const ver = fromMaybe(undefined)(mver);
 
     return function aff(success, error) {
         const request = indexedDB.open(name, ver);
@@ -28,7 +27,7 @@ exports._open = function _open(name, mver, req) {
         };
 
         request.onerror = errorHandler(error);
-        request.onblocked = eventHandler(Maybe.fromMaybe(noOp2)(req.onBlocked));
-        request.onupgradeneeded = eventHandler(Maybe.fromMaybe(noOp2)(req.onUpgradeNeeded));
+        request.onblocked = eventHandler(fromMaybe(noOp2)(req.onBlocked));
+        request.onupgradeneeded = eventHandler(fromMaybe(noOp2)(req.onUpgradeNeeded));
     };
 };

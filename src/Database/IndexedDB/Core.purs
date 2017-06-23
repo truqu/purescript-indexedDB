@@ -6,9 +6,6 @@ import Control.Monad.Aff(Aff)
 import Control.Monad.Eff(kind Effect, Eff)
 import Control.Monad.Eff.Exception(EXCEPTION)
 
-type Synchronous eff a = Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) a
-type Asynchronous eff a = Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) a
-
 foreign import data INDEXED_DB :: Effect
 
 

@@ -1,4 +1,3 @@
-const Maybe = require('Data.Maybe');
 const Core = require('Database.IndexedDB.Core');
 const $Core = require('Database.IndexedDB.Core/foreign');
 
@@ -15,8 +14,8 @@ exports.close = function close(db) {
     };
 };
 
-exports._createObjectStore = function _createObjectStore(db, name, opts) {
-    const keyPath = Maybe.fromMaybe(undefined)(opts.keyPath);
+exports._createObjectStore = function _createObjectStore(fromMaybe, db, name, opts) {
+    const keyPath = fromMaybe(undefined)(opts.keyPath);
     const autoIncrement = opts.autoIncrement;
 
     return function eff() {

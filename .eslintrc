@@ -11,12 +11,13 @@
         "PS": true
     },
     "rules": {
+        "import/no-extraneous-dependencies": 0,
+        "import/no-unresolved": 0,
         "indent": ["error", 4],
         "no-param-reassign": 0,
-        "import/no-unresolved": 0,
         "no-underscore-dangle": 0,
-        "prefer-template": 0,
+        "no-var": 0,
         "object-shorthand": 0,
-        "no-var": 0
+        "prefer-template": 0
     }
 }
