@@ -18,6 +18,12 @@ exports.errorHandler = function errorHandler(cb) {
     };
 };
 
+exports.successHandler = function successHandler(cb) {
+    return function _handler(e) {
+        cb(e.target.result);
+    };
+};
+
 exports._showIDBDatabase = function _showIDBDatabase(db) {
     return '(IDBDatabase ' +
         '{ name: ' + db.name +
@@ -40,4 +46,42 @@ exports._showIDBTransaction = function _showIDBTransaction(tx) {
         '{ error: ' + tx.error +
         ', mode: ' + tx.mode +
         ' })';
+};
+
+exports._dateTimeToForeign = function _dateTimeToForeign(y, m, d, h, mi, s, ms) {
+    return new Date(y, m, d, h, mi, s, ms);
+};
+
+exports._readDateTime = function _readDateTime(parse, right, left, date) {
+    if (Object.getPrototypeOf(date) !== Date.prototype) {
+        return left(typeof date);
+    }
+
+    const y = date.getFullYear();
+    const m = date.getMonth() + 1;
+    const d = date.getDate();
+    const h = date.getHours();
+    const mi = date.getMinutes();
+    const s = date.getSeconds();
+    const ms = date.getMilliseconds();
+
+    const mdate = parse(y)(m)(d)(h)(mi)(s)(ms);
+
+    if (mdate == null) {
+        return left(typeof date); // TODO Could return better error
+    }
+
+    return right(mdate);
+};
+
+exports._unsafeReadDateTime = function _unsafeReadDateTime(parse, date) {
+    const y = date.getFullYear();
+    const m = date.getMonth() + 1;
+    const d = date.getDate();
+    const h = date.getHours();
+    const mi = date.getMinutes();
+    const s = date.getSeconds();
+    const ms = date.getMilliseconds();
+
+    return parse(y)(m)(d)(h)(mi)(s)(ms);
 };
