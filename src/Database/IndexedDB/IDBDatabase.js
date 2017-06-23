@@ -14,15 +14,27 @@ exports.close = function close(db) {
     };
 };
 
-exports._createObjectStore = function _createObjectStore(fromMaybe, db, name, opts) {
-    const keyPath = fromMaybe(undefined)(opts.keyPath);
-    const autoIncrement = opts.autoIncrement;
-
+exports._createObjectStore = function _createObjectStore(db, name, opts) {
     return function eff() {
+        var keyPath;
+
         try {
+            // NOTE 1: createObjectStore throws when given an empty array
+            // NOTE 2: keyPath supports strings and sequence of strings, however
+            //         a string hasn't the same meaning as a sequence of strings
+            switch (opts.keyPath.length) {
+            case 0:
+                keyPath = undefined;
+                break;
+            case 1:
+                keyPath = opts.keyPath[0];
+                break;
+            default:
+                keyPath = opts.keyPath;
+            }
             return db.createObjectStore(name, {
+                autoIncrement: opts.autoIncrement,
                 keyPath: keyPath,
-                autoIncrement: autoIncrement,
             });
         } catch (e) {
             throw new Error(e.name);

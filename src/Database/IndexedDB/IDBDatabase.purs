@@ -6,8 +6,8 @@ import Control.Monad.Aff(Aff)
 import Control.Monad.Eff(Eff)
 import Control.Monad.Eff.Exception(EXCEPTION)
 import Data.Function.Uncurried as Fn
-import Data.Function.Uncurried(Fn2, Fn3, Fn4)
-import Data.Maybe(Maybe, fromMaybe)
+import Data.Function.Uncurried(Fn2, Fn3)
+import Data.Maybe(Maybe)
 
 import Database.IndexedDB.Core
 
@@ -15,10 +15,10 @@ import Database.IndexedDB.Core
 foreign import close :: forall eff. IDBDatabase -> Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) Unit
 
 
-foreign import _createObjectStore :: forall a eff. Fn4 (a -> Maybe a -> a) IDBDatabase String { keyPath :: Maybe String, autoIncrement :: Boolean } (Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) IDBObjectStore)
-createObjectStore :: forall eff. IDBDatabase -> String -> { keyPath :: Maybe String, autoIncrement :: Boolean } -> Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) IDBObjectStore
+foreign import _createObjectStore :: forall a eff. Fn3 IDBDatabase String { keyPath :: Array String, autoIncrement :: Boolean } (Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) IDBObjectStore)
+createObjectStore :: forall eff. IDBDatabase -> String -> { keyPath :: Array String, autoIncrement :: Boolean } -> Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) IDBObjectStore
 createObjectStore db name opts =
-  Fn.runFn4 _createObjectStore fromMaybe db name opts
+  Fn.runFn3 _createObjectStore db name opts
 
 
 foreign import _deleteObjectStore :: forall eff. Fn2 IDBDatabase String (Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) IDBObjectStore)
