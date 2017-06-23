@@ -55,40 +55,63 @@ instance showIDBTransaction :: Show IDBTransaction where
 data IDBTransactionMode = ReadOnly | ReadWrite | VersionChange
 
 
-newtype Key = Key Foreign
+data IDBCursorDirection = Next | NextUnique | Prev | PrevUnique
 
 
-instance eqKey :: Eq Key where
+foreign import data IDBKeyRange :: Type
+
+
+foreign import data IDBCursorWithValue :: Type
+
+
+foreign import data IDBKeyCursor :: Type
+
+
+foreign import data IDBIndex :: Type
+
+
+newtype KeyPath = KeyPath Foreign
+
+
+instance showIDBCursorDirection :: Show IDBCursorDirection where
+  show Next       = "next"
+  show NextUnique = "nextunique"
+  show Prev       = "prev"
+  show PrevUnique = "prevunique"
+
+
+instance eqKeyPath :: Eq KeyPath where
   eq a b = (runExceptT >>> runIdentity >>> isRight) $
-      eq <$> ((fromKey a) :: F Int) <*> fromKey b
+      eq <$> ((fromKeyPath a) :: F Int) <*> fromKeyPath b
     <|>
-      eq <$> ((fromKey a) :: F String) <*> fromKey b
+      eq <$> ((fromKeyPath a) :: F String) <*> fromKeyPath b
     <|>
-      eq <$> ((fromKey a) :: F DateTime) <*> fromKey b
+      eq <$> ((fromKeyPath a) :: F DateTime) <*> fromKeyPath b
     where
       runIdentity :: forall a. Identity a -> a
       runIdentity (Identity a) = a
 
+
 class Index a where
-  toKey         :: a -> Key
-  fromKey       :: Key -> F a
-  unsafeFromKey :: Key -> a
+  toKeyPath         :: a -> KeyPath
+  fromKeyPath       :: KeyPath -> F a
+  unsafeFromKeyPath :: KeyPath -> a
 
 
 instance indexInt :: Index Int where
-  toKey                 = Foreign.toForeign >>> Key
-  fromKey (Key f)       = Foreign.readInt f
-  unsafeFromKey (Key f) = Foreign.unsafeFromForeign f
+  toKeyPath                 = Foreign.toForeign >>> KeyPath
+  fromKeyPath (KeyPath f)       = Foreign.readInt f
+  unsafeFromKeyPath (KeyPath f) = Foreign.unsafeFromForeign f
 
 
 instance indexString :: Index String where
-  toKey                 = Foreign.toForeign >>> Key
-  fromKey (Key f)       = Foreign.readString f
-  unsafeFromKey (Key f) = Foreign.unsafeFromForeign f
+  toKeyPath                 = Foreign.toForeign >>> KeyPath
+  fromKeyPath (KeyPath f)       = Foreign.readString f
+  unsafeFromKeyPath (KeyPath f) = Foreign.unsafeFromForeign f
 
 
 instance indexDate :: Index DateTime where
-  toKey (DateTime d t) = Key $ Fn.runFn7 _dateTimeToForeign
+  toKeyPath (DateTime d t) = KeyPath $ Fn.runFn7 _dateTimeToForeign
     (fromEnum $ Date.year d)
     (fromEnum $ Date.month d)
     (fromEnum $ Date.day d)
@@ -96,14 +119,14 @@ instance indexDate :: Index DateTime where
     (fromEnum $ Time.minute t)
     (fromEnum $ Time.second t)
     (fromEnum $ Time.millisecond t)
-  fromKey (Key f)       = Fn.runFn4 _readDateTime dateTime dateTimeF dateTimeE f
-  unsafeFromKey (Key f) = Fn.runFn2 _unsafeReadDateTime dateTime f
+  fromKeyPath (KeyPath f)       = Fn.runFn4 _readDateTime dateTime dateTimeF dateTimeE f
+  unsafeFromKeyPath (KeyPath f) = Fn.runFn2 _unsafeReadDateTime dateTime f
 
 
 instance indexArray :: Index a => Index (Array a) where
-  toKey                 = Foreign.toForeign >>> Key
-  fromKey (Key f)       = Foreign.readArray f >>= traverse (Key >>> fromKey)
-  unsafeFromKey (Key f) = map unsafeFromKey (Foreign.unsafeFromForeign f)
+  toKeyPath                 = Foreign.toForeign >>> KeyPath
+  fromKeyPath (KeyPath f)       = Foreign.readArray f >>= traverse (KeyPath >>> fromKeyPath)
+  unsafeFromKeyPath (KeyPath f) = map unsafeFromKeyPath (Foreign.unsafeFromForeign f)
 
 
 foreign import _dateTimeToForeign  :: Fn7 Int Int Int Int Int Int Int Foreign
