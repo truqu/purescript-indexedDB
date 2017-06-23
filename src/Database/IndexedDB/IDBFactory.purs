@@ -13,7 +13,7 @@ import Database.IndexedDB.Core
 
 
 type IDBOpenRequest eff =
-  { onBlocked       :: Maybe (IDBDatabase -> Eff (idb :: INDEXED_DB | eff) Unit)
+  { onBlocked       :: Maybe (Eff (idb :: INDEXED_DB | eff) Unit)
   , onUpgradeNeeded :: Maybe (IDBDatabase -> Eff (idb :: INDEXED_DB | eff) Unit)
   }
 

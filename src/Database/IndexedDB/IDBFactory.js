@@ -1,8 +1,8 @@
 const $Core = require('Database.IndexedDB.Core/foreign');
 
+const noOp = $Core.noOp;
 const noOp2 = $Core.noOp2;
 const errorHandler = $Core.errorHandler;
-const eventHandler = $Core.eventHandler;
 
 
 exports.deleteDatabase = function deleteDatabase(name) {
@@ -26,8 +26,14 @@ exports._open = function _open(fromMaybe, name, mver, req) {
             success(e.target.result);
         };
 
+        request.onblocked = function onBlocked() {
+            fromMaybe(noOp)(req.onBlocked)();
+        };
+
+        request.onupgradeneeded = function onUpgradeNeeded(e) {
+            fromMaybe(noOp2)(req.onUpgradeNeeded)(e.target.result)();
+        };
+
         request.onerror = errorHandler(error);
-        request.onblocked = eventHandler(fromMaybe(noOp2)(req.onBlocked));
-        request.onupgradeneeded = eventHandler(fromMaybe(noOp2)(req.onUpgradeNeeded));
     };
 };

@@ -18,12 +18,6 @@ exports.errorHandler = function errorHandler(cb) {
     };
 };
 
-exports.eventHandler = function eventHandler(cb) {
-    return function _handler(e) {
-        cb(e.target.result)();
-    };
-};
-
 exports._showIDBDatabase = function _showIDBDatabase(db) {
     return '(IDBDatabase ' +
         '{ name: ' + db.name +
