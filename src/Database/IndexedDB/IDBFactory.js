@@ -11,7 +11,7 @@ const noOp = function noOp() {
 };
 
 const noOp2 = function noOp2() {
-    return exports.noOp;
+    return noOp;
 };
 
 
