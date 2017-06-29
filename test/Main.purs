@@ -18,12 +18,13 @@ import Test.Spec.Assertions              (shouldEqual, fail)
 import Test.Spec.Mocha                   (MOCHA, runMocha)
 
 import Database.IndexedDB.Core
+import Database.IndexedDB.IDBKey
 import Database.IndexedDB.IDBDatabase     as IDBDatabase
 import Database.IndexedDB.IDBFactory      as IDBFactory
 import Database.IndexedDB.IDBObjectStore  as IDBObjectStore
 
 
-tearDown :: forall eff. String -> Int -> IDBDatabase -> Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) Unit
+tearDown :: forall eff. String -> Int -> Database -> Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) Unit
 tearDown name version db = do
   liftEff $ IDBDatabase.close db
   version' <- IDBFactory.deleteDatabase name
@@ -250,7 +251,7 @@ main = runMocha do
           key           = 1
           callback db   = do
             store <- IDBDatabase.createObjectStore db storeName { keyPath, autoIncrement }
-            key   <- launchAff $ ((unsafeFromKeyPath >>> shouldEqual key)
+            key   <- launchAff $ ((unsafeFromKey >>> shouldEqual key)
               <$> IDBObjectStore.add store "patate" Nothing)
             pure unit
 
@@ -269,8 +270,8 @@ main = runMocha do
           key           = 14
           callback db   = do
             store <- IDBDatabase.createObjectStore db storeName { keyPath, autoIncrement }
-            key   <- launchAff $ ((unsafeFromKeyPath >>> shouldEqual key)
-              <$> IDBObjectStore.add store "patate" (Just $ toKeyPath key))
+            key   <- launchAff $ ((unsafeFromKey >>> shouldEqual key)
+              <$> IDBObjectStore.add store "patate" (Just $ toKey key))
             pure unit
 
       db <- IDBFactory.open dbName Nothing
@@ -288,8 +289,8 @@ main = runMocha do
           key           = "key"
           callback db   = do
             store <- IDBDatabase.createObjectStore db storeName { keyPath, autoIncrement }
-            key   <- launchAff $ ((unsafeFromKeyPath >>> shouldEqual key)
-              <$> IDBObjectStore.add store "patate" (Just $ toKeyPath key))
+            key   <- launchAff $ ((unsafeFromKey >>> shouldEqual key)
+              <$> IDBObjectStore.add store "patate" (Just $ toKey key))
             pure unit
 
       db <- IDBFactory.open dbName Nothing
@@ -314,8 +315,8 @@ main = runMocha do
         Just key -> do
           let callback db   = do
                 store <- IDBDatabase.createObjectStore db storeName { keyPath, autoIncrement }
-                key   <- launchAff $ ((unsafeFromKeyPath >>> shouldEqual key)
-                  <$> IDBObjectStore.add store "patate" (Just $ toKeyPath key))
+                key   <- launchAff $ ((unsafeFromKey >>> shouldEqual key)
+                  <$> IDBObjectStore.add store "patate" (Just $ toKey key))
                 pure unit
 
           db <- IDBFactory.open dbName Nothing
@@ -333,8 +334,8 @@ main = runMocha do
           key           = [14, 42]
           callback db   = do
             store <- IDBDatabase.createObjectStore db storeName { keyPath, autoIncrement }
-            key   <- launchAff $ ((unsafeFromKeyPath >>> shouldEqual key)
-              <$> IDBObjectStore.add store "patate" (Just $ toKeyPath key))
+            key   <- launchAff $ ((unsafeFromKey >>> shouldEqual key)
+              <$> IDBObjectStore.add store "patate" (Just $ toKey key))
             pure unit
 
       db <- IDBFactory.open dbName Nothing
