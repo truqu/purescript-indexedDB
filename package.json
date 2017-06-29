@@ -6,10 +6,10 @@
   "scripts": {
     "test:build": "pulp browserify -j 4 --main \"Test.Main\" -I test --to dist/karma/index.js",
     "test:run": "karma start --single-run",
-    "test:watch": "find . -type f -regex .*purs | entr -s 'npm run test'",
+    "test:watch": "find . -type f -regex '.*\\(src\\|test\\).*' ! -regex '.*bower_components.*\\|.*node_modules.*|.*\\.sw.*$' | entr -s 'npm run test'",
     "test": "npm run test:build && npm run test:run",
     "build": "pulp browserify -j 4 -O --to dist/bundle.js",
-    "start": "find . -type f -regex .*purs | entr -s 'clear; pulp browserify -j 4 -t dist/bundle.js'",
+    "start": "find . -type f -regex '.*\\(src\\|test\\).*' ! -regex '.*bower_components.*\\|.*node_modules.*|.*\\.sw.*$' | entr -s 'clear; pulp browserify -j 4 -t dist/bundle.js'",
     "start:test": "karma start"
   },
   "dependencies": {
