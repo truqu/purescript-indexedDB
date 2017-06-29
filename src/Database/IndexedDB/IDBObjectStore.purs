@@ -1,24 +1,26 @@
 module Database.IndexedDB.IDBObjectStore
   ( class IDBObjectStore, add, clear, createIndex, delete, deleteIndex, index, put
+  , module Database.IndexedDB.IDBIndex.Internal
   , autoIncrement
   , indexNames
   , keyPath
   , name
   ) where
 
-import Prelude                             (Unit, ($), (<$>))
+import Prelude                              (Unit, ($), (<$>))
 
-import Control.Monad.Aff                   (Aff)
-import Control.Monad.Eff                   (Eff)
-import Control.Monad.Eff.Exception         (EXCEPTION)
-import Data.Function.Uncurried              as Fn
-import Data.Function.Uncurried             (Fn2, Fn3, Fn4)
-import Data.Maybe                          (Maybe)
-import Data.Nullable                       (Nullable, toNullable)
-import Data.Foreign                        (Foreign)
+import Control.Monad.Aff                    (Aff)
+import Control.Monad.Eff                    (Eff)
+import Control.Monad.Eff.Exception          (EXCEPTION)
+import Data.Foreign                         (Foreign)
+import Data.Function.Uncurried               as Fn
+import Data.Function.Uncurried              (Fn2, Fn3, Fn4)
+import Data.Maybe                           (Maybe)
+import Data.Nullable                        (Nullable, toNullable)
 
-import Database.IndexedDB.Core             (INDEXED_DB, Index, KeyRange, ObjectStore)
-import Database.IndexedDB.IDBKey.Internal  (extractForeign, Key(Key))
+import Database.IndexedDB.Core              (INDEXED_DB, Index, KeyRange, ObjectStore)
+import Database.IndexedDB.IDBIndex.Internal (class IDBIndex, get, getAllKeys, getKey, openCursor, openKeyCursor)
+import Database.IndexedDB.IDBKey.Internal   (Key(Key), extractForeign)
 
 
 --------------------
