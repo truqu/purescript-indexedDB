@@ -63,6 +63,12 @@ instance idbKeyInt :: IDBKey Int where
   unsafeFromKey (Key f) = Foreign.unsafeFromForeign f
 
 
+instance idbKeyNumber :: IDBKey Number where
+  toKey                 = Foreign.toForeign >>> Key
+  fromKey (Key f)       = Foreign.readNumber f
+  unsafeFromKey (Key f) = Foreign.unsafeFromForeign f
+
+
 instance idbKeyString :: IDBKey String where
   toKey                 = Foreign.toForeign >>> Key
   fromKey (Key f)       = Foreign.readString f
