@@ -59,9 +59,28 @@ foreign import data Transaction :: Type
 foreign import data ValueCursor :: Type
 
 
+foreign import _showCursor :: forall cursor. cursor -> String
+instance showKeyCursor :: Show KeyCursor where
+  show = _showCursor
+
+
+instance showValueCursor :: Show ValueCursor where
+  show = _showCursor
+
+
 foreign import _showDatabase :: Database -> String
 instance showDatabase :: Show Database where
   show = _showDatabase
+
+
+foreign import _showIndex :: Index -> String
+instance showIndex :: Show Index where
+  show = _showIndex
+
+
+foreign import _showKeyRange :: KeyRange -> String
+instance showKeyRange :: Show KeyRange where
+  show = _showKeyRange
 
 
 foreign import _showObjectStore :: ObjectStore -> String
