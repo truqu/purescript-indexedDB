@@ -8,6 +8,7 @@
     },
     "globals": {
         "indexedDB": true,
+        "IDBKeyRange": true,
         "PS": true
     },
     "rules": {
