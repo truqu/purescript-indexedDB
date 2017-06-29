@@ -1,8 +1,4 @@
-const Maybe = require('Data.Maybe');
-const Core = require('Database.IndexedDB.Core');
-
-
-exports.abort = function abort(tx) {
+exports._abort = function _abort(tx) {
     return function eff() {
         try {
             tx.abort();
@@ -12,20 +8,20 @@ exports.abort = function abort(tx) {
     };
 };
 
-exports.error = function error(tx) {
+exports._error = function _error(tx) {
     return tx.error == null
-        ? Maybe.Nothing()
-        : Maybe.Just(new Error(tx.error.name));
+        ? null
+        : new Error(tx.error.name);
 };
 
-exports.mode = function mode(tx) {
+exports._mode = function _mode(ReadOnly, ReadWrite, VersionChange, tx) {
     if (tx.mode === 'readwrite') {
-        return Core.ReadWrite();
+        return ReadWrite;
     } else if (tx.mode === 'versionchange') {
-        return Core.VersionChange();
+        return VersionChange;
     }
 
-    return Core.ReadOnly();
+    return ReadOnly;
 };
 
 exports._objectStore = function _objectStore(tx, name) {

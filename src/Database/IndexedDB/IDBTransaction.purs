@@ -1,27 +1,63 @@
-module Database.IndexedDB.IDBTransaction where
+module Database.IndexedDB.IDBTransaction
+  (class IDBTransaction, abort, objectStore
+  , error
+  , mode
+  ) where
 
-import Prelude
+import Prelude                     (Unit, (>>>))
 
-import Control.Monad.Aff(Aff)
-import Control.Monad.Eff(Eff)
-import Control.Monad.Eff.Exception(EXCEPTION, Error)
-import Data.Function.Uncurried as Fn
-import Data.Function.Uncurried(Fn2)
-import Data.Maybe(Maybe)
+import Control.Monad.Eff           (Eff)
+import Control.Monad.Eff.Exception (EXCEPTION, Error)
+import Data.Function.Uncurried      as Fn
+import Data.Function.Uncurried     (Fn2, Fn4)
+import Data.Maybe                  (Maybe)
+import Data.Nullable               (Nullable, toMaybe)
 
-import Database.IndexedDB.Core
-
-
-foreign import abort :: forall eff. IDBTransaction -> Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) Unit
-
-
-foreign import _objectStore :: forall eff. Fn2 IDBTransaction String (Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) IDBObjectStore)
-objectStore :: forall eff. IDBTransaction -> String -> Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) IDBObjectStore
-objectStore tx name =
-  Fn.runFn2 _objectStore tx name
+import Database.IndexedDB.Core     (INDEXED_DB, ObjectStore, Transaction, TransactionMode(..))
 
 
-foreign import mode :: IDBTransaction -> IDBTransactionMode
+--------------------
+-- INTERFACES
+--
+class IDBTransaction tx where
+  abort :: forall eff. tx -> Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) Unit
+  objectStore :: forall eff. tx -> String -> Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) ObjectStore
 
 
-foreign import error :: IDBTransaction -> Maybe Error
+--------------------
+-- ATTRIBUTES
+--
+error :: Transaction -> Maybe Error
+error =
+  _error >>> toMaybe
+
+
+mode :: Transaction -> TransactionMode
+mode =
+  Fn.runFn4 _mode ReadOnly ReadWrite VersionChange
+
+
+--------------------
+-- INSTANCES
+--
+instance idbTransactionTransaction :: IDBTransaction Transaction where
+  objectStore tx name =
+    Fn.runFn2 _objectStore tx name
+
+  abort =
+    _abort
+
+
+--------------------
+-- FFI
+--
+foreign import _abort :: forall tx eff. tx -> Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) Unit
+
+
+foreign import _error :: Transaction -> (Nullable Error)
+
+
+foreign import _mode :: Fn4 TransactionMode TransactionMode TransactionMode Transaction TransactionMode
+
+
+foreign import _objectStore :: forall tx eff. Fn2 tx String (Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) ObjectStore)

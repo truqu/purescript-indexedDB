@@ -1,7 +1,14 @@
-const $Core = require('Database.IndexedDB.Core/foreign');
+const errorHandler = function errorHandler(cb) {
+    return function _handler(e) {
+        cb(new Error(e.target.error.name));
+    };
+};
 
-const errorHandler = $Core.errorHandler;
-const successHandler = $Core.successHandler;
+const successHandler = function successHandler(cb) {
+    return function _handler(e) {
+        cb(e.target.result);
+    };
+};
 
 
 exports._advance = function _advance(cursor, count) {

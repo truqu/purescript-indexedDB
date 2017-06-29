@@ -1,11 +1,21 @@
-const $Core = require('Database.IndexedDB.Core/foreign');
+const errorHandler = function errorHandler(cb) {
+    return function _handler(e) {
+        cb(new Error(e.target.error.name));
+    };
+};
 
-const noOp = $Core.noOp;
-const noOp2 = $Core.noOp2;
-const errorHandler = $Core.errorHandler;
+const noOp = function noOp() {
+    return function eff() {
+        // Nothing
+    };
+};
+
+const noOp2 = function noOp2() {
+    return exports.noOp;
+};
 
 
-exports.deleteDatabase = function deleteDatabase(name) {
+exports._deleteDatabase = function _deleteDatabase(name) {
     return function aff(success, error) {
         const request = indexedDB.deleteDatabase(name);
 

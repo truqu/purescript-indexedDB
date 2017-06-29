@@ -1,8 +1,19 @@
-const $Core = require('Database.IndexedDB.Core/foreign');
+const errorHandler = function errorHandler(cb) {
+    return function _handler(e) {
+        cb(new Error(e.target.error.name));
+    };
+};
 
-const toArray = $Core.toArray;
-const errorHandler = $Core.errorHandler;
-const successHandler = $Core.successHandler;
+const successHandler = function successHandler(cb) {
+    return function _handler(e) {
+        cb(e.target.result);
+    };
+};
+
+const toArray = function toArray(xs) {
+    return Array.prototype.slice.apply(xs);
+};
+
 
 exports._add = function _add(store, value, key) {
     return function aff(success, error) {
@@ -12,21 +23,13 @@ exports._add = function _add(store, value, key) {
     };
 };
 
-exports.autoIncrement = function autoIncrement(store) {
+exports._autoIncrement = function _autoIncrement(store) {
     return store.autoIncrement;
 };
 
-exports.clear = function clear(store) {
+exports._clear = function _clear(store) {
     return function aff(success, error) {
         const request = store.clear();
-        request.onsuccess = successHandler(success);
-        request.onerror = errorHandler(error);
-    };
-};
-
-exports._count = function _count(store, query) {
-    return function aff(success, error) {
-        const request = store.count(query);
         request.onsuccess = successHandler(success);
         request.onerror = errorHandler(error);
     };
@@ -69,39 +72,7 @@ exports._deleteIndex = function _deleteIndex(store, name) {
 
 exports._delete = function _delete(store, query) {
     return function aff(success, error) {
-        const request = store.delete(query || undefined);
-        request.onsuccess = successHandler(success);
-        request.onerror = errorHandler(error);
-    };
-};
-
-exports._get = function _get(store, query) {
-    return function aff(success, error) {
-        const request = store.get(query || undefined);
-        request.onsuccess = successHandler(success);
-        request.onerror = errorHandler(error);
-    };
-};
-
-exports._getKey = function _getKey(store, query) {
-    return function aff(success, error) {
-        const request = store.getKey(query || undefined);
-        request.onsuccess = successHandler(success);
-        request.onerror = errorHandler(error);
-    };
-};
-
-exports._getAll = function _getAll(store, query, count) {
-    return function aff(success, error) {
-        const request = store.getAll(query, count);
-        request.onsuccess = successHandler(success);
-        request.onerror = errorHandler(error);
-    };
-};
-
-exports._getAllKeys = function _getAllKeys(store, query, count) {
-    return function aff(success, error) {
-        const request = store.getAllKeys(query, count);
+        const request = store.delete(query);
         request.onsuccess = successHandler(success);
         request.onerror = errorHandler(error);
     };
@@ -117,11 +88,11 @@ exports._index = function _index(store, name) {
     };
 };
 
-exports.indexNames = function indexNames(store) {
+exports._indexNames = function _indexNames(store) {
     return toArray(store.indexNames);
 };
 
-exports.keyPath = function keyPath(store) {
+exports._keyPath = function _keyPath(store) {
     const path = store.keyPath;
 
     if (Array.isArray(path)) {
@@ -135,24 +106,8 @@ exports.keyPath = function keyPath(store) {
     return [];
 };
 
-exports.name = function name(store) {
+exports._name = function _name(store) {
     return store.name;
-};
-
-exports._openCursor = function _openCursor(store, query, dir) {
-    return function aff(success, error) {
-        const request = store.openCursor(query, dir);
-        request.onsuccess = successHandler(success);
-        request.onerror = errorHandler(error);
-    };
-};
-
-exports._openKeyCursor = function _openKeyCursor(store, query, dir) {
-    return function aff(success, error) {
-        const request = store.openKeyCursor(query, dir);
-        request.onsuccess = successHandler(success);
-        request.onerror = errorHandler(error);
-    };
 };
 
 exports._put = function _put(store, value, key) {

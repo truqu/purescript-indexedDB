@@ -1,72 +1,110 @@
 module Database.IndexedDB.Core
-  ( INDEXED_DB
-  , IDBCursorSource(..)
-  , IDBDatabase
-  , IDBIndex
-  , IDBKeyCursor
-  , IDBKeyRange
-  , IDBObjectStore
-  , IDBTransaction
-  , IDBTransactionMode(..)
-  , IDBValueCursor
-  , module Database.IndexedDB.IDBCursorDirection
+  ( class FromString, parse
+  , INDEXED_DB
+  , CursorDirection(..)
+  , CursorSource(..)
+  , Database
+  , Index
+  , KeyCursor
+  , KeyRange
+  , ObjectStore
+  , Transaction
+  , TransactionMode(..)
+  , ValueCursor
   , module Database.IndexedDB.IDBKey
   ) where
 
-import Prelude
+import Prelude                     (class Show)
 
-import Control.Monad.Aff           (Aff)
-import Control.Monad.Eff           (kind Effect, Eff)
-import Control.Monad.Eff.Exception (EXCEPTION)
-import Data.Function.Uncurried      as Fn
-import Data.Function.Uncurried     (Fn2, Fn4, Fn7)
-import Data.Maybe                  (Maybe)
-import Data.Nullable               (Nullable, toNullable)
+import Control.Monad.Eff           (kind Effect)
+import Data.Maybe                  (Maybe(..))
 
-import Database.IndexedDB.IDBCursorDirection
 import Database.IndexedDB.IDBKey
 
 
-data IDBTransactionMode = ReadOnly | ReadWrite | VersionChange
+class FromString a where
+  parse :: String -> Maybe a
 
 
-data IDBCursorSource = IDBObjectStore IDBObjectStore | IDBIndex IDBIndex
+data CursorDirection = Next | NextUnique | Prev | PrevUnique
+
+
+data CursorSource = ObjectStore ObjectStore | Index Index
+
+
+data TransactionMode = ReadOnly | ReadWrite | VersionChange
 
 
 foreign import data INDEXED_DB :: Effect
 
 
-foreign import data IDBDatabase :: Type
+foreign import data Database :: Type
 
 
-foreign import data IDBIndex :: Type
+foreign import data Index :: Type
 
 
-foreign import data IDBKeyCursor :: Type
+foreign import data KeyCursor :: Type
 
 
-foreign import data IDBKeyRange :: Type
+foreign import data KeyRange :: Type
 
 
-foreign import data IDBObjectStore :: Type
+foreign import data ObjectStore :: Type
 
 
-foreign import data IDBTransaction :: Type
+foreign import data Transaction :: Type
 
 
-foreign import data IDBValueCursor :: Type
+foreign import data ValueCursor :: Type
 
 
-foreign import _showIDBDatabase :: IDBDatabase -> String
-instance showIDBDatabase :: Show IDBDatabase where
-  show = _showIDBDatabase
+foreign import _showDatabase :: Database -> String
+instance showDatabase :: Show Database where
+  show = _showDatabase
 
 
-foreign import _showIDBObjectStore :: IDBObjectStore -> String
-instance showIDBObjectStore :: Show IDBObjectStore where
-  show = _showIDBObjectStore
+foreign import _showObjectStore :: ObjectStore -> String
+instance showObjectStore :: Show ObjectStore where
+  show = _showObjectStore
 
 
-foreign import _showIDBTransaction :: IDBTransaction -> String
-instance showIDBTransaction :: Show IDBTransaction where
-  show = _showIDBTransaction
+foreign import _showTransaction :: Transaction -> String
+instance showTransaction :: Show Transaction where
+  show = _showTransaction
+
+
+instance showCursorDirection :: Show CursorDirection where
+  show x =
+    case x of
+      Next       -> "next"
+      NextUnique -> "nextunique"
+      Prev       -> "prev"
+      PrevUnique -> "prevunique"
+
+
+instance showTransactionMode :: Show TransactionMode where
+  show x =
+    case x of
+      ReadOnly      -> "readonly"
+      ReadWrite     -> "readwrite"
+      VersionChange -> "versionchange"
+
+
+instance fromStringCursorDirection :: FromString CursorDirection where
+  parse s =
+    case s of
+      "next"       -> Just Next
+      "nextunique" -> Just NextUnique
+      "prev"       -> Just Prev
+      "prevunique" -> Just PrevUnique
+      _            -> Nothing
+
+
+instance fromStringTransactionMode :: FromString TransactionMode where
+  parse s =
+    case s of
+      "readonly"      -> Just ReadOnly
+      "readwrite"     -> Just ReadWrite
+      "versionchange" -> Just VersionChange
+      _               -> Nothing

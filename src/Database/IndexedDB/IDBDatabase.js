@@ -1,10 +1,9 @@
-const Core = require('Database.IndexedDB.Core');
 const $Core = require('Database.IndexedDB.Core/foreign');
 
 const toArray = $Core.toArray;
 
 
-exports.close = function close(db) {
+exports._close = function _close(db) {
     return function eff() {
         try {
             db.close();
@@ -52,33 +51,24 @@ exports._deleteObjectStore = function _deleteObjectStore(db, name) {
     };
 };
 
-exports.name = function name(db) {
+exports._name = function _name(db) {
     return db.name;
 };
 
-exports.objectStoreNames = function objectStoreNames(db) {
+exports._objectStoreNames = function _objectStoreNames(db) {
     return toArray(db.objectStoreNames);
 };
 
-exports._transaction = function _transaction(db, stores, mode) {
+exports._transaction = function _transaction(show, db, stores, mode) {
     return function eff() {
-        var mode_;
         try {
-            if (mode instanceof Core.ReadOnly) {
-                mode_ = 'readonly';
-            } else if (mode instanceof Core.ReadWrite) {
-                mode_ = 'readwrite';
-            } else {
-                mode_ = 'versionchange';
-            }
-
-            return db.transaction(stores, mode_);
+            return db.transaction(stores, show(mode));
         } catch (e) {
             throw new Error(e.name);
         }
     };
 };
 
-exports.version = function version(db) {
+exports._version = function _version(db) {
     return db.version;
 };

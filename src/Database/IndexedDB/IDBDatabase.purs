@@ -1,42 +1,84 @@
-module Database.IndexedDB.IDBDatabase where
+module Database.IndexedDB.IDBDatabase
+  ( class IDBDatabase, close, createObjectStore, deleteObjectStore, transaction
+  , name
+  , objectStoreNames
+  , version
+  ) where
 
-import Prelude
+import Prelude                     (Unit, show)
 
-import Control.Monad.Aff(Aff)
-import Control.Monad.Eff(Eff)
-import Control.Monad.Eff.Exception(EXCEPTION)
-import Data.Function.Uncurried as Fn
-import Data.Function.Uncurried(Fn2, Fn3)
-import Data.Maybe(Maybe)
+import Control.Monad.Eff           (Eff)
+import Control.Monad.Eff.Exception (EXCEPTION)
+import Data.Function.Uncurried      as Fn
+import Data.Function.Uncurried     (Fn2, Fn3, Fn4)
 
 import Database.IndexedDB.Core
 
 
-foreign import close :: forall eff. IDBDatabase -> Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) Unit
+--------------------
+-- INTERFACE
+--
+class IDBDatabase db where
+  close :: forall eff. db -> Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) Unit
+  createObjectStore :: forall eff. db -> String -> { keyPath :: Array String, autoIncrement :: Boolean } -> Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) ObjectStore
+  deleteObjectStore :: forall eff .  db -> String -> Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) ObjectStore
+  transaction :: forall eff. db -> Array String -> TransactionMode -> Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) Transaction
 
 
-foreign import _createObjectStore :: forall a eff. Fn3 IDBDatabase String { keyPath :: Array String, autoIncrement :: Boolean } (Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) IDBObjectStore)
-createObjectStore :: forall eff. IDBDatabase -> String -> { keyPath :: Array String, autoIncrement :: Boolean } -> Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) IDBObjectStore
-createObjectStore db name opts =
-  Fn.runFn3 _createObjectStore db name opts
+--------------------
+-- ATTRIBUTES
+--
+name :: Database -> String
+name =
+  _name
 
 
-foreign import _deleteObjectStore :: forall eff. Fn2 IDBDatabase String (Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) IDBObjectStore)
-deleteObjectStore :: forall eff .  IDBDatabase -> String -> Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) IDBObjectStore
-deleteObjectStore db name =
-  Fn.runFn2 _deleteObjectStore db name
+objectStoreNames :: Database -> Array String
+objectStoreNames =
+  _objectStoreNames
 
 
-foreign import name :: IDBDatabase -> String
+version :: Database -> Int
+version =
+  _version
 
 
-foreign import objectStoreNames :: IDBDatabase -> Array String
+--------------------
+-- INSTANCES
+--
+instance idbDatabaseDatabase :: IDBDatabase Database where
+  close =
+    _close
+
+  createObjectStore db name' opts =
+    Fn.runFn3 _createObjectStore db name' opts
+
+  deleteObjectStore db name' =
+    Fn.runFn2 _deleteObjectStore db name'
+
+  transaction db stores mode' =
+    Fn.runFn4 _transaction show db stores mode'
 
 
-foreign import _transaction :: forall eff. Fn3 IDBDatabase (Array String) IDBTransactionMode (Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) IDBTransaction)
-transaction :: forall eff. IDBDatabase -> Array String -> IDBTransactionMode -> Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) IDBTransaction
-transaction db stores mode =
-  Fn.runFn3 _transaction db stores mode
+--------------------
+-- FFI
+--
+foreign import _close :: forall db eff. db -> Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) Unit
 
 
-foreign import version :: IDBDatabase -> Int
+foreign import _createObjectStore :: forall db eff. Fn3 db String { keyPath :: Array String, autoIncrement :: Boolean } (Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) ObjectStore)
+
+
+foreign import _deleteObjectStore :: forall db eff. Fn2 db String (Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) ObjectStore)
+
+
+foreign import _name :: Database -> String
+
+
+foreign import _objectStoreNames :: Database -> Array String
+
+
+foreign import _transaction :: forall db eff. Fn4 (db -> String) db (Array String) TransactionMode (Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) Transaction)
+
+
+foreign import _version :: Database -> Int
