@@ -11,7 +11,7 @@ import Data.Date                          as Date
 import Data.DateTime                      as DateTime
 import Data.DateTime                     (DateTime(..), Date(..), Time(..))
 import Data.Enum                         (toEnum)
-import Data.Maybe                        (Maybe(..))
+import Data.Maybe                        (Maybe(..), isNothing)
 import Data.Time.Duration                (Milliseconds(..))
 import Test.Spec                         (describe, it)
 import Test.Spec.Assertions              (shouldEqual, fail)
@@ -115,17 +115,17 @@ main = runMocha do
   describe "IDBKeyRange" do
     it "only(int)" do
       let key   = 14
-          range = IDBKeyRange.new $ IDBKeyRange.Only key
+          range = IDBKeyRange.only key
       IDBKeyRange.includes range (toKey key) `shouldEqual` true
 
     it "only(string)" do
       let key   = "patate"
-          range = IDBKeyRange.new $ IDBKeyRange.Only key
+          range = IDBKeyRange.only key
       IDBKeyRange.includes range (toKey key) `shouldEqual` true
 
     it "only(float)" do
       let key   = 14.42
-          range = IDBKeyRange.new $ IDBKeyRange.Only key
+          range = IDBKeyRange.only key
       IDBKeyRange.includes range (toKey key) `shouldEqual` true
 
     it "only(date)" do
@@ -137,18 +137,134 @@ main = runMocha do
         Nothing ->
           fail "unable to create datetime"
         Just key -> do
-          let range = IDBKeyRange.new $ IDBKeyRange.Only key
+          let range = IDBKeyRange.only key
           IDBKeyRange.includes range (toKey key) `shouldEqual` true
 
     it "only([int])" do
       let key   = [14, 42]
-          range = IDBKeyRange.new $ IDBKeyRange.Only key
+          range = IDBKeyRange.only key
       IDBKeyRange.includes range (toKey key) `shouldEqual` true
 
     it "only([string])" do
       let key   = ["patate", "autruche"]
-          range = IDBKeyRange.new $ IDBKeyRange.Only key
+          range = IDBKeyRange.only key
       IDBKeyRange.includes range (toKey key) `shouldEqual` true
+
+    it "lowerBound(14, open)" do
+      let key   = 14
+          open  = true
+          range = IDBKeyRange.lowerBound key open
+      IDBKeyRange.includes range (toKey (key + 1)) `shouldEqual` true
+      IDBKeyRange.includes range (toKey key) `shouldEqual` (not open)
+      IDBKeyRange.includes range (toKey (key - 1)) `shouldEqual` false
+
+    it "lowerBound(14, close)" do
+      let key   = 14
+          open  = false
+          range = IDBKeyRange.lowerBound key open
+      IDBKeyRange.includes range (toKey (key + 1)) `shouldEqual` true
+      IDBKeyRange.includes range (toKey key) `shouldEqual` (not open)
+      IDBKeyRange.includes range (toKey (key - 1)) `shouldEqual` false
+
+    it "upperBound(14, open)" do
+      let key   = 14
+          open  = true
+          range = IDBKeyRange.upperBound key open
+      IDBKeyRange.includes range (toKey (key + 1)) `shouldEqual` false
+      IDBKeyRange.includes range (toKey key) `shouldEqual` (not open)
+      IDBKeyRange.includes range (toKey (key - 1)) `shouldEqual` true
+
+    it "upperBound(14, close)" do
+      let key   = 14
+          open  = false
+          range = IDBKeyRange.upperBound key open
+      IDBKeyRange.includes range (toKey (key + 1)) `shouldEqual` false
+      IDBKeyRange.includes range (toKey key) `shouldEqual` (not open)
+      IDBKeyRange.includes range (toKey (key - 1)) `shouldEqual` true
+
+    it "bound(42, 14, open, open) => Nothing" do
+      let lower     = 42
+          upper     = 14
+          lowerOpen = true
+          upperOpen = true
+          mrange    = IDBKeyRange.bound { lower, upper, lowerOpen, upperOpen }
+      isNothing mrange `shouldEqual` true
+
+    it "bound(14, 42, open, open)" do
+      let lower     = 14
+          upper     = 42
+          lowerOpen = true
+          upperOpen = true
+          mrange    = IDBKeyRange.bound { lower, upper, lowerOpen, upperOpen }
+      case mrange of
+        Nothing ->
+          fail "invalid range provided"
+        Just range -> do
+          IDBKeyRange.includes range (toKey (lower + 1)) `shouldEqual` true
+          IDBKeyRange.includes range (toKey (upper - 1)) `shouldEqual` true
+          IDBKeyRange.includes range (toKey (lower - 1)) `shouldEqual` false
+          IDBKeyRange.includes range (toKey (upper + 1)) `shouldEqual` false
+          IDBKeyRange.includes range (toKey lower) `shouldEqual` (not lowerOpen)
+          IDBKeyRange.includes range (toKey upper) `shouldEqual` (not upperOpen)
+
+    it "bound(14, 42, open, close)" do
+      let lower     = 14
+          upper     = 42
+          lowerOpen = true
+          upperOpen = false
+          mrange    = IDBKeyRange.bound { lower, upper, lowerOpen, upperOpen }
+      case mrange of
+        Nothing ->
+          fail "invalid range provided"
+        Just range -> do
+          IDBKeyRange.includes range (toKey (lower + 1)) `shouldEqual` true
+          IDBKeyRange.includes range (toKey (upper - 1)) `shouldEqual` true
+          IDBKeyRange.includes range (toKey (lower - 1)) `shouldEqual` false
+          IDBKeyRange.includes range (toKey (upper + 1)) `shouldEqual` false
+          IDBKeyRange.includes range (toKey lower) `shouldEqual` (not lowerOpen)
+          IDBKeyRange.includes range (toKey upper) `shouldEqual` (not upperOpen)
+
+    it "bound(14, 42, close, open)" do
+      let lower     = 14
+          upper     = 42
+          lowerOpen = false
+          upperOpen = true
+          mrange    = IDBKeyRange.bound { lower, upper, lowerOpen, upperOpen }
+      case mrange of
+        Nothing ->
+          fail "invalid range provided"
+        Just range -> do
+          IDBKeyRange.includes range (toKey (lower + 1)) `shouldEqual` true
+          IDBKeyRange.includes range (toKey (upper - 1)) `shouldEqual` true
+          IDBKeyRange.includes range (toKey (lower - 1)) `shouldEqual` false
+          IDBKeyRange.includes range (toKey (upper + 1)) `shouldEqual` false
+          IDBKeyRange.includes range (toKey lower) `shouldEqual` (not lowerOpen)
+          IDBKeyRange.includes range (toKey upper) `shouldEqual` (not upperOpen)
+
+    it "bound(14, 42, close, close)" do
+      let lower     = 14
+          upper     = 42
+          lowerOpen = false
+          upperOpen = false
+          mrange    = IDBKeyRange.bound { lower, upper, lowerOpen, upperOpen }
+      case mrange of
+        Nothing ->
+          fail "invalid range provided"
+        Just range -> do
+          IDBKeyRange.includes range (toKey (lower + 1)) `shouldEqual` true
+          IDBKeyRange.includes range (toKey (upper - 1)) `shouldEqual` true
+          IDBKeyRange.includes range (toKey (lower - 1)) `shouldEqual` false
+          IDBKeyRange.includes range (toKey (upper + 1)) `shouldEqual` false
+          IDBKeyRange.includes range (toKey lower) `shouldEqual` (not lowerOpen)
+          IDBKeyRange.includes range (toKey upper) `shouldEqual` (not upperOpen)
+
+    it "can access attributes of a range" do
+      let range = IDBKeyRange.lowerBound 14 true
+      IDBKeyRange.lower range `shouldEqual` (Just $ toKey 14)
+      IDBKeyRange.upper range `shouldEqual` (Nothing :: Maybe Key)
+      IDBKeyRange.lowerOpen range `shouldEqual` true
+      -- NOTE Not true on Chrome 56.x  => The default value for the flag is `true`
+      -- IDBKeyRange.upperOpen range `shouldEqual` false
 
   describe "IDBDatabase" do
     it "createObjectStore (keyPath: [], autoIncrement: true)" do
@@ -393,7 +509,7 @@ main = runMocha do
             _     <- launchAff $ do
               _ <- IDBObjectStore.add store "patate" (Just $ toKey 14)
               _ <- IDBObjectStore.clear store
-              v <- IDBObjectStore.get store (IDBKeyRange.new $ IDBKeyRange.Only 14)
+              v <- IDBObjectStore.get store (IDBKeyRange.only 14)
               v `shouldEqual` (Nothing :: Maybe Int)
 
             pure unit
