@@ -2,10 +2,7 @@ exports._bound = function _bound(lower, upper, lowerOpen, upperOpen) {
     try {
         return IDBKeyRange.bound(lower, upper, lowerOpen, upperOpen);
     } catch (e) {
-        // NOTE
-        // An exception can only be thrown if lower >= upper. In such case,
-        // We fallback to the lower bound only.
-        return exports._only(lower);
+        return null;
     }
 };
 
