@@ -31,8 +31,8 @@ import Data.Nullable               (Nullable, toMaybe, toNullable)
 import Database.IndexedDB.Core
 
 
-foreign import _add :: forall value eff. Fn3 IDBObjectStore value (Nullable KeyPath) (Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) KeyPath)
-add :: forall value eff. IDBObjectStore -> value -> Maybe KeyPath -> Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) KeyPath
+foreign import _add :: forall value eff. Fn3 IDBObjectStore value (Nullable IDBKey) (Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) IDBKey)
+add :: forall value eff. IDBObjectStore -> value -> Maybe IDBKey -> Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) IDBKey
 add store value mkey =
   Fn.runFn3 _add store value (toNullable mkey)
 
@@ -49,8 +49,8 @@ count store range =
   Fn.runFn2 _count store (toNullable range)
 
 
-foreign import _createIndex :: forall eff. Fn4 IDBObjectStore String (Array KeyPath) { unique :: Boolean, multiEntry :: Boolean } (Eff (idb :: INDEXED_DB, exception :: EXCEPTION) IDBIndex)
-createIndex :: forall eff. IDBObjectStore -> String -> (Array KeyPath) -> { unique :: Boolean, multiEntry :: Boolean } -> Eff (idb :: INDEXED_DB, exception :: EXCEPTION) IDBIndex
+foreign import _createIndex :: forall eff. Fn4 IDBObjectStore String (Array String) { unique :: Boolean, multiEntry :: Boolean } (Eff (idb :: INDEXED_DB, exception :: EXCEPTION) IDBIndex)
+createIndex :: forall eff. IDBObjectStore -> String -> (Array String) -> { unique :: Boolean, multiEntry :: Boolean } -> Eff (idb :: INDEXED_DB, exception :: EXCEPTION) IDBIndex
 createIndex store name path params =
   Fn.runFn4 _createIndex store name path params
 
@@ -73,20 +73,20 @@ get store range =
   toMaybe <$> Fn.runFn2 _get store (toNullable range)
 
 
-foreign import _getKey :: forall eff. Fn2 IDBObjectStore (Nullable IDBKeyRange) (Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) (Nullable KeyPath))
-getKey :: forall eff. IDBObjectStore -> Maybe IDBKeyRange -> Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) (Maybe KeyPath)
+foreign import _getKey :: forall eff. Fn2 IDBObjectStore (Nullable IDBKeyRange) (Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) (Nullable IDBKey))
+getKey :: forall eff. IDBObjectStore -> Maybe IDBKeyRange -> Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) (Maybe IDBKey)
 getKey store range =
   toMaybe <$> Fn.runFn2 _getKey store (toNullable range)
 
 
-foreign import _getAllKeys :: forall eff. Fn3 IDBObjectStore (Nullable IDBKeyRange) (Nullable Int) (Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) (Array KeyPath))
-getAllKeys :: forall eff. IDBObjectStore -> Maybe IDBKeyRange -> Maybe Int -> Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) (Array KeyPath)
+foreign import _getAllKeys :: forall eff. Fn3 IDBObjectStore (Nullable IDBKeyRange) (Nullable Int) (Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) (Array IDBKey))
+getAllKeys :: forall eff. IDBObjectStore -> Maybe IDBKeyRange -> Maybe Int -> Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) (Array IDBKey)
 getAllKeys store range count =
   Fn.runFn3 _getAllKeys store (toNullable range) (toNullable count)
 
 
-foreign import _openCursor :: forall eff. Fn3 IDBObjectStore (Nullable IDBKeyRange) (Nullable IDBCursorDirection) (Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) IDBCursorWithValue)
-openCursor :: forall eff. IDBObjectStore -> Maybe IDBKeyRange -> Maybe IDBCursorDirection -> Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) IDBCursorWithValue
+foreign import _openCursor :: forall eff. Fn3 IDBObjectStore (Nullable IDBKeyRange) (Nullable IDBCursorDirection) (Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) IDBValueCursor)
+openCursor :: forall eff. IDBObjectStore -> Maybe IDBKeyRange -> Maybe IDBCursorDirection -> Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) IDBValueCursor
 openCursor store range dir =
   Fn.runFn3 _openCursor store (toNullable range) (toNullable dir)
 
@@ -112,7 +112,7 @@ foreign import keyPath :: IDBObjectStore -> Array String
 foreign import name :: IDBObjectStore -> String
 
 
-foreign import _put :: forall value eff. Fn3 IDBObjectStore value (Nullable KeyPath) (Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) KeyPath)
-put :: forall value eff. IDBObjectStore -> value -> Maybe KeyPath -> Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) KeyPath
+foreign import _put :: forall value eff. Fn3 IDBObjectStore value (Nullable IDBKey) (Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) IDBKey)
+put :: forall value eff. IDBObjectStore -> value -> Maybe IDBKey -> Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) IDBKey
 put store value mkey =
   Fn.runFn3 _put store value (toNullable mkey)
