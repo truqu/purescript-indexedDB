@@ -18,7 +18,7 @@ import Data.Function.Uncurried     (Fn2, Fn4, Fn7)
 import Data.List.NonEmpty          (NonEmptyList(..))
 import Data.List.Types             (List(..))
 import Data.NonEmpty               (NonEmpty(..))
-import Data.Either                 (Either(..), isRight)
+import Data.Either                 (Either(..), either, isRight)
 import Data.Identity               (Identity(..))
 import Data.Nullable               (Nullable, toNullable)
 import Data.Time                    as Time
@@ -49,12 +49,43 @@ instance eqKey :: Eq Key where
   eq a b = (runExceptT >>> runIdentity >>> isRight) $
       eq <$> ((fromKey a) :: F Int) <*> fromKey b
     <|>
+      eq <$> ((fromKey a) :: F Number) <*> fromKey b
+    <|>
       eq <$> ((fromKey a) :: F String) <*> fromKey b
     <|>
       eq <$> ((fromKey a) :: F DateTime) <*> fromKey b
     where
       runIdentity :: forall a. Identity a -> a
       runIdentity (Identity x) = x
+
+
+instance ordKey :: Ord Key where
+  compare a b = (runExceptT >>> runIdentity >>> either (const LT) id) $
+      compare <$> ((fromKey a) :: F Int) <*> fromKey b
+    <|>
+      compare <$> ((fromKey a) :: F Number) <*> fromKey b
+    <|>
+      compare <$> ((fromKey a) :: F String) <*> fromKey b
+    <|>
+      compare <$> ((fromKey a) :: F DateTime) <*> fromKey b
+    where
+      runIdentity :: forall a. Identity a -> a
+      runIdentity (Identity x) = x
+
+
+instance showKey :: Show Key where
+  show a = (runExceptT >>> format) $
+      (show <$> (fromKey a :: F Int))
+    <|>
+      (show <$> (fromKey a :: F Number))
+    <|>
+      (show <$> (fromKey a :: F String))
+    <|>
+      (show <$> (fromKey a :: F DateTime))
+    where
+      format :: forall a. Identity (Either a String) -> String
+      format (Identity x) =
+        either (const "(Key)") (\s -> "(Key " <> s <> ")") x
 
 
 instance idbKeyInt :: IDBKey Int where
