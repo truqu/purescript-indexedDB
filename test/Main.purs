@@ -22,6 +22,7 @@ import Database.IndexedDB.IDBKey
 import Database.IndexedDB.IDBDatabase     as IDBDatabase
 import Database.IndexedDB.IDBFactory      as IDBFactory
 import Database.IndexedDB.IDBObjectStore  as IDBObjectStore
+import Database.IndexedDB.IDBKeyRange     as IDBKeyRange
 
 
 tearDown :: forall eff. String -> Int -> Database -> Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) Unit
@@ -111,6 +112,43 @@ main = runMocha do
       name `shouldEqual` name
       tearDown name version db02
 
+  describe "IDBKeyRange" do
+    it "only(int)" do
+      let key   = 14
+          range = IDBKeyRange.new $ IDBKeyRange.Only key
+      IDBKeyRange.includes range (toKey key) `shouldEqual` true
+
+    it "only(string)" do
+      let key   = "patate"
+          range = IDBKeyRange.new $ IDBKeyRange.Only key
+      IDBKeyRange.includes range (toKey key) `shouldEqual` true
+
+    it "only(float)" do
+      let key   = 14.42
+          range = IDBKeyRange.new $ IDBKeyRange.Only key
+      IDBKeyRange.includes range (toKey key) `shouldEqual` true
+
+    it "only(date)" do
+      let mkey = DateTime
+            <$> (Date.canonicalDate <$> toEnum 2017 <*> toEnum 6 <*> toEnum 23)
+            <*> (Time <$> toEnum 17 <*> toEnum 59 <*> toEnum 34 <*> toEnum 42)
+
+      case mkey of
+        Nothing ->
+          fail "unable to create datetime"
+        Just key -> do
+          let range = IDBKeyRange.new $ IDBKeyRange.Only key
+          IDBKeyRange.includes range (toKey key) `shouldEqual` true
+
+    it "only([int])" do
+      let key   = [14, 42]
+          range = IDBKeyRange.new $ IDBKeyRange.Only key
+      IDBKeyRange.includes range (toKey key) `shouldEqual` true
+
+    it "only([string])" do
+      let key   = ["patate", "autruche"]
+          range = IDBKeyRange.new $ IDBKeyRange.Only key
+      IDBKeyRange.includes range (toKey key) `shouldEqual` true
 
   describe "IDBDatabase" do
     it "createObjectStore (keyPath: [], autoIncrement: true)" do
@@ -336,6 +374,28 @@ main = runMocha do
             store <- IDBDatabase.createObjectStore db storeName { keyPath, autoIncrement }
             key   <- launchAff $ ((unsafeFromKey >>> shouldEqual key)
               <$> IDBObjectStore.add store "patate" (Just $ toKey key))
+            pure unit
+
+      db <- IDBFactory.open dbName Nothing
+        { onUpgradeNeeded : Just callback
+        , onBlocked       : Nothing
+        }
+      tearDown dbName dbVersion db
+
+    it "clear()" do
+      let dbName        = "db-clear"
+          dbVersion     = 1
+          storeName     = "store"
+          keyPath       = []
+          autoIncrement = true
+          callback db   = do
+            store <- IDBDatabase.createObjectStore db storeName { keyPath, autoIncrement }
+            _     <- launchAff $ do
+              _ <- IDBObjectStore.add store "patate" (Just $ toKey 14)
+              _ <- IDBObjectStore.clear store
+              v <- IDBObjectStore.get store (IDBKeyRange.new $ IDBKeyRange.Only 14)
+              v `shouldEqual` (Nothing :: Maybe Int)
+
             pure unit
 
       db <- IDBFactory.open dbName Nothing
