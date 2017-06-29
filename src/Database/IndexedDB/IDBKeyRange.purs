@@ -15,7 +15,7 @@ import Data.Function.Uncurried     (Fn2, Fn4)
 import Data.Foreign                (Foreign)
 
 import Database.IndexedDB.Core     (KeyRange)
-import Database.IndexedDB.IDBKey.Internal (Key(..), extractForeign)
+import Database.IndexedDB.IDBKey.Internal (class IDBKey, Key(..), toKey, extractForeign)
 
 
 --------------------
@@ -32,20 +32,20 @@ data Range key
   | Bound { lower :: key, upper :: key, lowerOpen :: Boolean, upperOpen :: Boolean }
 
 
-new :: Range Key -> KeyRange
+new :: forall a. IDBKey a => Range a -> KeyRange
 new range =
   case range of
     Only key ->
-      _only (extractForeign key)
+      _only (extractForeign $ toKey key)
 
     LowerBound { lower: key, lowerOpen: open } ->
-      Fn.runFn2 _lowerBound (extractForeign key) open
+      Fn.runFn2 _lowerBound (extractForeign $ toKey key) open
 
     UpperBound { upper: key, upperOpen: open } ->
-      Fn.runFn2 _upperBound (extractForeign key) open
+      Fn.runFn2 _upperBound (extractForeign $ toKey key) open
 
     Bound { lower: key1, upper: key2, lowerOpen: open1, upperOpen: open2 } ->
-      Fn.runFn4 _bound (extractForeign key1) (extractForeign key2) open1 open2
+      Fn.runFn4 _bound (extractForeign $ toKey key1) (extractForeign $ toKey key2) open1 open2
 
 
 --------------------
