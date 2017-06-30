@@ -54,6 +54,8 @@ instance eqKey :: Eq Key where
       eq <$> ((fromKey a) :: F String) <*> fromKey b
     <|>
       eq <$> ((fromKey a) :: F DateTime) <*> fromKey b
+    <|>
+      eq <$> ((fromKey a) :: F (Array Key)) <*> fromKey b
     where
       runIdentity :: forall a. Identity a -> a
       runIdentity (Identity x) = x
@@ -68,6 +70,8 @@ instance ordKey :: Ord Key where
       compare <$> ((fromKey a) :: F String) <*> fromKey b
     <|>
       compare <$> ((fromKey a) :: F DateTime) <*> fromKey b
+    <|>
+      compare <$> ((fromKey a) :: F (Array Key)) <*> fromKey b
     where
       runIdentity :: forall a. Identity a -> a
       runIdentity (Identity x) = x
@@ -82,6 +86,8 @@ instance showKey :: Show Key where
       (show <$> (fromKey a :: F String))
     <|>
       (show <$> (fromKey a :: F DateTime))
+    <|>
+      (show <$> (fromKey a :: F (Array Key)))
     where
       format :: forall a. Identity (Either a String) -> String
       format (Identity x) =

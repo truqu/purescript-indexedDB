@@ -1,6 +1,5 @@
 module Database.IndexedDB.Core
   ( class FromString, parse
-  , INDEXED_DB
   , IDB
   , CursorDirection(..)
   , CursorSource(..)
@@ -22,9 +21,6 @@ import Control.Monad.Eff           (kind Effect)
 import Data.Maybe                  (Maybe(..))
 
 import Database.IndexedDB.IDBKey
-
-
-foreign import data INDEXED_DB :: Effect
 
 
 foreign import data IDB :: Effect
