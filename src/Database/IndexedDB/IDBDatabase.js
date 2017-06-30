@@ -59,6 +59,38 @@ exports._objectStoreNames = function _objectStoreNames(db) {
     return toArray(db.objectStoreNames);
 };
 
+exports._onAbort = function _onAbort(db, f) {
+    return function eff() {
+        db.onabort = function onabort() {
+            f();
+        };
+    };
+};
+
+exports._onClose = function _onClose(db, f) {
+    return function eff() {
+        db.onclose = function onclose() {
+            f();
+        };
+    };
+};
+
+exports._onError = function _onError(db, f) {
+    return function eff() {
+        db.onerror = function onerror(e) {
+            f(new Error(e.target.error.name))();
+        };
+    };
+};
+
+exports._onVersionChange = function _onVersionChange(db, f) {
+    return function eff() {
+        db.onversionchange = function onversionchange(e) {
+            f({ oldVersion: e.oldVersion, newVersion: e.newVersion })();
+        };
+    };
+};
+
 exports._transaction = function _transaction(show, db, stores, mode) {
     return function eff() {
         try {

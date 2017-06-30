@@ -41,7 +41,7 @@ exports._open = function _open(fromMaybe, name, mver, req) {
         };
 
         request.onupgradeneeded = function onUpgradeNeeded(e) {
-            fromMaybe(noOp2)(req.onUpgradeNeeded)(e.target.result)();
+            fromMaybe(noOp2)(req.onUpgradeNeeded)(e.target.result)(e.target.transaction)();
         };
 
         request.onerror = errorHandler(error);

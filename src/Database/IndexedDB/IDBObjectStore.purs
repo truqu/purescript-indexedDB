@@ -7,6 +7,7 @@ module Database.IndexedDB.IDBObjectStore
   , indexNames
   , keyPath
   , name
+  , transaction
   , defaultParameters
   ) where
 
@@ -21,7 +22,7 @@ import Data.Function.Uncurried              (Fn2, Fn3, Fn4)
 import Data.Maybe                           (Maybe)
 import Data.Nullable                        (Nullable, toNullable)
 
-import Database.IndexedDB.Core              (IDB, Index, KeyRange, KeyPath, ObjectStore)
+import Database.IndexedDB.Core              (IDB, Index, KeyRange, KeyPath, ObjectStore, Transaction)
 import Database.IndexedDB.IDBIndex.Internal (class IDBIndex, IDBIndexParameters, count, get, getAllKeys, getKey, openCursor, openKeyCursor)
 import Database.IndexedDB.IDBKey.Internal   (Key(Key), extractForeign)
 
@@ -69,6 +70,11 @@ keyPath =
 name :: ObjectStore -> String
 name =
   _name
+
+
+transaction :: ObjectStore -> Transaction
+transaction =
+  _transaction
 
 
 --------------------
@@ -138,3 +144,6 @@ foreign import _name :: ObjectStore -> String
 
 
 foreign import _put :: forall value e. Fn3 ObjectStore value (Nullable Foreign) (Aff (idb :: IDB | e) Foreign)
+
+
+foreign import _transaction :: ObjectStore -> Transaction

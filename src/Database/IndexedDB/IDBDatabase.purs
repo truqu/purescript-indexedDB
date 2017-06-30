@@ -4,12 +4,16 @@ module Database.IndexedDB.IDBDatabase
   , name
   , objectStoreNames
   , version
+  , onAbort
+  , onClose
+  , onError
+  , onVersionChange
   ) where
 
 import Prelude                           (Unit, show)
 
 import Control.Monad.Eff                 (Eff)
-import Control.Monad.Eff.Exception       (EXCEPTION)
+import Control.Monad.Eff.Exception       (EXCEPTION, Error)
 import Data.Function.Uncurried            as Fn
 import Data.Function.Uncurried           (Fn2, Fn3, Fn4)
 
@@ -51,7 +55,24 @@ version =
 --------------------
 -- EVENT HANDLERS
 --
--- onAbort :: forall e. Database -> Eff (idb :: IDB, exception :: EXCEPTION | e) Unit -> Eff (idb :: IDB, exception :: EXCEPTION | e) Unit
+onAbort :: forall e e'. Database -> Eff ( | e') Unit -> Eff (idb :: IDB | e) Unit
+onAbort db f =
+  Fn.runFn2 _onAbort db f
+
+
+onClose :: forall e e'. Database -> Eff ( | e') Unit -> Eff (idb :: IDB | e) Unit
+onClose db f =
+  Fn.runFn2 _onClose db f
+
+
+onError :: forall e e'. Database -> (Error -> Eff ( | e') Unit) -> Eff (idb :: IDB | e) Unit
+onError db f =
+  Fn.runFn2 _onError db f
+
+
+onVersionChange :: forall e e'. Database -> ({ oldVersion :: Int, newVersion :: Int } -> Eff ( | e') Unit) -> Eff (idb :: IDB | e) Unit
+onVersionChange db f =
+  Fn.runFn2 _onVersionChange db f
 
 
 
@@ -88,6 +109,18 @@ foreign import _name :: Database -> String
 
 
 foreign import _objectStoreNames :: Database -> Array String
+
+
+foreign import _onAbort :: forall db e e'. Fn2 db (Eff ( | e') Unit) (Eff (idb :: IDB | e) Unit)
+
+
+foreign import _onClose :: forall db e e'. Fn2 db (Eff ( | e') Unit) (Eff (idb :: IDB | e) Unit)
+
+
+foreign import _onError :: forall db e e'. Fn2 db (Error -> Eff ( | e') Unit) (Eff (idb :: IDB | e) Unit)
+
+
+foreign import _onVersionChange :: forall db e e'. Fn2 db ({ oldVersion :: Int, newVersion :: Int } -> Eff ( | e') Unit) (Eff (idb :: IDB | e) Unit)
 
 
 foreign import _transaction :: forall db e. Fn4 (db -> String) db (Array String) TransactionMode (Eff (idb :: IDB, exception :: EXCEPTION | e) Transaction)

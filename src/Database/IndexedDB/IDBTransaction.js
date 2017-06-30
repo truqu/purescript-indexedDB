@@ -33,3 +33,27 @@ exports._objectStore = function _objectStore(tx, name) {
         }
     };
 };
+
+exports._onAbort = function _onAbort(tx, f) {
+    return function eff() {
+        tx.onabort = function onabort() {
+            f();
+        };
+    };
+};
+
+exports._onComplete = function _onComplete(tx, f) {
+    return function eff() {
+        tx.oncomplete = function oncomplete() {
+            f();
+        };
+    };
+};
+
+exports._onError = function _onError(tx, f) {
+    return function eff() {
+        tx.onerror = function onerror(e) {
+            f(new Error(e.target.error.name))();
+        };
+    };
+};

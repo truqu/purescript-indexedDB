@@ -2,6 +2,9 @@ module Database.IndexedDB.IDBTransaction
   (class IDBTransaction, abort, objectStore
   , error
   , mode
+  , onAbort
+  , onComplete
+  , onError
   ) where
 
 import Prelude                     (Unit, (>>>))
@@ -38,6 +41,24 @@ mode =
 
 
 --------------------
+-- EVENT HANDLERS
+--
+onAbort :: forall e e'. Transaction -> Eff ( | e') Unit -> Eff (idb :: IDB | e) Unit
+onAbort db f =
+  Fn.runFn2 _onAbort db f
+
+
+onComplete :: forall e e'. Transaction -> Eff ( | e') Unit -> Eff (idb :: IDB | e) Unit
+onComplete db f =
+  Fn.runFn2 _onComplete db f
+
+
+onError :: forall e e'. Transaction -> (Error -> Eff ( | e') Unit) -> Eff (idb :: IDB | e) Unit
+onError db f =
+  Fn.runFn2 _onError db f
+
+
+--------------------
 -- INSTANCES
 --
 instance idbTransactionTransaction :: IDBTransaction Transaction where
@@ -61,3 +82,12 @@ foreign import _mode :: Fn4 TransactionMode TransactionMode TransactionMode Tran
 
 
 foreign import _objectStore :: forall tx e. Fn2 tx String (Eff (idb :: IDB, exception :: EXCEPTION | e) ObjectStore)
+
+
+foreign import _onAbort :: forall tx e e'. Fn2 tx (Eff ( | e') Unit) (Eff (idb :: IDB | e) Unit)
+
+
+foreign import _onComplete :: forall tx e e'. Fn2 tx (Eff ( | e') Unit) (Eff (idb :: IDB | e) Unit)
+
+
+foreign import _onError :: forall tx e e'. Fn2 tx (Error -> Eff ( | e') Unit) (Eff (idb :: IDB | e) Unit)

@@ -117,3 +117,8 @@ exports._put = function _put(store, value, key) {
         request.onerror = errorHandler(error);
     };
 };
+
+exports._transaction = function _transaction(store) {
+    return store.transaction;
+};
+
