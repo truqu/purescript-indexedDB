@@ -88,6 +88,12 @@ instance showKey :: Show Key where
         either (const "(Key)") (\s -> "(Key " <> s <> ")") x
 
 
+instance idbKeyKey :: IDBKey Key where
+  toKey         = id
+  fromKey       = pure
+  unsafeFromKey = id
+
+
 instance idbKeyInt :: IDBKey Int where
   toKey                 = Foreign.toForeign >>> Key
   fromKey (Key f)       = Foreign.readInt f
