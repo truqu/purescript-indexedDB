@@ -76,3 +76,4 @@ generated-docs
 .purs*
 .psa*
 dist
+src/Main.purs
