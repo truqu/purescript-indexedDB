@@ -3,6 +3,7 @@ module Test.Main where
 import Prelude
 
 import Control.Monad.Aff                 (Aff, launchAff, forkAff, delay)
+import Control.Monad.Aff.Console         (log)
 import Control.Monad.Aff.AVar            (AVAR, makeVar', modifyVar, peekVar, killVar)
 import Control.Monad.Eff                 (Eff)
 import Control.Monad.Eff.Class           (liftEff)
@@ -520,3 +521,409 @@ main = runMocha do
         }
       tearDown dbName dbVersion db
 
+    it "count(Nothing) " do
+      let dbName        = "db-count"
+          dbVersion     = 1
+          storeName     = "store"
+          keyPath       = []
+          autoIncrement = true
+          callback db   = do
+            store <- IDBDatabase.createObjectStore db storeName { keyPath, autoIncrement }
+            _     <- launchAff $ do
+              _ <- IDBObjectStore.add store "patate" Nothing
+              _ <- IDBObjectStore.add store 14 Nothing
+              n <- IDBObjectStore.count store Nothing
+              n `shouldEqual` 2
+            pure unit
+
+      db <- IDBFactory.open dbName Nothing
+        { onUpgradeNeeded : Just callback
+        , onBlocked       : Nothing
+        }
+      tearDown dbName dbVersion db
+
+
+    it "getKey() (fixed)" do
+      let dbName        = "db-getKey"
+          dbVersion     = 1
+          storeName     = "store"
+          keyPath       = ["id"]
+          key           = "patate"
+          autoIncrement = false
+          callback db   = do
+            store <- IDBDatabase.createObjectStore db storeName { keyPath, autoIncrement }
+            _     <- launchAff $ do
+              key'  <- IDBObjectStore.add store { id: key, value: 14 } Nothing
+              (unsafeFromKey key') `shouldEqual` key
+              key'  <- IDBObjectStore.getKey store (IDBKeyRange.only key)
+              (unsafeFromKey <$> key') `shouldEqual` (Just key)
+            pure unit
+
+      db <- IDBFactory.open dbName Nothing
+        { onUpgradeNeeded : Just callback
+        , onBlocked       : Nothing
+        }
+      tearDown dbName dbVersion db
+
+    it "getKey() (given)" do
+      let dbName        = "db-getKey"
+          dbVersion     = 1
+          storeName     = "store"
+          keyPath       = []
+          autoIncrement = true
+          callback db   = do
+            store <- IDBDatabase.createObjectStore db storeName { keyPath, autoIncrement }
+            _     <- launchAff $ do
+              key  <- IDBObjectStore.add store "patate" Nothing
+              mkey <- IDBObjectStore.getKey store (IDBKeyRange.only key)
+              mkey `shouldEqual` Just key
+            pure unit
+
+      db <- IDBFactory.open dbName Nothing
+        { onUpgradeNeeded : Just callback
+        , onBlocked       : Nothing
+        }
+      tearDown dbName dbVersion db
+
+    it "getKey() unknown" do
+      let dbName        = "db-getKey"
+          dbVersion     = 1
+          storeName     = "store"
+          keyPath       = []
+          autoIncrement = true
+          callback db   = do
+            store <- IDBDatabase.createObjectStore db storeName { keyPath, autoIncrement }
+            _     <- launchAff $ do
+              key  <- IDBObjectStore.add store "patate" Nothing
+              mkey <- IDBObjectStore.getKey store (IDBKeyRange.only 14)
+              mkey `shouldEqual` Nothing
+            pure unit
+
+      db <- IDBFactory.open dbName Nothing
+        { onUpgradeNeeded : Just callback
+        , onBlocked       : Nothing
+        }
+      tearDown dbName dbVersion db
+
+    it "getAllKeys(nothing, nothing)" do
+      let dbName        = "db-getAllKeys"
+          dbVersion     = 1
+          storeName     = "store"
+          keyPath       = []
+          autoIncrement = true
+          callback db   = do
+            store <- IDBDatabase.createObjectStore db storeName { keyPath, autoIncrement }
+            _     <- launchAff $ do
+              k1  <- IDBObjectStore.add store "patate" Nothing
+              k2  <- IDBObjectStore.add store "autruche" Nothing
+              keys <- IDBObjectStore.getAllKeys store Nothing Nothing
+              keys `shouldEqual` [k1,k2]
+            pure unit
+
+      db <- IDBFactory.open dbName Nothing
+        { onUpgradeNeeded : Just callback
+        , onBlocked       : Nothing
+        }
+      tearDown dbName dbVersion db
+
+    it "getAllKeys(lowerBound(1, true), nothing)" do
+      let dbName        = "db-getAllKeys"
+          dbVersion     = 1
+          storeName     = "store"
+          keyPath       = []
+          autoIncrement = true
+          callback db   = do
+            store <- IDBDatabase.createObjectStore db storeName { keyPath, autoIncrement }
+            _     <- launchAff $ do
+              k1  <- IDBObjectStore.add store "patate" Nothing
+              k2  <- IDBObjectStore.add store "autruche" Nothing
+              k3  <- IDBObjectStore.add store 14 Nothing
+              keys <- IDBObjectStore.getAllKeys store (Just $ IDBKeyRange.lowerBound 1 true) Nothing
+              keys `shouldEqual` [k2, k3]
+            pure unit
+
+      db <- IDBFactory.open dbName Nothing
+        { onUpgradeNeeded : Just callback
+        , onBlocked       : Nothing
+        }
+      tearDown dbName dbVersion db
+
+    it "openCursor(Nothing, Next)" do
+      let dbName        = "db-openCursor"
+          dbVersion     = 1
+          storeName     = "store"
+          keyPath       = []
+          autoIncrement = true
+          callback db   = do
+            store <- IDBDatabase.createObjectStore db storeName { keyPath, autoIncrement }
+            _     <- launchAff $ do
+              _ <- IDBObjectStore.openCursor store Nothing Next
+              pure unit
+            pure unit
+
+      db <- IDBFactory.open dbName Nothing
+        { onUpgradeNeeded : Just callback
+        , onBlocked       : Nothing
+        }
+      tearDown dbName dbVersion db
+
+    it "openCursor(Nothing, NextUnique)" do
+      let dbName        = "db-openCursor"
+          dbVersion     = 1
+          storeName     = "store"
+          keyPath       = []
+          autoIncrement = true
+          callback db   = do
+            store <- IDBDatabase.createObjectStore db storeName { keyPath, autoIncrement }
+            _     <- launchAff $ do
+              _ <- IDBObjectStore.openCursor store Nothing NextUnique
+              pure unit
+            pure unit
+
+      db <- IDBFactory.open dbName Nothing
+        { onUpgradeNeeded : Just callback
+        , onBlocked       : Nothing
+        }
+      tearDown dbName dbVersion db
+
+    it "openCursor(Nothing, Prev)" do
+      let dbName        = "db-openCursor"
+          dbVersion     = 1
+          storeName     = "store"
+          keyPath       = []
+          autoIncrement = true
+          callback db   = do
+            store <- IDBDatabase.createObjectStore db storeName { keyPath, autoIncrement }
+            _     <- launchAff $ do
+              _ <- IDBObjectStore.openCursor store Nothing Prev
+              pure unit
+            pure unit
+
+      db <- IDBFactory.open dbName Nothing
+        { onUpgradeNeeded : Just callback
+        , onBlocked       : Nothing
+        }
+      tearDown dbName dbVersion db
+
+    it "openCursor(Nothing, PrevUnique)" do
+      let dbName        = "db-openCursor"
+          dbVersion     = 1
+          storeName     = "store"
+          keyPath       = []
+          autoIncrement = true
+          callback db   = do
+            store <- IDBDatabase.createObjectStore db storeName { keyPath, autoIncrement }
+            _     <- launchAff $ do
+              _ <- IDBObjectStore.openCursor store Nothing PrevUnique
+              pure unit
+            pure unit
+
+      db <- IDBFactory.open dbName Nothing
+        { onUpgradeNeeded : Just callback
+        , onBlocked       : Nothing
+        }
+      tearDown dbName dbVersion db
+
+    it "openCursor(Just upperBound, Next)" do
+      let dbName        = "db-openCursor"
+          dbVersion     = 1
+          storeName     = "store"
+          keyPath       = []
+          autoIncrement = true
+          callback db   = do
+            store <- IDBDatabase.createObjectStore db storeName { keyPath, autoIncrement }
+            _     <- launchAff $ do
+              _ <- IDBObjectStore.openCursor store (Just $ IDBKeyRange.upperBound 10 true) Next
+              pure unit
+            pure unit
+
+      db <- IDBFactory.open dbName Nothing
+        { onUpgradeNeeded : Just callback
+        , onBlocked       : Nothing
+        }
+      tearDown dbName dbVersion db
+
+    it "openKeyCursor(Nothing, Next)" do
+      let dbName        = "db-openKeyCursor"
+          dbVersion     = 1
+          storeName     = "store"
+          keyPath       = []
+          autoIncrement = true
+          callback db   = do
+            store <- IDBDatabase.createObjectStore db storeName { keyPath, autoIncrement }
+            _     <- launchAff $ do
+              _ <- IDBObjectStore.openKeyCursor store Nothing Next
+              pure unit
+            pure unit
+
+      db <- IDBFactory.open dbName Nothing
+        { onUpgradeNeeded : Just callback
+        , onBlocked       : Nothing
+        }
+      tearDown dbName dbVersion db
+
+    it "openKeyCursor(Nothing, NextUnique)" do
+      let dbName        = "db-openKeyCursor"
+          dbVersion     = 1
+          storeName     = "store"
+          keyPath       = []
+          autoIncrement = true
+          callback db   = do
+            store <- IDBDatabase.createObjectStore db storeName { keyPath, autoIncrement }
+            _     <- launchAff $ do
+              _ <- IDBObjectStore.openKeyCursor store Nothing NextUnique
+              pure unit
+            pure unit
+
+      db <- IDBFactory.open dbName Nothing
+        { onUpgradeNeeded : Just callback
+        , onBlocked       : Nothing
+        }
+      tearDown dbName dbVersion db
+
+    it "openKeyCursor(Nothing, Prev)" do
+      let dbName        = "db-openKeyCursor"
+          dbVersion     = 1
+          storeName     = "store"
+          keyPath       = []
+          autoIncrement = true
+          callback db   = do
+            store <- IDBDatabase.createObjectStore db storeName { keyPath, autoIncrement }
+            _     <- launchAff $ do
+              _ <- IDBObjectStore.openKeyCursor store Nothing Prev
+              pure unit
+            pure unit
+
+      db <- IDBFactory.open dbName Nothing
+        { onUpgradeNeeded : Just callback
+        , onBlocked       : Nothing
+        }
+      tearDown dbName dbVersion db
+
+    it "openKeyCursor(Nothing, PrevUnique)" do
+      let dbName        = "db-openKeyCursor"
+          dbVersion     = 1
+          storeName     = "store"
+          keyPath       = []
+          autoIncrement = true
+          callback db   = do
+            store <- IDBDatabase.createObjectStore db storeName { keyPath, autoIncrement }
+            _     <- launchAff $ do
+              _ <- IDBObjectStore.openKeyCursor store Nothing PrevUnique
+              pure unit
+            pure unit
+
+      db <- IDBFactory.open dbName Nothing
+        { onUpgradeNeeded : Just callback
+        , onBlocked       : Nothing
+        }
+      tearDown dbName dbVersion db
+
+    it "openKeyCursor(Just upperBound, Next)" do
+      let dbName        = "db-openKeyCursor"
+          dbVersion     = 1
+          storeName     = "store"
+          keyPath       = []
+          autoIncrement = true
+          callback db   = do
+            store <- IDBDatabase.createObjectStore db storeName { keyPath, autoIncrement }
+            _     <- launchAff $ do
+              _ <- IDBObjectStore.openKeyCursor store (Just $ IDBKeyRange.upperBound 10 true) Next
+              pure unit
+            pure unit
+
+      db <- IDBFactory.open dbName Nothing
+        { onUpgradeNeeded : Just callback
+        , onBlocked       : Nothing
+        }
+      tearDown dbName dbVersion db
+
+    it "store.autoIncrement[true]" do
+      let dbName        = "db-autoIncrement"
+          dbVersion     = 1
+          storeName     = "store"
+          keyPath       = []
+          autoIncrement = true
+          callback db   = do
+            store <- IDBDatabase.createObjectStore db storeName { keyPath, autoIncrement }
+            let autoIncrement' = IDBObjectStore.autoIncrement store
+            _ <- launchAff $ autoIncrement `shouldEqual` autoIncrement'
+            pure unit
+
+      db <- IDBFactory.open dbName Nothing
+        { onUpgradeNeeded : Just callback
+        , onBlocked       : Nothing
+        }
+      tearDown dbName dbVersion db
+
+    it "store.autoIncrement[false]" do
+      let dbName        = "db-autoIncrement"
+          dbVersion     = 1
+          storeName     = "store"
+          keyPath       = []
+          autoIncrement = false
+          callback db   = do
+            store <- IDBDatabase.createObjectStore db storeName { keyPath, autoIncrement }
+            let autoIncrement' = IDBObjectStore.autoIncrement store
+            _ <- launchAff $ autoIncrement `shouldEqual` autoIncrement'
+            pure unit
+
+      db <- IDBFactory.open dbName Nothing
+        { onUpgradeNeeded : Just callback
+        , onBlocked       : Nothing
+        }
+      tearDown dbName dbVersion db
+
+    it "store.keyPath[\"patate\"]" do
+      let dbName        = "db-keyPath"
+          dbVersion     = 1
+          storeName     = "store"
+          keyPath       = ["patate"]
+          autoIncrement = false
+          callback db   = do
+            store <- IDBDatabase.createObjectStore db storeName { keyPath, autoIncrement }
+            let keyPath' = IDBObjectStore.keyPath store
+            _ <- launchAff $ keyPath `shouldEqual` keyPath'
+            pure unit
+
+      db <- IDBFactory.open dbName Nothing
+        { onUpgradeNeeded : Just callback
+        , onBlocked       : Nothing
+        }
+      tearDown dbName dbVersion db
+
+    it "store.indexNames[]" do
+      let dbName        = "db-indexNames"
+          dbVersion     = 1
+          storeName     = "store"
+          keyPath       = []
+          autoIncrement = false
+          callback db   = do
+            store <- IDBDatabase.createObjectStore db storeName { keyPath, autoIncrement }
+            let indexNames = IDBObjectStore.indexNames store
+            _ <- launchAff $ indexNames `shouldEqual` []
+            pure unit
+
+      db <- IDBFactory.open dbName Nothing
+        { onUpgradeNeeded : Just callback
+        , onBlocked       : Nothing
+        }
+      tearDown dbName dbVersion db
+
+    it "store.name[\"store\"]" do
+      let dbName        = "db-indexNames"
+          dbVersion     = 1
+          storeName     = "store"
+          keyPath       = []
+          autoIncrement = false
+          callback db   = do
+            store <- IDBDatabase.createObjectStore db storeName { keyPath, autoIncrement }
+            let storeName' = IDBObjectStore.name store
+            _ <- launchAff $ storeName `shouldEqual` storeName'
+            pure unit
+
+      db <- IDBFactory.open dbName Nothing
+        { onUpgradeNeeded : Just callback
+        , onBlocked       : Nothing
+        }
+      tearDown dbName dbVersion db
