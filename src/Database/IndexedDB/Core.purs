@@ -1,6 +1,7 @@
 module Database.IndexedDB.Core
   ( class FromString, parse
   , INDEXED_DB
+  , IDB
   , CursorDirection(..)
   , CursorSource(..)
   , Database
@@ -23,8 +24,10 @@ import Data.Maybe                  (Maybe(..))
 import Database.IndexedDB.IDBKey
 
 
-class FromString a where
-  parse :: String -> Maybe a
+foreign import data INDEXED_DB :: Effect
+
+
+foreign import data IDB :: Effect
 
 
 data CursorDirection = Next | NextUnique | Prev | PrevUnique
@@ -37,9 +40,6 @@ data TransactionMode = ReadOnly | ReadWrite | VersionChange
 
 
 type KeyPath   = Array String
-
-
-foreign import data INDEXED_DB :: Effect
 
 
 foreign import data Database :: Type
@@ -61,6 +61,10 @@ foreign import data Transaction :: Type
 
 
 foreign import data ValueCursor :: Type
+
+
+class FromString a where
+  parse :: String -> Maybe a
 
 
 foreign import _showCursor :: forall cursor. cursor -> String

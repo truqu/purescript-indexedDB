@@ -14,18 +14,18 @@ import Database.IndexedDB.Core
 --------------------
 -- INTERFACE
 --
-type OpenRequest eff =
-  { onBlocked       :: Maybe (Eff (idb :: INDEXED_DB | eff) Unit)
-  , onUpgradeNeeded :: Maybe (Database -> Eff (idb :: INDEXED_DB | eff) Unit)
+type OpenRequest e =
+  { onBlocked       :: Maybe (Eff (idb :: IDB | e) Unit)
+  , onUpgradeNeeded :: Maybe (Database -> Eff (idb :: IDB | e) Unit)
   }
 
 
-deleteDatabase :: forall eff. String -> Aff (idb :: INDEXED_DB | eff) Int
+deleteDatabase :: forall e. String -> Aff (idb :: IDB | e) Int
 deleteDatabase =
   _deleteDatabase
 
 
-open :: forall eff .  String -> Maybe Int -> OpenRequest eff -> Aff (idb :: INDEXED_DB | eff) Database
+open :: forall e.  String -> Maybe Int -> OpenRequest e -> Aff (idb :: IDB | e) Database
 open name mver req =
   Fn.runFn4 _open fromMaybe name mver req
 
@@ -33,7 +33,7 @@ open name mver req =
 --------------------
 -- FFI
 --
-foreign import _deleteDatabase :: forall eff. String -> Aff (idb :: INDEXED_DB | eff) Int
+foreign import _deleteDatabase :: forall e. String -> Aff (idb :: IDB | e) Int
 
 
-foreign import _open :: forall a eff. Fn4 (a -> Maybe a -> a) String (Maybe Int) (OpenRequest eff) (Aff (idb :: INDEXED_DB | eff) Database)
+foreign import _open :: forall a e. Fn4 (a -> Maybe a -> a) String (Maybe Int) (OpenRequest e) (Aff (idb :: IDB | e) Database)

@@ -29,11 +29,11 @@ import Database.IndexedDB.Core
 -- INTERFACES
 --
 class IDBCursor cursor where
-    advance :: forall eff. cursor -> Int -> Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) Unit
-    continue :: forall eff. cursor -> Maybe Key -> Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) Unit
-    continuePrimaryKey :: forall eff. cursor -> Key -> Key -> Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) Unit
-    delete :: forall eff. cursor -> Aff (idb ::INDEXED_DB, exception :: EXCEPTION | eff) Unit
-    update :: forall val eff. cursor -> val -> Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) Key
+    advance :: forall e. cursor -> Int -> Eff (idb :: IDB, exception :: EXCEPTION | e) Unit
+    continue :: forall e. cursor -> Maybe Key -> Eff (idb :: IDB, exception :: EXCEPTION | e) Unit
+    continuePrimaryKey :: forall e. cursor -> Key -> Key -> Eff (idb :: IDB, exception :: EXCEPTION | e) Unit
+    delete :: forall e. cursor -> Aff (idb ::IDB, exception :: EXCEPTION | e) Unit
+    update :: forall val e. cursor -> val -> Aff (idb :: IDB, exception :: EXCEPTION | e) Key
 
 
 --------------------
@@ -110,16 +110,16 @@ instance valueCursorKeyCursor :: IDBCursor ValueCursor where
 --------------------
 -- FFI
 --
-foreign import _advance :: forall cursor eff. Fn2 cursor Int (Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) Unit)
+foreign import _advance :: forall cursor e. Fn2 cursor Int (Eff (idb :: IDB, exception :: EXCEPTION | e) Unit)
 
 
-foreign import _continue :: forall cursor eff. Fn2 cursor (Nullable Key) (Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) Unit)
+foreign import _continue :: forall cursor e. Fn2 cursor (Nullable Key) (Eff (idb :: IDB, exception :: EXCEPTION | e) Unit)
 
 
-foreign import _continuePrimaryKey :: forall cursor eff. Fn3 cursor Key Key (Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) Unit)
+foreign import _continuePrimaryKey :: forall cursor e. Fn3 cursor Key Key (Eff (idb :: IDB, exception :: EXCEPTION | e) Unit)
 
 
-foreign import _delete :: forall cursor eff. cursor -> (Aff (idb ::INDEXED_DB, exception :: EXCEPTION | eff) Unit)
+foreign import _delete :: forall cursor e. cursor -> (Aff (idb ::IDB, exception :: EXCEPTION | e) Unit)
 
 
 foreign import _direction :: forall cursor. Fn2 (String -> Nullable CursorDirection) cursor CursorDirection
@@ -134,7 +134,7 @@ foreign import _primaryKey :: forall cursor. cursor -> Key
 foreign import _source :: forall cursor. Fn3 (ObjectStore -> CursorSource) (Index -> CursorSource) cursor CursorSource
 
 
-foreign import _update :: forall cursor eff. Fn2 cursor Foreign (Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) Key)
+foreign import _update :: forall cursor e. Fn2 cursor Foreign (Aff (idb :: IDB, exception :: EXCEPTION | e) Key)
 
 
 foreign import _value :: forall cursor val. cursor -> val

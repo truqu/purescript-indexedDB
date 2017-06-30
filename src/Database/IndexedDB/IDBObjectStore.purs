@@ -21,7 +21,7 @@ import Data.Function.Uncurried              (Fn2, Fn3, Fn4)
 import Data.Maybe                           (Maybe)
 import Data.Nullable                        (Nullable, toNullable)
 
-import Database.IndexedDB.Core              (INDEXED_DB, Index, KeyRange, KeyPath, ObjectStore)
+import Database.IndexedDB.Core              (IDB, Index, KeyRange, KeyPath, ObjectStore)
 import Database.IndexedDB.IDBIndex.Internal (class IDBIndex, IDBIndexParameters, count, get, getAllKeys, getKey, openCursor, openKeyCursor)
 import Database.IndexedDB.IDBKey.Internal   (Key(Key), extractForeign)
 
@@ -30,13 +30,13 @@ import Database.IndexedDB.IDBKey.Internal   (Key(Key), extractForeign)
 -- INTERFACES
 --
 class IDBObjectStore store where
-  add :: forall value eff. store -> value -> Maybe Key -> Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) Key
-  clear :: forall eff. store -> Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) Unit
-  createIndex :: forall eff. store -> IndexName -> KeyPath -> IDBIndexParameters -> Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) Index
-  delete :: forall eff. store -> KeyRange -> Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) Unit
-  deleteIndex :: forall eff. store -> IndexName -> Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) Unit
-  index :: forall eff. store -> IndexName -> Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) Index
-  put :: forall value eff. store -> value -> Maybe Key -> Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) Key
+  add :: forall value e. store -> value -> Maybe Key -> Aff (idb :: IDB | e) Key
+  clear :: forall e. store -> Aff (idb :: IDB | e) Unit
+  createIndex :: forall e. store -> IndexName -> KeyPath -> IDBIndexParameters -> Eff (idb :: IDB, exception :: EXCEPTION | e) Index
+  delete :: forall e. store -> KeyRange -> Aff (idb :: IDB | e) Unit
+  deleteIndex :: forall e. store -> IndexName -> Eff (idb :: IDB, exception :: EXCEPTION | e) Unit
+  index :: forall e. store -> IndexName -> Eff (idb :: IDB, exception :: EXCEPTION | e) Index
+  put :: forall value e. store -> value -> Maybe Key -> Aff (idb :: IDB | e) Key
 
 
 type IndexName = String
@@ -107,25 +107,25 @@ defaultParameters =
 --------------------
 -- FFI
 --
-foreign import _add :: forall value eff. Fn3 ObjectStore value (Nullable Foreign) (Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) Foreign)
+foreign import _add :: forall value e. Fn3 ObjectStore value (Nullable Foreign) (Aff (idb :: IDB | e) Foreign)
 
 
 foreign import _autoIncrement :: ObjectStore -> Boolean
 
 
-foreign import _clear :: forall eff. ObjectStore -> Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) Unit
+foreign import _clear :: forall e. ObjectStore -> Aff (idb :: IDB | e) Unit
 
 
-foreign import _createIndex :: forall eff. Fn4 ObjectStore String (Array String) { unique :: Boolean, multiEntry :: Boolean } (Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) Index)
+foreign import _createIndex :: forall e. Fn4 ObjectStore String (Array String) { unique :: Boolean, multiEntry :: Boolean } (Eff (idb :: IDB | e) Index)
 
 
-foreign import _delete :: forall eff. Fn2 ObjectStore KeyRange (Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) Unit)
+foreign import _delete :: forall e. Fn2 ObjectStore KeyRange (Aff (idb :: IDB | e) Unit)
 
 
-foreign import _deleteIndex :: forall eff. Fn2 ObjectStore String (Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) Unit)
+foreign import _deleteIndex :: forall e. Fn2 ObjectStore String (Eff (idb :: IDB | e) Unit)
 
 
-foreign import _index :: forall eff. Fn2 ObjectStore String (Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) Index)
+foreign import _index :: forall e. Fn2 ObjectStore String (Eff (idb :: IDB | e) Index)
 
 
 foreign import _indexNames :: ObjectStore -> Array String
@@ -137,4 +137,4 @@ foreign import _keyPath :: ObjectStore -> Array String
 foreign import _name :: ObjectStore -> String
 
 
-foreign import _put :: forall value eff. Fn3 ObjectStore value (Nullable Foreign) (Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) Foreign)
+foreign import _put :: forall value e. Fn3 ObjectStore value (Nullable Foreign) (Aff (idb :: IDB | e) Foreign)

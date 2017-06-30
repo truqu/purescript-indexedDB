@@ -21,10 +21,10 @@ import Database.IndexedDB.IDBObjectStore (IDBObjectStoreParameters)
 -- INTERFACE
 --
 class IDBDatabase db where
-  close :: forall eff. db -> Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) Unit
-  createObjectStore :: forall eff. db -> StoreName -> IDBObjectStoreParameters -> Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) ObjectStore
-  deleteObjectStore :: forall eff .  db -> StoreName -> Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) ObjectStore
-  transaction :: forall eff. db -> KeyPath -> TransactionMode -> Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) Transaction
+  close :: forall e. db -> Eff (idb :: IDB, exception :: EXCEPTION | e) Unit
+  createObjectStore :: forall e. db -> StoreName -> IDBObjectStoreParameters -> Eff (idb :: IDB, exception :: EXCEPTION | e) ObjectStore
+  deleteObjectStore :: forall e.  db -> StoreName -> Eff (idb :: IDB, exception :: EXCEPTION | e) ObjectStore
+  transaction :: forall e. db -> KeyPath -> TransactionMode -> Eff (idb :: IDB, exception :: EXCEPTION | e) Transaction
 
 
 type StoreName = String
@@ -49,6 +49,13 @@ version =
 
 
 --------------------
+-- EVENT HANDLERS
+--
+-- onAbort :: forall e. Database -> Eff (idb :: IDB, exception :: EXCEPTION | e) Unit -> Eff (idb :: IDB, exception :: EXCEPTION | e) Unit
+
+
+
+--------------------
 -- INSTANCES
 --
 instance idbDatabaseDatabase :: IDBDatabase Database where
@@ -68,13 +75,13 @@ instance idbDatabaseDatabase :: IDBDatabase Database where
 --------------------
 -- FFI
 --
-foreign import _close :: forall db eff. db -> Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) Unit
+foreign import _close :: forall db e. db -> Eff (idb :: IDB, exception :: EXCEPTION | e) Unit
 
 
-foreign import _createObjectStore :: forall db eff. Fn3 db String { keyPath :: Array String, autoIncrement :: Boolean } (Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) ObjectStore)
+foreign import _createObjectStore :: forall db e. Fn3 db String { keyPath :: Array String, autoIncrement :: Boolean } (Eff (idb :: IDB, exception :: EXCEPTION | e) ObjectStore)
 
 
-foreign import _deleteObjectStore :: forall db eff. Fn2 db String (Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) ObjectStore)
+foreign import _deleteObjectStore :: forall db e. Fn2 db String (Eff (idb :: IDB, exception :: EXCEPTION | e) ObjectStore)
 
 
 foreign import _name :: Database -> String
@@ -83,7 +90,7 @@ foreign import _name :: Database -> String
 foreign import _objectStoreNames :: Database -> Array String
 
 
-foreign import _transaction :: forall db eff. Fn4 (db -> String) db (Array String) TransactionMode (Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) Transaction)
+foreign import _transaction :: forall db e. Fn4 (db -> String) db (Array String) TransactionMode (Eff (idb :: IDB, exception :: EXCEPTION | e) Transaction)
 
 
 foreign import _version :: Database -> Int

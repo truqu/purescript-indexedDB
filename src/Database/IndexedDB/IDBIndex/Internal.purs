@@ -3,14 +3,13 @@ module Database.IndexedDB.IDBIndex.Internal where
 import Prelude
 
 import Control.Monad.Aff           (Aff)
-import Control.Monad.Eff.Exception (EXCEPTION)
 import Data.Foreign                (Foreign, unsafeFromForeign)
 import Data.Function.Uncurried      as Fn
 import Data.Function.Uncurried     (Fn2, Fn3)
 import Data.Maybe                  (Maybe)
 import Data.Nullable               (Nullable, toMaybe, toNullable)
 
-import Database.IndexedDB.Core     (INDEXED_DB, CursorDirection, Index, Key, KeyCursor, KeyRange,
+import Database.IndexedDB.Core     (IDB, CursorDirection, Index, Key, KeyCursor, KeyRange,
                                    KeyPath, ObjectStore, ValueCursor)
 
 
@@ -18,12 +17,12 @@ import Database.IndexedDB.Core     (INDEXED_DB, CursorDirection, Index, Key, Key
 -- INTERFACES
 --
 class IDBIndex index where
-  count :: forall eff. index -> Maybe KeyRange -> Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) Int
-  get :: forall a eff. index -> KeyRange -> Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) (Maybe a)
-  getAllKeys :: forall eff. index -> Maybe KeyRange -> Maybe Int -> Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) (Array Key)
-  getKey :: forall eff. index -> KeyRange -> Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) (Maybe Key)
-  openCursor :: forall eff. index -> Maybe KeyRange -> CursorDirection -> Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) ValueCursor
-  openKeyCursor :: forall eff. index -> Maybe KeyRange -> CursorDirection -> Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) KeyCursor
+  count :: forall e. index -> Maybe KeyRange -> Aff (idb :: IDB | e) Int
+  get :: forall a e. index -> KeyRange -> Aff (idb :: IDB | e) (Maybe a)
+  getAllKeys :: forall e. index -> Maybe KeyRange -> Maybe Int -> Aff (idb :: IDB | e) (Array Key)
+  getKey :: forall e. index -> KeyRange -> Aff (idb :: IDB | e) (Maybe Key)
+  openCursor :: forall e. index -> Maybe KeyRange -> CursorDirection -> Aff (idb :: IDB | e) ValueCursor
+  openKeyCursor :: forall e. index -> Maybe KeyRange -> CursorDirection -> Aff (idb :: IDB | e) KeyCursor
 
 
 type IDBIndexParameters =
@@ -128,19 +127,19 @@ foreign import _objectStore :: Index -> ObjectStore
 foreign import _unique :: Index -> Boolean
 
 
-foreign import _count :: forall index eff. Fn2 index (Nullable KeyRange) (Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) Int)
+foreign import _count :: forall index e. Fn2 index (Nullable KeyRange) (Aff (idb :: IDB | e) Int)
 
 
-foreign import _get :: forall index eff. Fn2 index KeyRange (Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) (Nullable Foreign))
+foreign import _get :: forall index e. Fn2 index KeyRange (Aff (idb :: IDB | e) (Nullable Foreign))
 
 
-foreign import _getAllKeys :: forall index eff. Fn3 index (Nullable KeyRange) (Nullable Int) (Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) (Array Key))
+foreign import _getAllKeys :: forall index e. Fn3 index (Nullable KeyRange) (Nullable Int) (Aff (idb :: IDB | e) (Array Key))
 
 
-foreign import _getKey :: forall index eff. Fn2 index KeyRange (Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) (Nullable Key))
+foreign import _getKey :: forall index e. Fn2 index KeyRange (Aff (idb :: IDB | e) (Nullable Key))
 
 
-foreign import _openCursor :: forall index eff. Fn3 index (Nullable KeyRange) String (Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) ValueCursor)
+foreign import _openCursor :: forall index e. Fn3 index (Nullable KeyRange) String (Aff (idb :: IDB | e) ValueCursor)
 
 
-foreign import _openKeyCursor :: forall index eff. Fn3 index (Nullable KeyRange) String (Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) KeyCursor)
+foreign import _openKeyCursor :: forall index e. Fn3 index (Nullable KeyRange) String (Aff (idb :: IDB | e) KeyCursor)

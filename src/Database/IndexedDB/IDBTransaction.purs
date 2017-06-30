@@ -13,15 +13,15 @@ import Data.Function.Uncurried     (Fn2, Fn4)
 import Data.Maybe                  (Maybe)
 import Data.Nullable               (Nullable, toMaybe)
 
-import Database.IndexedDB.Core     (INDEXED_DB, ObjectStore, Transaction, TransactionMode(..))
+import Database.IndexedDB.Core     (IDB, ObjectStore, Transaction, TransactionMode(..))
 
 
 --------------------
 -- INTERFACES
 --
 class IDBTransaction tx where
-  abort :: forall eff. tx -> Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) Unit
-  objectStore :: forall eff. tx -> String -> Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) ObjectStore
+  abort :: forall e. tx -> Eff (idb :: IDB, exception :: EXCEPTION | e) Unit
+  objectStore :: forall e. tx -> String -> Eff (idb :: IDB, exception :: EXCEPTION | e) ObjectStore
 
 
 --------------------
@@ -51,7 +51,7 @@ instance idbTransactionTransaction :: IDBTransaction Transaction where
 --------------------
 -- FFI
 --
-foreign import _abort :: forall tx eff. tx -> Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) Unit
+foreign import _abort :: forall tx e. tx -> Eff (idb :: IDB, exception :: EXCEPTION | e) Unit
 
 
 foreign import _error :: Transaction -> (Nullable Error)
@@ -60,4 +60,4 @@ foreign import _error :: Transaction -> (Nullable Error)
 foreign import _mode :: Fn4 TransactionMode TransactionMode TransactionMode Transaction TransactionMode
 
 
-foreign import _objectStore :: forall tx eff. Fn2 tx String (Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) ObjectStore)
+foreign import _objectStore :: forall tx e. Fn2 tx String (Eff (idb :: IDB, exception :: EXCEPTION | e) ObjectStore)
