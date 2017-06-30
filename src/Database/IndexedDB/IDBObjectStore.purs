@@ -19,7 +19,7 @@ import Data.Maybe                           (Maybe)
 import Data.Nullable                        (Nullable, toNullable)
 
 import Database.IndexedDB.Core              (INDEXED_DB, Index, KeyRange, ObjectStore)
-import Database.IndexedDB.IDBIndex.Internal (class IDBIndex, get, getAllKeys, getKey, openCursor, openKeyCursor)
+import Database.IndexedDB.IDBIndex.Internal (class IDBIndex, count, get, getAllKeys, getKey, openCursor, openKeyCursor)
 import Database.IndexedDB.IDBKey.Internal   (Key(Key), extractForeign)
 
 
