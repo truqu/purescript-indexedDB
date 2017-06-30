@@ -4,9 +4,10 @@ import Prelude
 
 import Control.Monad.Aff                 (Aff, launchAff, forkAff, delay, attempt)
 import Control.Monad.Aff.AVar            (AVAR, makeVar, makeVar', modifyVar, peekVar, putVar, takeVar)
+import Control.Monad.Aff.Console         (log)
 import Control.Monad.Eff                 (Eff)
 import Control.Monad.Eff.Class           (liftEff)
-import Control.Monad.Eff.Exception       (EXCEPTION)
+import Control.Monad.Eff.Exception       (EXCEPTION, message)
 import Control.Monad.Eff.Now             (NOW, now)
 import Data.Date                          as Date
 import Data.DateTime                      as DateTime
@@ -18,12 +19,13 @@ import Data.Maybe                        (Maybe(..), isNothing, maybe)
 import Data.Time.Duration                (Milliseconds(..))
 import Data.Traversable                  (traverse)
 import Data.Tuple                        (Tuple(..), uncurry)
-import Test.Spec                         (describe, describeOnly, it, itOnly)
+import Test.Spec                         (describe, describe, it, it)
 import Test.Spec.Assertions              (shouldEqual, fail)
 import Test.Spec.Mocha                   (MOCHA, runMocha)
 
 import Database.IndexedDB.Core
 import Database.IndexedDB.IDBKey
+import Database.IndexedDB.IDBCursor       as IDBCursor
 import Database.IndexedDB.IDBDatabase     as IDBDatabase
 import Database.IndexedDB.IDBFactory      as IDBFactory
 import Database.IndexedDB.IDBIndex        as IDBIndex
@@ -38,7 +40,7 @@ launchAff' :: forall a e. Aff e a -> Eff (exception :: EXCEPTION | e) Unit
 launchAff' aff =
   pure unit <* (launchAff aff)
 
-main :: forall eff. Eff (now :: NOW, mocha :: MOCHA, idb :: IDB, exception :: EXCEPTION, avar :: AVAR | eff) Unit
+-- main :: forall eff. Eff (now :: NOW, mocha :: MOCHA, idb :: IDB, exception :: EXCEPTION, avar :: AVAR | eff) Unit
 main = runMocha do
   describe "IDBFactory" do
     let
@@ -627,7 +629,127 @@ main = runMocha do
         }
       tearDown db
 
-    it "multiEntry - adding keys" do
+    it "openKeyCursor() - throw InvalidStateError on index deleted by aborted upgrade" do
+      res <- attempt $ setup
+        { storeParams     : { keyPath: ["key"], autoIncrement: false }
+        , indexParams     : IDBIndex.defaultParameters
+        , keyPath         : ["indexedProperty"]
+        , values          : [ { key: 14, indexedProperty: "patate" } :+: Nothing
+                            ]
+        , onUpgradeNeeded : Just $ \db tx index -> launchAff' do
+            IDBTransaction.onAbort tx (pure unit)
+            IDBDatabase.onAbort db (pure unit)
+            IDBTransaction.abort tx
+            cursor <- attempt $ IDBIndex.openKeyCursor index Nothing Next
+            case cursor of
+              Right _  -> fail "expected InvalidStateError"
+              Left err -> message err `shouldEqual` "InvalidStateError"
+        }
+      case res of
+        Right _ -> fail "expected InvalidStateError"
+        _       -> pure unit
+
+    it "openKeyCursor() - throw TransactionInactiveError on aborted transaction" do
+      { db } <- setup
+        { storeParams     : { keyPath: ["key"], autoIncrement: false }
+        , indexParams     : IDBIndex.defaultParameters
+        , keyPath         : ["indexedProperty"]
+        , values          : [ { key: 14, indexedProperty: "patate" } :+: Nothing
+                            ]
+        , onUpgradeNeeded : Nothing
+        }
+
+      tx    <- IDBDatabase.transaction db ["store"] ReadOnly
+      store <- IDBTransaction.objectStore tx "store"
+      index <- IDBObjectStore.index store "index"
+      IDBTransaction.onAbort tx (pure unit)
+      IDBTransaction.abort tx
+      cursor <- attempt $ IDBIndex.openKeyCursor index Nothing Next
+      case cursor of
+        Right _  -> fail "expected TransactionInactiveError"
+        Left err -> message err `shouldEqual` "TransactionInactiveError"
+
+      tearDown db
+
+    it "openKeyCursor() - throw InvalidStateError when the index is deleted" do
+      { db } <- setup
+        { storeParams     : { keyPath: ["key"], autoIncrement: false }
+        , indexParams     : IDBIndex.defaultParameters
+        , keyPath         : ["indexedProperty"]
+        , values          : [ { key: 14, indexedProperty: "patate" } :+: Nothing
+                            ]
+        , onUpgradeNeeded : Just $ \db tx index -> launchAff' do
+            store <- IDBTransaction.objectStore tx "store"
+            IDBObjectStore.deleteIndex store "index"
+            cursor <- attempt $ IDBIndex.openKeyCursor index Nothing Next
+            case cursor of
+              Right _  -> fail "expected InvalidStateError"
+              Left err -> message err `shouldEqual` "InvalidStateError"
+        }
+
+      tearDown db
+
+    it "openCursor() - throw InvalidStateError on index deleted by aborted upgrade" do
+      res <- attempt $ setup
+        { storeParams     : { keyPath: ["key"], autoIncrement: false }
+        , indexParams     : IDBIndex.defaultParameters
+        , keyPath         : ["indexedProperty"]
+        , values          : [ { key: 14, indexedProperty: "patate" } :+: Nothing
+                            ]
+        , onUpgradeNeeded : Just $ \db tx index -> launchAff' do
+            IDBTransaction.onAbort tx (pure unit)
+            IDBDatabase.onAbort db (pure unit)
+            IDBTransaction.abort tx
+            cursor <- attempt $ IDBIndex.openCursor index Nothing Next
+            case cursor of
+              Right _  -> fail "expected InvalidStateError"
+              Left err -> message err `shouldEqual` "InvalidStateError"
+        }
+      case res of
+        Right _ -> fail "expected InvalidStateError"
+        _       -> pure unit
+
+    it "openCursor() - throw TransactionInactiveError on aborted transaction" do
+      { db } <- setup
+        { storeParams     : { keyPath: ["key"], autoIncrement: false }
+        , indexParams     : IDBIndex.defaultParameters
+        , keyPath         : ["indexedProperty"]
+        , values          : [ { key: 14, indexedProperty: "patate" } :+: Nothing
+                            ]
+        , onUpgradeNeeded : Nothing
+        }
+
+      tx    <- IDBDatabase.transaction db ["store"] ReadOnly
+      store <- IDBTransaction.objectStore tx "store"
+      index <- IDBObjectStore.index store "index"
+      IDBTransaction.onAbort tx (pure unit)
+      IDBTransaction.abort tx
+      cursor <- attempt $ IDBIndex.openCursor index Nothing Next
+      case cursor of
+        Right _  -> fail "expected TransactionInactiveError"
+        Left err -> message err `shouldEqual` "TransactionInactiveError"
+
+      tearDown db
+
+    it "openCursor() - throw InvalidStateError when the index is deleted" do
+      { db } <- setup
+        { storeParams     : { keyPath: ["key"], autoIncrement: false }
+        , indexParams     : IDBIndex.defaultParameters
+        , keyPath         : ["indexedProperty"]
+        , values          : [ { key: 14, indexedProperty: "patate" } :+: Nothing
+                            ]
+        , onUpgradeNeeded : Just $ \db tx index -> launchAff' do
+            store <- IDBTransaction.objectStore tx "store"
+            IDBObjectStore.deleteIndex store "index"
+            cursor <- attempt $ IDBIndex.openCursor index Nothing Next
+            case cursor of
+              Right _  -> fail "expected InvalidStateError"
+              Left err -> message err `shouldEqual` "InvalidStateError"
+        }
+
+      tearDown db
+
+    it "getKey() - multiEntry - adding keys" do
       { db } <- setup
         { storeParams     : IDBObjectStore.defaultParameters
         , indexParams     : { unique: false, multiEntry: true }
@@ -645,4 +767,25 @@ main = runMocha do
             key <- IDBIndex.getKey index (IDBKeyRange.only "bob")
             key `shouldEqual` (Just $ toKey 2)
         }
+      tearDown db
+
+
+    it "get() - returns the record with the first key in the range" do
+      { db } <- setup
+        { storeParams     : { keyPath: ["key"], autoIncrement: false }
+        , indexParams     : IDBIndex.defaultParameters
+        , keyPath         : ["indexedProperty"]
+        , values          : [ { key: 14, indexedProperty: "patate" } :+: Nothing
+                            , { key: 42, indexedProperty: "autruche" } :+: Nothing
+                            , { key: 1337, indexedProperty: "baguette" } :+: Nothing
+                            ]
+        , onUpgradeNeeded : Nothing
+        }
+
+      tx    <- IDBDatabase.transaction db ["store"] ReadOnly
+      store <- IDBTransaction.objectStore tx "store"
+      index <- IDBObjectStore.index store "index"
+      val   <- IDBIndex.get index (IDBKeyRange.lowerBound "autruche" false)
+      ((\r -> r.key) <$> val) `shouldEqual` (Just 42)
+
       tearDown db
