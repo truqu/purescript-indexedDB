@@ -67,10 +67,14 @@ exports._primaryKey = function _primaryKey(cursor) {
 };
 
 exports._source = function _source(IDBObjectStore, IDBIndex, cursor) {
-    console.log(typeof cursor.source);
-    console.log(Object.getPrototypeOf(cursor.source));
-    console.log(cursor.source);
-    throw new Error('TODO');
+    switch (cursor.source.constructor.name) {
+    case 'IDBIndex':
+        return IDBIndex(cursor.source);
+    case 'IDBObjectStore':
+        return IDBObjectStore(cursor.source);
+    default:
+        throw new Error('UnexpectedCursorSource');
+    }
 };
 
 exports._update = function _update(cursor, value) {
