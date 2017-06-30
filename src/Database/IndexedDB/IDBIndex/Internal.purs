@@ -21,8 +21,8 @@ class IDBIndex index where
   get :: forall a eff. index -> KeyRange -> Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) (Maybe a)
   getAllKeys :: forall eff. index -> Maybe KeyRange -> Maybe Int -> Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) (Array Key)
   getKey :: forall eff. index -> KeyRange -> Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) (Maybe Key)
-  openCursor :: forall eff. index -> Maybe KeyRange -> Maybe CursorDirection -> Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) ValueCursor
-  openKeyCursor :: forall eff. index -> Maybe KeyRange -> Maybe CursorDirection -> Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) KeyCursor
+  openCursor :: forall eff. index -> Maybe KeyRange -> CursorDirection -> Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) ValueCursor
+  openKeyCursor :: forall eff. index -> Maybe KeyRange -> CursorDirection -> Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) KeyCursor
 
 
 --------------------
@@ -70,10 +70,10 @@ instance idbIndexIndex :: IDBIndex Index where
     toMaybe <$> Fn.runFn2 _getKey index range
 
   openCursor index range dir =
-    Fn.runFn3 _openCursor index (toNullable range) (toNullable dir)
+    Fn.runFn3 _openCursor index (toNullable range) (show dir)
 
   openKeyCursor index range dir =
-    Fn.runFn3 _openKeyCursor index (toNullable range) (toNullable dir)
+    Fn.runFn3 _openKeyCursor index (toNullable range) (show dir)
 
 
 instance idbIndexObjectStore :: IDBIndex ObjectStore where
@@ -90,10 +90,10 @@ instance idbIndexObjectStore :: IDBIndex ObjectStore where
     toMaybe <$> Fn.runFn2 _getKey store range
 
   openCursor store range dir =
-    Fn.runFn3 _openCursor store (toNullable range) (toNullable dir)
+    Fn.runFn3 _openCursor store (toNullable range) (show dir)
 
   openKeyCursor store range dir =
-    Fn.runFn3 _openKeyCursor store (toNullable range) (toNullable dir)
+    Fn.runFn3 _openKeyCursor store (toNullable range) (show dir)
 
 
 --------------------
@@ -126,7 +126,7 @@ foreign import _getAllKeys :: forall index eff. Fn3 index (Nullable KeyRange) (N
 foreign import _getKey :: forall index eff. Fn2 index KeyRange (Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) (Nullable Key))
 
 
-foreign import _openCursor :: forall index eff. Fn3 index (Nullable KeyRange) (Nullable CursorDirection) (Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) ValueCursor)
+foreign import _openCursor :: forall index eff. Fn3 index (Nullable KeyRange) String (Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) ValueCursor)
 
 
-foreign import _openKeyCursor :: forall index eff. Fn3 index (Nullable KeyRange) (Nullable CursorDirection) (Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) KeyCursor)
+foreign import _openKeyCursor :: forall index eff. Fn3 index (Nullable KeyRange) String (Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) KeyCursor)
