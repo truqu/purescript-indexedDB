@@ -34,12 +34,16 @@ import Database.IndexedDB.IDBTransaction  as IDBTransaction
 
 infixr 7 Tuple as :+:
 
+launchAff' :: forall a e. Aff e a -> Eff (exception :: EXCEPTION | e) Unit
+launchAff' aff =
+  pure unit <* (launchAff aff)
+
 main :: forall eff. Eff (now :: NOW, mocha :: MOCHA, idb :: IDB, exception :: EXCEPTION, avar :: AVAR | eff) Unit
 main = runMocha do
   describe "IDBFactory" do
     let
         tearDown name version db = do
-          liftEff $ IDBDatabase.close db
+          IDBDatabase.close db
           version' <- IDBFactory.deleteDatabase name
           version' `shouldEqual` version
 
@@ -73,7 +77,7 @@ main = runMocha do
         , onBlocked : Nothing
         }
       IDBDatabase.name db `shouldEqual` name
-      liftEff $ IDBDatabase.close db
+      IDBDatabase.close db
       db <- IDBFactory.open name Nothing
         { onUpgradeNeeded : Nothing
         , onBlocked       : Nothing
@@ -111,7 +115,7 @@ main = runMocha do
         }
       _ <- forkAff do
         delay (Milliseconds 100.0)
-        liftEff $ IDBDatabase.close db01
+        IDBDatabase.close db01
 
       db02  <- IDBFactory.open name (Just version)
         { onUpgradeNeeded : Nothing
@@ -277,14 +281,14 @@ main = runMocha do
   describe "IDBDatabase" do
     let
         tearDown db = do
-          liftEff $ IDBDatabase.close db
+          IDBDatabase.close db
           _ <- IDBFactory.deleteDatabase (IDBDatabase.name db)
           pure unit
 
         setup storeParams = do
-          let onUpgradeNeeded var db _ = pure unit <* do
+          let onUpgradeNeeded var db _ = launchAff' do
                 store <- IDBDatabase.createObjectStore db "store" storeParams
-                _     <- (launchAff $ putVar var { db, store })
+                _     <- putVar var { db, store }
                 pure unit
 
           var <- makeVar
@@ -320,14 +324,13 @@ main = runMocha do
       tearDown db
 
     it "deleteObjectStore" do
-      let onUpgradeNeeded var db _ = do
+      let onUpgradeNeeded var db _ = launchAff' do
             _ <- IDBDatabase.deleteObjectStore db "store"
-            _ <- (launchAff $ putVar var true)
-            pure unit
+            putVar var true
 
       var           <- makeVar
       { db, store } <- setup IDBObjectStore.defaultParameters
-      liftEff $ IDBDatabase.close db
+      IDBDatabase.close db
       db <- IDBFactory.open "db" (Just 999) { onUpgradeNeeded : Just (onUpgradeNeeded var)
                                             , onBlocked       : Nothing
                                             }
@@ -339,16 +342,15 @@ main = runMocha do
   describe "IDBObjectStore" do
     let
         tearDown db = do
-          liftEff $ IDBDatabase.close db
+          IDBDatabase.close db
           _ <- IDBFactory.deleteDatabase (IDBDatabase.name db)
           pure unit
 
         setup { storeParams, onUpgradeNeeded } = do
-          let onUpgradeNeeded' var db _ = pure unit <* do
+          let onUpgradeNeeded' var db _ = launchAff' do
                 store <- IDBDatabase.createObjectStore db "store" storeParams
-                launchAff do
-                  liftEff $ maybe (pure unit) id (onUpgradeNeeded <*> pure db <*> pure store)
-                  putVar var { db, store }
+                liftEff $ maybe (pure unit) id (onUpgradeNeeded <*> pure db <*> pure store)
+                putVar var { db, store }
 
           var <- makeVar
           db  <- IDBFactory.open "db" Nothing
@@ -362,7 +364,7 @@ main = runMocha do
       date   <- liftEff $ toDateTime <$> now
       { db } <- setup
         { storeParams: { autoIncrement: true, keyPath: [] }
-        , onUpgradeNeeded: Just $ \_ store -> pure unit <* (launchAff do
+        , onUpgradeNeeded: Just $ \_ store -> launchAff' do
             -- no key
             key <- IDBObjectStore.add store "patate" (Nothing :: Maybe Key)
             (toKey 1) `shouldEqual` key
@@ -386,48 +388,48 @@ main = runMocha do
             -- array key
             key <- IDBObjectStore.add store "patate" (Just $ toKey [14, 42])
             (toKey [14, 42]) `shouldEqual` key
-        )}
+        }
       tearDown db
 
     it "clear()" do
       { db } <- setup
         { storeParams: IDBObjectStore.defaultParameters
-        , onUpgradeNeeded: Just $ \_ store -> pure unit <* (launchAff do
+        , onUpgradeNeeded: Just $ \_ store -> launchAff' do
             key <- IDBObjectStore.add store "patate" (Just 14)
             _   <- IDBObjectStore.clear store
             val <- IDBObjectStore.get store (IDBKeyRange.only key)
             val `shouldEqual` (Nothing :: Maybe String)
-        )}
+        }
       tearDown db
 
     it "count()" do
       { db } <- setup
         { storeParams: IDBObjectStore.defaultParameters
-        , onUpgradeNeeded: Just $ \_ store -> pure unit <* (launchAff do
+        , onUpgradeNeeded: Just $ \_ store -> launchAff' do
             key <- IDBObjectStore.add store "patate" (Just 14)
             key <- IDBObjectStore.add store "autruche" (Just 42)
             n   <- IDBObjectStore.count store Nothing
             n `shouldEqual` 2
-        )}
+        }
       tearDown db
 
     it "getKey()" do
       { db } <- setup
         { storeParams: IDBObjectStore.defaultParameters
-        , onUpgradeNeeded: Just $ \_ store -> pure unit <* (launchAff do
+        , onUpgradeNeeded: Just $ \_ store -> launchAff' do
             key  <- IDBObjectStore.add store "patate" (Just 14)
             mkey <- IDBObjectStore.getKey store (IDBKeyRange.only 14)
             mkey `shouldEqual` (Just key)
 
             mkey <- IDBObjectStore.getKey store (IDBKeyRange.only 42)
             mkey `shouldEqual` (Nothing :: Maybe Key)
-        )}
+          }
       tearDown db
 
     it "getAllKeys()" do
       { db } <- setup
         { storeParams: IDBObjectStore.defaultParameters
-        , onUpgradeNeeded: Just $ \_ store -> pure unit <* (launchAff do
+        , onUpgradeNeeded: Just $ \_ store -> launchAff' do
             key1  <- IDBObjectStore.add store "patate" (Just 14)
             key2  <- IDBObjectStore.add store "autruche" (Just 42)
             key3  <- IDBObjectStore.add store 14 (Just 1337)
@@ -447,39 +449,39 @@ main = runMocha do
             -- count
             keys  <- IDBObjectStore.getAllKeys store (Just $ IDBKeyRange.lowerBound 1 true) (Just 2)
             keys `shouldEqual` [key1, key2]
-        )}
+        }
       tearDown db
 
     it "openCursor()" do
       { db } <- setup
         { storeParams: IDBObjectStore.defaultParameters
-        , onUpgradeNeeded: Just $ \_ store -> pure unit <* (launchAff do
+        , onUpgradeNeeded: Just $ \_ store -> launchAff' do
             _ <- IDBObjectStore.openCursor store Nothing Next
             _ <- IDBObjectStore.openCursor store Nothing NextUnique
             _ <- IDBObjectStore.openCursor store Nothing Prev
             _ <- IDBObjectStore.openCursor store Nothing PrevUnique
             _ <- IDBObjectStore.openCursor store (Just $ IDBKeyRange.upperBound 1 true) Next
             pure unit
-        )}
+        }
       tearDown db
 
     it "openKeyCursor()" do
       { db } <- setup
         { storeParams: IDBObjectStore.defaultParameters
-        , onUpgradeNeeded: Just $ \_ store -> pure unit <* (launchAff do
+        , onUpgradeNeeded: Just $ \_ store -> launchAff' do
             _ <- IDBObjectStore.openKeyCursor store Nothing Next
             _ <- IDBObjectStore.openKeyCursor store Nothing NextUnique
             _ <- IDBObjectStore.openKeyCursor store Nothing Prev
             _ <- IDBObjectStore.openKeyCursor store Nothing PrevUnique
             _ <- IDBObjectStore.openKeyCursor store (Just $ IDBKeyRange.lowerBound 1 true) Next
             pure unit
-        )}
+        }
       tearDown db
 
   describe "IDBIndex" do
     let
         tearDown db = do
-          liftEff $ IDBDatabase.close db
+          IDBDatabase.close db
           _ <- IDBFactory.deleteDatabase (IDBDatabase.name db)
           pure unit
 
@@ -491,13 +493,12 @@ main = runMocha do
                  , onUpgradeNeeded :: Maybe (Database -> Transaction -> Index -> Eff (idb :: IDB, avar :: AVAR, exception :: EXCEPTION | e') Unit)
                } -> Aff (idb :: IDB, avar :: AVAR | e) { db :: Database, index :: Index, store :: ObjectStore }
         setup { storeParams, indexParams, values, keyPath, onUpgradeNeeded } = do
-          let onUpgradeNeeded' var db tx = pure unit <* do
+          let onUpgradeNeeded' var db tx = launchAff' do
                 store <- IDBDatabase.createObjectStore db "store" storeParams
-                launchAff do
-                  _     <- traverse (uncurry (IDBObjectStore.add store)) values
-                  index <- liftEff $ IDBObjectStore.createIndex store "index" keyPath indexParams
-                  liftEff $ maybe (pure unit) id (onUpgradeNeeded <*> pure db <*> pure tx <*> pure index)
-                  putVar var { db, index, store }
+                _     <- traverse (uncurry (IDBObjectStore.add store)) values
+                index <- IDBObjectStore.createIndex store "index" keyPath indexParams
+                liftEff $ maybe (pure unit) id (onUpgradeNeeded <*> pure db <*> pure tx <*> pure index)
+                putVar var { db, index, store }
 
           var <- makeVar
           db  <- IDBFactory.open "db" Nothing
@@ -522,7 +523,7 @@ main = runMocha do
       tearDown db
 
     it "attempt to create an index that requires unique values on an object store already contains duplicates" do
-      let onAbort var = launchAff (putVar var true) *> pure unit
+      let onAbort var = launchAff' (putVar var true)
       txVar <- makeVar
       dbVar <- makeVar
       res   <- attempt $ setup
@@ -534,7 +535,7 @@ main = runMocha do
         , values          : [ { indexedProperty: "bar" } :+: (Just $ toKey 1)
                             , { indexedProperty: "bar" } :+: (Just $ toKey 2)
                             ]
-        , onUpgradeNeeded : Just $ \db tx _ -> do
+        , onUpgradeNeeded : Just $ \db tx _ -> launchAff' do
             IDBTransaction.onAbort tx (onAbort txVar)
             IDBDatabase.onAbort db (onAbort dbVar)
         }
@@ -557,7 +558,7 @@ main = runMocha do
                             , { key: "key2", indexedProperty: "indexed_2" } :+: Nothing
                             , { key: "key3", indexedProperty: "indexed_3" } :+: Nothing
                             ]
-        , onUpgradeNeeded : Just $ \_ _ index -> const unit <$> launchAff do
+        , onUpgradeNeeded : Just $ \_ _ index -> launchAff' do
             val <- IDBIndex.get index (IDBKeyRange.only "indexed_2")
             ((\r -> r.key) <$> val) `shouldEqual` (Just $ toKey "key2")
         }
@@ -572,9 +573,9 @@ main = runMocha do
                             , "object_2" :+: (Just $ toKey 2)
                             , "object_3" :+: (Just $ toKey 3)
                             ]
-        , onUpgradeNeeded : Just $ \_ _ index -> const unit <$> launchAff do
-          val <- IDBIndex.get index (IDBKeyRange.only "object_3")
-          val `shouldEqual` (Just "object_3")
+        , onUpgradeNeeded : Just $ \_ _ index -> launchAff' do
+            val <- IDBIndex.get index (IDBKeyRange.only "object_3")
+            val `shouldEqual` (Just "object_3")
         }
       tearDown db
 
@@ -588,9 +589,9 @@ main = runMocha do
         , keyPath         : ["i"]
         , values          : [ { key: "date", i: (toKey date) } :+: Nothing
                             ]
-        , onUpgradeNeeded : Just $ \_ _ index -> const unit <$> launchAff do
-          val <- IDBIndex.get index (IDBKeyRange.only date)
-          ((\r -> r.key) <$> val) `shouldEqual` (Just "date")
+        , onUpgradeNeeded : Just $ \_ _ index -> launchAff' do
+            val <- IDBIndex.get index (IDBKeyRange.only date)
+            ((\r -> r.key) <$> val) `shouldEqual` (Just "date")
         }
       tearDown db
 
@@ -604,9 +605,9 @@ main = runMocha do
         , keyPath         : ["i"]
         , values          : [ { key: "num", i: (toKey num) } :+: Nothing
                             ]
-        , onUpgradeNeeded : Just $ \_ _ index -> const unit <$> launchAff do
-          val <- IDBIndex.get index (IDBKeyRange.only num)
-          ((\r -> r.key) <$> val) `shouldEqual` (Just "num")
+        , onUpgradeNeeded : Just $ \_ _ index -> launchAff' do
+            val <- IDBIndex.get index (IDBKeyRange.only num)
+            ((\r -> r.key) <$> val) `shouldEqual` (Just "num")
         }
       tearDown db
 
@@ -620,8 +621,28 @@ main = runMocha do
         , keyPath         : ["i"]
         , values          : [ { key: "array", i: (toKey array) } :+: Nothing
                             ]
-        , onUpgradeNeeded : Just $ \_ _ index -> const unit <$> launchAff do
-          val <- IDBIndex.get index (IDBKeyRange.only array)
-          ((\r -> r.key) <$> val) `shouldEqual` (Just "array")
+        , onUpgradeNeeded : Just $ \_ _ index -> launchAff' do
+            val <- IDBIndex.get index (IDBKeyRange.only array)
+            ((\r -> r.key) <$> val) `shouldEqual` (Just "array")
+        }
+      tearDown db
+
+    it "multiEntry - adding keys" do
+      { db } <- setup
+        { storeParams     : IDBObjectStore.defaultParameters
+        , indexParams     : { unique: false, multiEntry: true }
+        , keyPath         : ["name"]
+        , values          : [ { name: ["patate", "autruche"] } :+: (Just $ toKey 1)
+                            , { name: ["bob"] } :+: (Just $ toKey 2)
+                            ]
+        , onUpgradeNeeded : Just $ \_ _ index -> launchAff' do
+            key <- IDBIndex.getKey index (IDBKeyRange.only "patate")
+            key `shouldEqual` (Just $ toKey 1)
+
+            key <- IDBIndex.getKey index (IDBKeyRange.only "autruche")
+            key `shouldEqual` (Just $ toKey 1)
+
+            key <- IDBIndex.getKey index (IDBKeyRange.only "bob")
+            key `shouldEqual` (Just $ toKey 2)
         }
       tearDown db

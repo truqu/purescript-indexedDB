@@ -12,8 +12,9 @@ module Database.IndexedDB.IDBDatabase
 
 import Prelude                           (Unit, show)
 
+import Control.Monad.Aff                 (Aff)
 import Control.Monad.Eff                 (Eff)
-import Control.Monad.Eff.Exception       (EXCEPTION, Error)
+import Control.Monad.Eff.Exception       (Error)
 import Data.Function.Uncurried            as Fn
 import Data.Function.Uncurried           (Fn2, Fn3, Fn4)
 
@@ -25,10 +26,10 @@ import Database.IndexedDB.IDBObjectStore (IDBObjectStoreParameters)
 -- INTERFACE
 --
 class IDBDatabase db where
-  close :: forall e. db -> Eff (idb :: IDB, exception :: EXCEPTION | e) Unit
-  createObjectStore :: forall e. db -> StoreName -> IDBObjectStoreParameters -> Eff (idb :: IDB, exception :: EXCEPTION | e) ObjectStore
-  deleteObjectStore :: forall e.  db -> StoreName -> Eff (idb :: IDB, exception :: EXCEPTION | e) ObjectStore
-  transaction :: forall e. db -> KeyPath -> TransactionMode -> Eff (idb :: IDB, exception :: EXCEPTION | e) Transaction
+  close :: forall e. db -> Aff (idb :: IDB | e) Unit
+  createObjectStore :: forall e. db -> StoreName -> IDBObjectStoreParameters -> Aff (idb :: IDB | e) ObjectStore
+  deleteObjectStore :: forall e.  db -> StoreName -> Aff (idb :: IDB | e) ObjectStore
+  transaction :: forall e. db -> KeyPath -> TransactionMode -> Aff (idb :: IDB | e) Transaction
 
 
 type StoreName = String
@@ -55,22 +56,22 @@ version =
 --------------------
 -- EVENT HANDLERS
 --
-onAbort :: forall e e'. Database -> Eff ( | e') Unit -> Eff (idb :: IDB | e) Unit
+onAbort :: forall e e'. Database -> Eff ( | e') Unit -> Aff (idb :: IDB | e) Unit
 onAbort db f =
   Fn.runFn2 _onAbort db f
 
 
-onClose :: forall e e'. Database -> Eff ( | e') Unit -> Eff (idb :: IDB | e) Unit
+onClose :: forall e e'. Database -> Eff ( | e') Unit -> Aff (idb :: IDB | e) Unit
 onClose db f =
   Fn.runFn2 _onClose db f
 
 
-onError :: forall e e'. Database -> (Error -> Eff ( | e') Unit) -> Eff (idb :: IDB | e) Unit
+onError :: forall e e'. Database -> (Error -> Eff ( | e') Unit) -> Aff (idb :: IDB | e) Unit
 onError db f =
   Fn.runFn2 _onError db f
 
 
-onVersionChange :: forall e e'. Database -> ({ oldVersion :: Int, newVersion :: Int } -> Eff ( | e') Unit) -> Eff (idb :: IDB | e) Unit
+onVersionChange :: forall e e'. Database -> ({ oldVersion :: Int, newVersion :: Int } -> Eff ( | e') Unit) -> Aff (idb :: IDB | e) Unit
 onVersionChange db f =
   Fn.runFn2 _onVersionChange db f
 
@@ -96,13 +97,13 @@ instance idbDatabaseDatabase :: IDBDatabase Database where
 --------------------
 -- FFI
 --
-foreign import _close :: forall db e. db -> Eff (idb :: IDB, exception :: EXCEPTION | e) Unit
+foreign import _close :: forall db e. db -> Aff (idb :: IDB | e) Unit
 
 
-foreign import _createObjectStore :: forall db e. Fn3 db String { keyPath :: Array String, autoIncrement :: Boolean } (Eff (idb :: IDB, exception :: EXCEPTION | e) ObjectStore)
+foreign import _createObjectStore :: forall db e. Fn3 db String { keyPath :: Array String, autoIncrement :: Boolean } (Aff (idb :: IDB | e) ObjectStore)
 
 
-foreign import _deleteObjectStore :: forall db e. Fn2 db String (Eff (idb :: IDB, exception :: EXCEPTION | e) ObjectStore)
+foreign import _deleteObjectStore :: forall db e. Fn2 db String (Aff (idb :: IDB | e) ObjectStore)
 
 
 foreign import _name :: Database -> String
@@ -111,19 +112,19 @@ foreign import _name :: Database -> String
 foreign import _objectStoreNames :: Database -> Array String
 
 
-foreign import _onAbort :: forall db e e'. Fn2 db (Eff ( | e') Unit) (Eff (idb :: IDB | e) Unit)
+foreign import _onAbort :: forall db e e'. Fn2 db (Eff ( | e') Unit) (Aff (idb :: IDB | e) Unit)
 
 
-foreign import _onClose :: forall db e e'. Fn2 db (Eff ( | e') Unit) (Eff (idb :: IDB | e) Unit)
+foreign import _onClose :: forall db e e'. Fn2 db (Eff ( | e') Unit) (Aff (idb :: IDB | e) Unit)
 
 
-foreign import _onError :: forall db e e'. Fn2 db (Error -> Eff ( | e') Unit) (Eff (idb :: IDB | e) Unit)
+foreign import _onError :: forall db e e'. Fn2 db (Error -> Eff ( | e') Unit) (Aff (idb :: IDB | e) Unit)
 
 
-foreign import _onVersionChange :: forall db e e'. Fn2 db ({ oldVersion :: Int, newVersion :: Int } -> Eff ( | e') Unit) (Eff (idb :: IDB | e) Unit)
+foreign import _onVersionChange :: forall db e e'. Fn2 db ({ oldVersion :: Int, newVersion :: Int } -> Eff ( | e') Unit) (Aff (idb :: IDB | e) Unit)
 
 
-foreign import _transaction :: forall db e. Fn4 (db -> String) db (Array String) TransactionMode (Eff (idb :: IDB, exception :: EXCEPTION | e) Transaction)
+foreign import _transaction :: forall db e. Fn4 (db -> String) db (Array String) TransactionMode (Aff (idb :: IDB | e) Transaction)
 
 
 foreign import _version :: Database -> Int

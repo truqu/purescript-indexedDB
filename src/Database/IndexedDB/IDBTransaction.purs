@@ -9,8 +9,9 @@ module Database.IndexedDB.IDBTransaction
 
 import Prelude                     (Unit, (>>>))
 
+import Control.Monad.Aff           (Aff)
 import Control.Monad.Eff           (Eff)
-import Control.Monad.Eff.Exception (EXCEPTION, Error)
+import Control.Monad.Eff.Exception (Error)
 import Data.Function.Uncurried      as Fn
 import Data.Function.Uncurried     (Fn2, Fn4)
 import Data.Maybe                  (Maybe)
@@ -23,8 +24,8 @@ import Database.IndexedDB.Core     (IDB, ObjectStore, Transaction, TransactionMo
 -- INTERFACES
 --
 class IDBTransaction tx where
-  abort :: forall e. tx -> Eff (idb :: IDB, exception :: EXCEPTION | e) Unit
-  objectStore :: forall e. tx -> String -> Eff (idb :: IDB, exception :: EXCEPTION | e) ObjectStore
+  abort :: forall e. tx -> Aff (idb :: IDB | e) Unit
+  objectStore :: forall e. tx -> String -> Aff (idb :: IDB | e) ObjectStore
 
 
 --------------------
@@ -43,17 +44,17 @@ mode =
 --------------------
 -- EVENT HANDLERS
 --
-onAbort :: forall e e'. Transaction -> Eff ( | e') Unit -> Eff (idb :: IDB | e) Unit
+onAbort :: forall e e'. Transaction -> Eff ( | e') Unit -> Aff (idb :: IDB | e) Unit
 onAbort db f =
   Fn.runFn2 _onAbort db f
 
 
-onComplete :: forall e e'. Transaction -> Eff ( | e') Unit -> Eff (idb :: IDB | e) Unit
+onComplete :: forall e e'. Transaction -> Eff ( | e') Unit -> Aff (idb :: IDB | e) Unit
 onComplete db f =
   Fn.runFn2 _onComplete db f
 
 
-onError :: forall e e'. Transaction -> (Error -> Eff ( | e') Unit) -> Eff (idb :: IDB | e) Unit
+onError :: forall e e'. Transaction -> (Error -> Eff ( | e') Unit) -> Aff (idb :: IDB | e) Unit
 onError db f =
   Fn.runFn2 _onError db f
 
@@ -72,7 +73,7 @@ instance idbTransactionTransaction :: IDBTransaction Transaction where
 --------------------
 -- FFI
 --
-foreign import _abort :: forall tx e. tx -> Eff (idb :: IDB, exception :: EXCEPTION | e) Unit
+foreign import _abort :: forall tx e. tx -> Aff (idb :: IDB | e) Unit
 
 
 foreign import _error :: Transaction -> (Nullable Error)
@@ -81,13 +82,13 @@ foreign import _error :: Transaction -> (Nullable Error)
 foreign import _mode :: Fn4 TransactionMode TransactionMode TransactionMode Transaction TransactionMode
 
 
-foreign import _objectStore :: forall tx e. Fn2 tx String (Eff (idb :: IDB, exception :: EXCEPTION | e) ObjectStore)
+foreign import _objectStore :: forall tx e. Fn2 tx String (Aff (idb :: IDB | e) ObjectStore)
 
 
-foreign import _onAbort :: forall tx e e'. Fn2 tx (Eff ( | e') Unit) (Eff (idb :: IDB | e) Unit)
+foreign import _onAbort :: forall tx e e'. Fn2 tx (Eff ( | e') Unit) (Aff (idb :: IDB | e) Unit)
 
 
-foreign import _onComplete :: forall tx e e'. Fn2 tx (Eff ( | e') Unit) (Eff (idb :: IDB | e) Unit)
+foreign import _onComplete :: forall tx e e'. Fn2 tx (Eff ( | e') Unit) (Aff (idb :: IDB | e) Unit)
 
 
-foreign import _onError :: forall tx e e'. Fn2 tx (Error -> Eff ( | e') Unit) (Eff (idb :: IDB | e) Unit)
+foreign import _onError :: forall tx e e'. Fn2 tx (Error -> Eff ( | e') Unit) (Aff (idb :: IDB | e) Unit)

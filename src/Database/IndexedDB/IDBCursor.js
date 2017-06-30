@@ -12,31 +12,32 @@ const successHandler = function successHandler(cb) {
 
 
 exports._advance = function _advance(cursor, count) {
-    return function eff() {
+    return function aff(success, error) {
         try {
             cursor.advance(count);
+            success();
         } catch (e) {
-            throw new Error(e.name);
+            error(new Error(e.name));
         }
     };
 };
 
 exports._continue = function _continue(cursor, key) {
-    return function eff() {
+    return function aff(success, error) {
         try {
             cursor.continue(key || undefined);
         } catch (e) {
-            throw new Error(e.name);
+            error(new Error(e.name));
         }
     };
 };
 
 exports._continuePrimaryKey = function _continuePrimaryKey(cursor, key, primaryKey) {
-    return function eff() {
+    return function aff(success, error) {
         try {
             cursor.continuePrimaryKey(key, primaryKey);
         } catch (e) {
-            throw new Error(e.name);
+            error(new Error(e.name));
         }
     };
 };

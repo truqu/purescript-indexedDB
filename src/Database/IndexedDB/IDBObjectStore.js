@@ -36,7 +36,7 @@ exports._clear = function _clear(store) {
 };
 
 exports._createIndex = function _createIndex(store, name, path, params) {
-    return function eff() {
+    return function aff(success, error) {
         var keyPath;
 
         try {
@@ -53,19 +53,21 @@ exports._createIndex = function _createIndex(store, name, path, params) {
                 keyPath = path;
             }
 
-            return store.createIndex(name, keyPath, params);
+            const index = store.createIndex(name, keyPath, params);
+            success(index);
         } catch (e) {
-            throw new Error(e.name);
+            error(new Error(e.name));
         }
     };
 };
 
 exports._deleteIndex = function _deleteIndex(store, name) {
-    return function eff() {
+    return function aff(success, error) {
         try {
             store.deleteIndex(name);
+            success();
         } catch (e) {
-            throw new Error(e.name);
+            error(new Error(e.name));
         }
     };
 };
@@ -79,11 +81,12 @@ exports._delete = function _delete(store, query) {
 };
 
 exports._index = function _index(store, name) {
-    return function eff() {
+    return function aff(success, error) {
         try {
-            return store.index(name);
+            const index = store.index(name);
+            success(index);
         } catch (e) {
-            throw new Error(e.name);
+            error(new Error(e.name));
         }
     };
 };

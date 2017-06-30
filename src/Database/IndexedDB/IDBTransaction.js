@@ -1,9 +1,10 @@
 exports._abort = function _abort(tx) {
-    return function eff() {
+    return function aff(success, error) {
         try {
             tx.abort();
+            success();
         } catch (e) {
-            throw new Error(e.name);
+            error(new Error(e.name));
         }
     };
 };
@@ -25,35 +26,39 @@ exports._mode = function _mode(ReadOnly, ReadWrite, VersionChange, tx) {
 };
 
 exports._objectStore = function _objectStore(tx, name) {
-    return function eff() {
+    return function aff(success, error) {
         try {
-            return tx.objectStore(name);
+            const store = tx.objectStore(name);
+            success(store);
         } catch (e) {
-            throw new Error(e.name);
+            error(new Error(e.name));
         }
     };
 };
 
 exports._onAbort = function _onAbort(tx, f) {
-    return function eff() {
+    return function aff(success) {
         tx.onabort = function onabort() {
             f();
         };
+        success();
     };
 };
 
 exports._onComplete = function _onComplete(tx, f) {
-    return function eff() {
+    return function aff(success) {
         tx.oncomplete = function oncomplete() {
             f();
         };
+        success();
     };
 };
 
 exports._onError = function _onError(tx, f) {
-    return function eff() {
+    return function aff(success) {
         tx.onerror = function onerror(e) {
             f(new Error(e.target.error.name))();
         };
+        success();
     };
 };

@@ -14,8 +14,6 @@ module Database.IndexedDB.IDBObjectStore
 import Prelude                              (Unit, ($), (<$>), (>>>))
 
 import Control.Monad.Aff                    (Aff)
-import Control.Monad.Eff                    (Eff)
-import Control.Monad.Eff.Exception          (EXCEPTION)
 import Data.Foreign                         (Foreign)
 import Data.Function.Uncurried               as Fn
 import Data.Function.Uncurried              (Fn2, Fn3, Fn4)
@@ -33,10 +31,10 @@ import Database.IndexedDB.IDBKey.Internal   (class IDBKey, Key(Key), extractFore
 class IDBObjectStore store where
   add :: forall v k e. (IDBKey k) => store -> v -> Maybe k -> Aff (idb :: IDB | e) Key
   clear :: forall e. store -> Aff (idb :: IDB | e) Unit
-  createIndex :: forall e. store -> IndexName -> KeyPath -> IDBIndexParameters -> Eff (idb :: IDB, exception :: EXCEPTION | e) Index
+  createIndex :: forall e. store -> IndexName -> KeyPath -> IDBIndexParameters -> Aff (idb :: IDB | e) Index
   delete :: forall e. store -> KeyRange -> Aff (idb :: IDB | e) Unit
-  deleteIndex :: forall e. store -> IndexName -> Eff (idb :: IDB, exception :: EXCEPTION | e) Unit
-  index :: forall e. store -> IndexName -> Eff (idb :: IDB, exception :: EXCEPTION | e) Index
+  deleteIndex :: forall e. store -> IndexName -> Aff (idb :: IDB | e) Unit
+  index :: forall e. store -> IndexName -> Aff (idb :: IDB | e) Index
   put :: forall v k e. (IDBKey k) => store -> v -> Maybe k -> Aff (idb :: IDB | e) Key
 
 
@@ -122,16 +120,16 @@ foreign import _autoIncrement :: ObjectStore -> Boolean
 foreign import _clear :: forall e. ObjectStore -> Aff (idb :: IDB | e) Unit
 
 
-foreign import _createIndex :: forall e. Fn4 ObjectStore String (Array String) { unique :: Boolean, multiEntry :: Boolean } (Eff (idb :: IDB | e) Index)
+foreign import _createIndex :: forall e. Fn4 ObjectStore String (Array String) { unique :: Boolean, multiEntry :: Boolean } (Aff (idb :: IDB | e) Index)
 
 
 foreign import _delete :: forall e. Fn2 ObjectStore KeyRange (Aff (idb :: IDB | e) Unit)
 
 
-foreign import _deleteIndex :: forall e. Fn2 ObjectStore String (Eff (idb :: IDB | e) Unit)
+foreign import _deleteIndex :: forall e. Fn2 ObjectStore String (Aff (idb :: IDB | e) Unit)
 
 
-foreign import _index :: forall e. Fn2 ObjectStore String (Eff (idb :: IDB | e) Index)
+foreign import _index :: forall e. Fn2 ObjectStore String (Aff (idb :: IDB | e) Index)
 
 
 foreign import _indexNames :: ObjectStore -> Array String
