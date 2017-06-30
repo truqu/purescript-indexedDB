@@ -16,7 +16,7 @@ import Database.IndexedDB.Core
 --
 type OpenRequest e =
   { onBlocked       :: Maybe (Eff (| e) Unit)
-  , onUpgradeNeeded :: Maybe (Database -> Eff (| e) Unit)
+  , onUpgradeNeeded :: Maybe (Database -> Transaction -> Eff (| e) Unit)
   }
 
 
