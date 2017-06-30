@@ -7,6 +7,7 @@ module Database.IndexedDB.Core
   , Index
   , KeyCursor
   , KeyRange
+  , KeyPath
   , ObjectStore
   , Transaction
   , TransactionMode(..)
@@ -33,6 +34,9 @@ data CursorSource = ObjectStore ObjectStore | Index Index
 
 
 data TransactionMode = ReadOnly | ReadWrite | VersionChange
+
+
+type KeyPath   = Array String
 
 
 foreign import data INDEXED_DB :: Effect

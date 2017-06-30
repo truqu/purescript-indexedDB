@@ -4,9 +4,11 @@ module Database.IndexedDB.IDBIndex
 
 import Database.IndexedDB.IDBIndex.Internal
   ( class IDBIndex, count, get, getAllKeys, getKey, openCursor, openKeyCursor
+  , IDBIndexParameters
   , keyPath
   , multiEntry
   , name
   , objectStore
   , unique
+  , defaultParameters
   )

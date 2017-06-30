@@ -1,10 +1,13 @@
 module Database.IndexedDB.IDBObjectStore
   ( class IDBObjectStore, add, clear, createIndex, delete, deleteIndex, index, put
   , module Database.IndexedDB.IDBIndex.Internal
+  , IDBObjectStoreParameters
+  , IndexName
   , autoIncrement
   , indexNames
   , keyPath
   , name
+  , defaultParameters
   ) where
 
 import Prelude                              (Unit, ($), (<$>))
@@ -18,8 +21,8 @@ import Data.Function.Uncurried              (Fn2, Fn3, Fn4)
 import Data.Maybe                           (Maybe)
 import Data.Nullable                        (Nullable, toNullable)
 
-import Database.IndexedDB.Core              (INDEXED_DB, Index, KeyRange, ObjectStore)
-import Database.IndexedDB.IDBIndex.Internal (class IDBIndex, count, get, getAllKeys, getKey, openCursor, openKeyCursor)
+import Database.IndexedDB.Core              (INDEXED_DB, Index, KeyRange, KeyPath, ObjectStore)
+import Database.IndexedDB.IDBIndex.Internal (class IDBIndex, IDBIndexParameters, count, get, getAllKeys, getKey, openCursor, openKeyCursor)
 import Database.IndexedDB.IDBKey.Internal   (Key(Key), extractForeign)
 
 
@@ -29,11 +32,20 @@ import Database.IndexedDB.IDBKey.Internal   (Key(Key), extractForeign)
 class IDBObjectStore store where
   add :: forall value eff. store -> value -> Maybe Key -> Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) Key
   clear :: forall eff. store -> Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) Unit
-  createIndex :: forall eff. store -> String -> (Array String) -> { unique :: Boolean, multiEntry :: Boolean } -> Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) Index
+  createIndex :: forall eff. store -> IndexName -> KeyPath -> IDBIndexParameters -> Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) Index
   delete :: forall eff. store -> KeyRange -> Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) Unit
-  deleteIndex :: forall eff. store -> String -> Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) Unit
-  index :: forall eff. store -> String -> Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) Index
+  deleteIndex :: forall eff. store -> IndexName -> Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) Unit
+  index :: forall eff. store -> IndexName -> Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) Index
   put :: forall value eff. store -> value -> Maybe Key -> Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) Key
+
+
+type IndexName = String
+
+
+type IDBObjectStoreParameters =
+  { keyPath       :: KeyPath
+  , autoIncrement :: Boolean
+  }
 
 
 --------------------
@@ -83,6 +95,13 @@ instance idbObjectStoreObjectStore :: IDBObjectStore ObjectStore where
 
   put store value key =
     Key <$> Fn.runFn3 _put store value (toNullable $ extractForeign <$> key)
+
+
+defaultParameters :: IDBObjectStoreParameters
+defaultParameters =
+  { keyPath       : []
+  , autoIncrement : false
+  }
 
 
 --------------------

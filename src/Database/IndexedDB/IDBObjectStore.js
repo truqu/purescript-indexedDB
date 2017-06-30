@@ -44,7 +44,7 @@ exports._createIndex = function _createIndex(store, name, path, params) {
             //       a string hasn't the same meaning as a sequence of strings
             switch (path.length) {
             case 0:
-                keyPath = null;
+                keyPath = '';
                 break;
             case 1:
                 keyPath = path[0];
@@ -53,7 +53,7 @@ exports._createIndex = function _createIndex(store, name, path, params) {
                 keyPath = path;
             }
 
-            store.createIndex(name, keyPath, params);
+            return store.createIndex(name, keyPath, params);
         } catch (e) {
             throw new Error(e.name);
         }
@@ -100,7 +100,7 @@ exports._keyPath = function _keyPath(store) {
     }
 
     if (typeof path === 'string') {
-        return path.split('.');
+        return [path];
     }
 
     return [];

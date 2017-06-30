@@ -1,18 +1,20 @@
 module Database.IndexedDB.IDBDatabase
   ( class IDBDatabase, close, createObjectStore, deleteObjectStore, transaction
+  , StoreName
   , name
   , objectStoreNames
   , version
   ) where
 
-import Prelude                     (Unit, show)
+import Prelude                           (Unit, show)
 
-import Control.Monad.Eff           (Eff)
-import Control.Monad.Eff.Exception (EXCEPTION)
-import Data.Function.Uncurried      as Fn
-import Data.Function.Uncurried     (Fn2, Fn3, Fn4)
+import Control.Monad.Eff                 (Eff)
+import Control.Monad.Eff.Exception       (EXCEPTION)
+import Data.Function.Uncurried            as Fn
+import Data.Function.Uncurried           (Fn2, Fn3, Fn4)
 
 import Database.IndexedDB.Core
+import Database.IndexedDB.IDBObjectStore (IDBObjectStoreParameters)
 
 
 --------------------
@@ -20,9 +22,12 @@ import Database.IndexedDB.Core
 --
 class IDBDatabase db where
   close :: forall eff. db -> Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) Unit
-  createObjectStore :: forall eff. db -> String -> { keyPath :: Array String, autoIncrement :: Boolean } -> Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) ObjectStore
-  deleteObjectStore :: forall eff .  db -> String -> Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) ObjectStore
-  transaction :: forall eff. db -> Array String -> TransactionMode -> Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) Transaction
+  createObjectStore :: forall eff. db -> StoreName -> IDBObjectStoreParameters -> Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) ObjectStore
+  deleteObjectStore :: forall eff .  db -> StoreName -> Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) ObjectStore
+  transaction :: forall eff. db -> KeyPath -> TransactionMode -> Eff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) Transaction
+
+
+type StoreName = String
 
 
 --------------------

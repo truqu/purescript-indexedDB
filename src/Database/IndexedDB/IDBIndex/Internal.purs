@@ -10,7 +10,8 @@ import Data.Function.Uncurried     (Fn2, Fn3)
 import Data.Maybe                  (Maybe)
 import Data.Nullable               (Nullable, toMaybe, toNullable)
 
-import Database.IndexedDB.Core     (INDEXED_DB, CursorDirection, Index, Key, KeyCursor, KeyRange, ObjectStore, ValueCursor)
+import Database.IndexedDB.Core     (INDEXED_DB, CursorDirection, Index, Key, KeyCursor, KeyRange,
+                                   KeyPath, ObjectStore, ValueCursor)
 
 
 --------------------
@@ -25,10 +26,16 @@ class IDBIndex index where
   openKeyCursor :: forall eff. index -> Maybe KeyRange -> CursorDirection -> Aff (idb :: INDEXED_DB, exception :: EXCEPTION | eff) KeyCursor
 
 
+type IDBIndexParameters =
+  { unique     :: Boolean
+  , multiEntry :: Boolean
+  }
+
+
 --------------------
 -- ATTRIBUTES
 --
-keyPath :: Index -> String
+keyPath :: Index -> KeyPath
 keyPath =
   _keyPath
 
@@ -96,10 +103,17 @@ instance idbIndexObjectStore :: IDBIndex ObjectStore where
     Fn.runFn3 _openKeyCursor store (toNullable range) (show dir)
 
 
+defaultParameters :: IDBIndexParameters
+defaultParameters =
+  { unique     : false
+  , multiEntry : false
+  }
+
+
 --------------------
 -- FFI
 --
-foreign import _keyPath :: Index -> String
+foreign import _keyPath :: Index -> Array String
 
 
 foreign import _multiEntry :: Index -> Boolean

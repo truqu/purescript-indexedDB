@@ -12,7 +12,17 @@ const successHandler = function successHandler(cb) {
 
 
 exports._keyPath = function _keyPath(index) {
-    return index.keyPath;
+    const path = index.keyPath;
+
+    if (Array.isArray(path)) {
+        return path;
+    }
+
+    if (typeof path === 'string' && path !== '') {
+        return [path];
+    }
+
+    return [];
 };
 
 exports._multiEntry = function _multiEntry(index) {
@@ -33,9 +43,13 @@ exports._unique = function _unique(index) {
 
 exports._count = function _count(index, query) {
     return function aff(success, error) {
-        const request = index.count(query);
-        request.onsuccess = successHandler(success);
-        request.onerror = errorHandler(error);
+        try {
+            const request = index.count(query);
+            request.onsuccess = successHandler(success);
+            request.onerror = errorHandler(error);
+        } catch (e) {
+            error(new Error(e.name));
+        }
     };
 };
 
