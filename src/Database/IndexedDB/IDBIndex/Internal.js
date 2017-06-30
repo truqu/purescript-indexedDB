@@ -55,9 +55,13 @@ exports._count = function _count(index, query) {
 
 exports._get = function _get(index, range) {
     return function aff(success, error) {
-        const request = index.get(range);
-        request.onsuccess = successHandler(success);
-        request.onerror = errorHandler(error);
+        try {
+            const request = index.get(range);
+            request.onsuccess = successHandler(success);
+            request.onerror = errorHandler(error);
+        } catch (e) {
+            error(new Error(e.name));
+        }
     };
 };
 
@@ -78,32 +82,48 @@ exports._getAll = function _getAll(index, query, count) {
 
 exports._getAllKeys = function _getAllKeys(index, range, count) {
     return function aff(success, error) {
-        const request = index.getAllKeys(range, count || undefined);
-        request.onsuccess = successHandler(success);
-        request.onerror = errorHandler(error);
+        try {
+            const request = index.getAllKeys(range, count || undefined);
+            request.onsuccess = successHandler(success);
+            request.onerror = errorHandler(error);
+        } catch (e) {
+            error(new Error(e.name));
+        }
     };
 };
 
 exports._getKey = function _getKey(index, range) {
     return function aff(success, error) {
-        const request = index.getKey(range);
-        request.onsuccess = successHandler(success);
-        request.onerror = errorHandler(error);
+        try {
+            const request = index.getKey(range);
+            request.onsuccess = successHandler(success);
+            request.onerror = errorHandler(error);
+        } catch (e) {
+            error(new Error(e.name));
+        }
     };
 };
 
 exports._openCursor = function _openCursor(index, query, dir) {
     return function aff(success, error) {
-        const request = index.openCursor(query, dir);
-        request.onsuccess = successHandler(success);
-        request.onerror = errorHandler(error);
+        try {
+            const request = index.openCursor(query, dir);
+            request.onsuccess = successHandler(success);
+            request.onerror = errorHandler(error);
+        } catch (e) {
+            error(new Error(e.name));
+        }
     };
 };
 
 exports._openKeyCursor = function _openKeyCursor(index, query, dir) {
     return function aff(success, error) {
-        const request = index.openKeyCursor(query, dir);
-        request.onsuccess = successHandler(success);
-        request.onerror = errorHandler(error);
+        try {
+            const request = index.openKeyCursor(query, dir);
+            request.onsuccess = successHandler(success);
+            request.onerror = errorHandler(error);
+        } catch (e) {
+            error(new Error(e.name));
+        }
     };
 };

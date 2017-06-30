@@ -17,13 +17,17 @@ const noOp2 = function noOp2() {
 
 exports._deleteDatabase = function _deleteDatabase(name) {
     return function aff(success, error) {
-        const request = indexedDB.deleteDatabase(name);
+        try {
+            const request = indexedDB.deleteDatabase(name);
 
-        request.onsuccess = function onSuccess(e) {
-            success(e.oldVersion);
-        };
+            request.onsuccess = function onSuccess(e) {
+                success(e.oldVersion);
+            };
 
-        request.onerror = errorHandler(error);
+            request.onerror = errorHandler(error);
+        } catch (e) {
+            error(new Error(e.name));
+        }
     };
 };
 
@@ -31,19 +35,23 @@ exports._open = function _open(fromMaybe, name, mver, req) {
     const ver = fromMaybe(undefined)(mver);
 
     return function aff(success, error) {
-        const request = indexedDB.open(name, ver);
-        request.onsuccess = function onSuccess(e) {
-            success(e.target.result);
-        };
+        try {
+            const request = indexedDB.open(name, ver);
+            request.onsuccess = function onSuccess(e) {
+                success(e.target.result);
+            };
 
-        request.onblocked = function onBlocked() {
-            fromMaybe(noOp)(req.onBlocked)();
-        };
+            request.onblocked = function onBlocked() {
+                fromMaybe(noOp)(req.onBlocked)();
+            };
 
-        request.onupgradeneeded = function onUpgradeNeeded(e) {
-            fromMaybe(noOp2)(req.onUpgradeNeeded)(e.target.result)(e.target.transaction)();
-        };
+            request.onupgradeneeded = function onUpgradeNeeded(e) {
+                fromMaybe(noOp2)(req.onUpgradeNeeded)(e.target.result)(e.target.transaction)();
+            };
 
-        request.onerror = errorHandler(error);
+            request.onerror = errorHandler(error);
+        } catch (e) {
+            error(new Error(e.name));
+        }
     };
 };

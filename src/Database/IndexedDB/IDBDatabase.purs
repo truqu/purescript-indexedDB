@@ -29,7 +29,7 @@ class IDBDatabase db where
   close :: forall e. db -> Aff (idb :: IDB | e) Unit
   createObjectStore :: forall e. db -> StoreName -> IDBObjectStoreParameters -> Aff (idb :: IDB | e) ObjectStore
   deleteObjectStore :: forall e.  db -> StoreName -> Aff (idb :: IDB | e) ObjectStore
-  transaction :: forall e. db -> KeyPath -> TransactionMode -> Aff (idb :: IDB | e) Transaction
+  transaction :: forall e. db -> Array StoreName -> TransactionMode -> Aff (idb :: IDB | e) Transaction
 
 
 type StoreName = String
@@ -91,7 +91,7 @@ instance idbDatabaseDatabase :: IDBDatabase Database where
     Fn.runFn2 _deleteObjectStore db name'
 
   transaction db stores mode' =
-    Fn.runFn4 _transaction show db stores mode'
+    Fn.runFn3 _transaction db stores (show mode')
 
 
 --------------------
@@ -124,7 +124,7 @@ foreign import _onError :: forall db e e'. Fn2 db (Error -> Eff ( | e') Unit) (A
 foreign import _onVersionChange :: forall db e e'. Fn2 db ({ oldVersion :: Int, newVersion :: Int } -> Eff ( | e') Unit) (Aff (idb :: IDB | e) Unit)
 
 
-foreign import _transaction :: forall db e. Fn4 (db -> String) db (Array String) TransactionMode (Aff (idb :: IDB | e) Transaction)
+foreign import _transaction :: forall db e. Fn3 db (Array String) String (Aff (idb :: IDB | e) Transaction)
 
 
 foreign import _version :: Database -> Int

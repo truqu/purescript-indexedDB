@@ -44,9 +44,13 @@ exports._continuePrimaryKey = function _continuePrimaryKey(cursor, key, primaryK
 
 exports._delete = function _delete(cursor) {
     return function aff(success, error) {
-        const request = cursor.delete();
-        request.onsuccess = successHandler(success);
-        request.onerror = errorHandler(error);
+        try {
+            const request = cursor.delete();
+            request.onsuccess = successHandler(success);
+            request.onerror = errorHandler(error);
+        } catch (e) {
+            error(new Error(e.name));
+        }
     };
 };
 
@@ -71,9 +75,13 @@ exports._source = function _source(IDBObjectStore, IDBIndex, cursor) {
 
 exports._update = function _update(cursor, value) {
     return function aff(success, error) {
-        const request = cursor.update(value);
-        request.onsuccess = successHandler(success);
-        request.onerror = errorHandler(error);
+        try {
+            const request = cursor.update(value);
+            request.onsuccess = successHandler(success);
+            request.onerror = errorHandler(error);
+        } catch (e) {
+            error(new Error(e.name));
+        }
     };
 };
 

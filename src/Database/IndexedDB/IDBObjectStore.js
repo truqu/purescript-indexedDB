@@ -17,9 +17,13 @@ const toArray = function toArray(xs) {
 
 exports._add = function _add(store, value, key) {
     return function aff(success, error) {
-        const request = store.add(value, key || undefined);
-        request.onsuccess = successHandler(success);
-        request.onerror = errorHandler(error);
+        try {
+            const request = store.add(value, key || undefined);
+            request.onsuccess = successHandler(success);
+            request.onerror = errorHandler(error);
+        } catch (e) {
+            error(new Error(e.name));
+        }
     };
 };
 
@@ -29,9 +33,13 @@ exports._autoIncrement = function _autoIncrement(store) {
 
 exports._clear = function _clear(store) {
     return function aff(success, error) {
-        const request = store.clear();
-        request.onsuccess = successHandler(success);
-        request.onerror = errorHandler(error);
+        try {
+            const request = store.clear();
+            request.onsuccess = successHandler(success);
+            request.onerror = errorHandler(error);
+        } catch (e) {
+            error(new Error(e.name));
+        }
     };
 };
 
@@ -74,9 +82,13 @@ exports._deleteIndex = function _deleteIndex(store, name) {
 
 exports._delete = function _delete(store, query) {
     return function aff(success, error) {
-        const request = store.delete(query);
-        request.onsuccess = successHandler(success);
-        request.onerror = errorHandler(error);
+        try {
+            const request = store.delete(query);
+            request.onsuccess = successHandler(success);
+            request.onerror = errorHandler(error);
+        } catch (e) {
+            error(new Error(e.name));
+        }
     };
 };
 
@@ -115,9 +127,13 @@ exports._name = function _name(store) {
 
 exports._put = function _put(store, value, key) {
     return function aff(success, error) {
-        const request = store.put(value, key || undefined);
-        request.onsuccess = successHandler(success);
-        request.onerror = errorHandler(error);
+        try {
+            const request = store.put(value, key || undefined);
+            request.onsuccess = successHandler(success);
+            request.onerror = errorHandler(error);
+        } catch (e) {
+            error(new Error(e.name));
+        }
     };
 };
 

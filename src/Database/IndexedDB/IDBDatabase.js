@@ -99,10 +99,10 @@ exports._onVersionChange = function _onVersionChange(db, f) {
     };
 };
 
-exports._transaction = function _transaction(show, db, stores, mode) {
+exports._transaction = function _transaction(db, stores, mode) {
     return function aff(success, error) {
         try {
-            const transaction = db.transaction(stores, show(mode));
+            const transaction = db.transaction(stores, mode);
             success(transaction);
         } catch (e) {
             error(new Error(e.name));
