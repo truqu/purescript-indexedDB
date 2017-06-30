@@ -36,7 +36,7 @@ exports.describe = function (only) {
     return function (name) {
         return function (nested) {
             return function () {
-                var f = only ? describe : describe.only;
+                var f = only ? describe.only : describe;
                 f(name, function () {
                     nested();
                 });
