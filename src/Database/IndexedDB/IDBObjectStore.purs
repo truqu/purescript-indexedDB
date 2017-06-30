@@ -11,7 +11,7 @@ module Database.IndexedDB.IDBObjectStore
   , defaultParameters
   ) where
 
-import Prelude                              (Unit, ($), (<$>))
+import Prelude                              (Unit, ($), (<$>), (>>>))
 
 import Control.Monad.Aff                    (Aff)
 import Control.Monad.Eff                    (Eff)
@@ -24,20 +24,20 @@ import Data.Nullable                        (Nullable, toNullable)
 
 import Database.IndexedDB.Core              (IDB, Index, KeyRange, KeyPath, ObjectStore, Transaction)
 import Database.IndexedDB.IDBIndex.Internal (class IDBIndex, IDBIndexParameters, count, get, getAllKeys, getKey, openCursor, openKeyCursor)
-import Database.IndexedDB.IDBKey.Internal   (Key(Key), extractForeign)
+import Database.IndexedDB.IDBKey.Internal   (class IDBKey, Key(Key), extractForeign, toKey)
 
 
 --------------------
 -- INTERFACES
 --
 class IDBObjectStore store where
-  add :: forall value e. store -> value -> Maybe Key -> Aff (idb :: IDB | e) Key
+  add :: forall v k e. (IDBKey k) => store -> v -> Maybe k -> Aff (idb :: IDB | e) Key
   clear :: forall e. store -> Aff (idb :: IDB | e) Unit
   createIndex :: forall e. store -> IndexName -> KeyPath -> IDBIndexParameters -> Eff (idb :: IDB, exception :: EXCEPTION | e) Index
   delete :: forall e. store -> KeyRange -> Aff (idb :: IDB | e) Unit
   deleteIndex :: forall e. store -> IndexName -> Eff (idb :: IDB, exception :: EXCEPTION | e) Unit
   index :: forall e. store -> IndexName -> Eff (idb :: IDB, exception :: EXCEPTION | e) Index
-  put :: forall value e. store -> value -> Maybe Key -> Aff (idb :: IDB | e) Key
+  put :: forall v k e. (IDBKey k) => store -> v -> Maybe k -> Aff (idb :: IDB | e) Key
 
 
 type IndexName = String
@@ -82,7 +82,7 @@ transaction =
 --
 instance idbObjectStoreObjectStore :: IDBObjectStore ObjectStore where
   add store value key =
-    Key <$> Fn.runFn3 _add store value (toNullable $ extractForeign <$> key)
+    Key <$> Fn.runFn3 _add store value (toNullable $ (toKey >>> extractForeign) <$> key)
 
   clear =
     _clear
@@ -100,7 +100,7 @@ instance idbObjectStoreObjectStore :: IDBObjectStore ObjectStore where
     Fn.runFn2 _index store name'
 
   put store value key =
-    Key <$> Fn.runFn3 _put store value (toNullable $ extractForeign <$> key)
+    Key <$> Fn.runFn3 _put store value (toNullable $ (toKey >>> extractForeign) <$> key)
 
 
 defaultParameters :: IDBObjectStoreParameters
