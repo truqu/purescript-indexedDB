@@ -1,3 +1,5 @@
+-- | A cursor is used to iterate over a range of records in an index or
+-- | an object store in a specific direction.
 module Database.IndexedDB.IDBCursor
   ( class IDBCursor, advance, continue, continuePrimaryKey, delete, update
   , direction
@@ -26,33 +28,64 @@ import Database.IndexedDB.Core
 --------------------
 -- INTERFACES
 --
+-- | Cursor objects implement the IDBCursor interface.
+-- | There is only ever one IDBCursor instance representing a given cursor.
+-- | There is no limit on how many cursors can be used at the same time.
 class IDBCursor cursor where
+    -- | Advances the cursor through the next count records in range.
     advance :: forall e. cursor -> Int -> Aff (idb :: IDB | e) Unit
+
+    -- | Advances the cursor to the next record in range matching or after key.
     continue :: forall e. cursor -> Maybe Key -> Aff (idb :: IDB | e) Unit
+
+    -- | Advances the cursor to the next record in range matching or after key and primaryKey. Throws an "InvalidAccessError" DOMException if the source is not an index.
     continuePrimaryKey :: forall e. cursor -> Key -> Key -> Aff (idb :: IDB | e) Unit
-    delete :: forall e. cursor -> Aff (idb ::IDB | e) Unit
+
+    -- | Delete the record pointed at by the cursor with a new value.
+    delete :: forall e. cursor -> Aff (idb :: IDB | e) Unit
+
+    -- | Update the record pointed at by the cursor with a new value.
+    -- |
+    -- | Throws a "DataError" DOMException if the effective object store uses
+    -- | in-line keys and the key would have changed.
     update :: forall val e. cursor -> val -> Aff (idb :: IDB | e) Key
 
 
 --------------------
 -- ATTRIBUTES
 --
-direction :: KeyCursor -> CursorDirection
+-- | Returns the direction (Next|NextUnique|Prev|PrevUnique) of the cursor.
+direction
+  :: KeyCursor
+  -> CursorDirection
 direction =
   Fn.runFn2 _direction (parse >>> toNullable)
 
 
-key :: KeyCursor -> Key
+-- | Returns the key of the cursor. Throws a "InvalidStateError" DOMException
+-- | if the cursor is advancing or is finished.
+key
+  :: forall e
+  .  KeyCursor
+  -> Aff (idb :: IDB | e) Key
 key =
   _key
 
 
-primaryKey :: KeyCursor -> Key
+-- | Returns the effective key of the cursor. Throws a "InvalidStateError" DOMException
+-- | if the cursor is advancing or is finished.
+primaryKey
+  :: forall e
+  .  KeyCursor
+  -> Aff (idb :: IDB | e) Key
 primaryKey =
   _primaryKey
 
 
-source :: KeyCursor -> CursorSource
+-- | Returns the IDBObjectStore or IDBIndex the cursor was opened from.
+source
+  :: KeyCursor
+  -> CursorSource
 source =
   Fn.runFn3 _source ObjectStore Index
 
@@ -61,27 +94,48 @@ source =
 -- the concrete types mostly for consistency with the Database.IndexedDB.IDBIndex module
 -- where the IDBIndex interfaces is shared by Index and ObjectStore, but attributes of
 -- respective concrete types aren't shared.
-direction' :: ValueCursor -> CursorDirection
+
+
+-- | Returns the direction (Next|NextUnique|Prev|PrevUnique) of the cursor.
+direction'
+  :: ValueCursor
+  -> CursorDirection
 direction' =
   Fn.runFn2 _direction (parse >>> toNullable)
 
 
-key' :: ValueCursor -> Key
+-- | Returns the key of the cursor. Throws a "InvalidStateError" DOMException
+-- | if the cursor is advancing or is finished.
+key'
+  :: forall e
+  .  ValueCursor
+  -> Aff (idb :: IDB | e) Key
 key' =
   _key
 
 
-primaryKey' :: ValueCursor -> Key
+-- | Returns the effective key of the cursor. Throws a "InvalidStateError" DOMException
+-- | if the cursor is advancing or is finished.
+primaryKey'
+  :: forall e
+  .  ValueCursor
+  -> Aff (idb :: IDB | e) Key
 primaryKey' =
   _primaryKey
 
 
-source' :: ValueCursor -> CursorSource
+-- | Returns the IDBObjectStore or IDBIndex the cursor was opened from.
+source'
+  :: ValueCursor
+  -> CursorSource
 source' =
   Fn.runFn3 _source ObjectStore Index
 
 
-value :: forall val. ValueCursor -> val
+value
+  :: forall val
+  .  ValueCursor
+  -> val
 value =
   _value >>> unsafeFromForeign
 
@@ -108,31 +162,55 @@ instance valueCursorKeyCursor :: IDBCursor ValueCursor where
 --------------------
 -- FFI
 --
-foreign import _advance :: forall cursor e. Fn2 cursor Int (Aff (idb :: IDB | e) Unit)
+foreign import _advance
+  :: forall cursor e
+  .  Fn2 cursor Int (Aff (idb :: IDB | e) Unit)
 
 
-foreign import _continue :: forall cursor e. Fn2 cursor (Nullable Key) (Aff (idb :: IDB | e) Unit)
+foreign import _continue
+  :: forall cursor e
+  .  Fn2 cursor (Nullable Key) (Aff (idb :: IDB | e) Unit)
 
 
-foreign import _continuePrimaryKey :: forall cursor e. Fn3 cursor Key Key (Aff (idb :: IDB | e) Unit)
+foreign import _continuePrimaryKey
+  :: forall cursor e
+  .  Fn3 cursor Key Key (Aff (idb :: IDB | e) Unit)
 
 
-foreign import _delete :: forall cursor e. cursor -> (Aff (idb ::IDB | e) Unit)
+foreign import _delete
+  :: forall cursor e
+  .  cursor
+  -> (Aff (idb :: IDB | e) Unit)
 
 
-foreign import _direction :: forall cursor. Fn2 (String -> Nullable CursorDirection) cursor CursorDirection
+foreign import _direction
+  :: forall cursor
+  .  Fn2 (String -> Nullable CursorDirection) cursor CursorDirection
 
 
-foreign import _key :: forall cursor. cursor -> Key
+foreign import _key
+  :: forall cursor e
+  .  cursor
+  -> Aff (idb :: IDB | e) Key
 
 
-foreign import _primaryKey :: forall cursor. cursor -> Key
+foreign import _primaryKey
+  :: forall cursor e
+  .  cursor
+  -> Aff (idb :: IDB | e) Key
 
 
-foreign import _source :: forall cursor. Fn3 (ObjectStore -> CursorSource) (Index -> CursorSource) cursor CursorSource
+foreign import _source
+  :: forall cursor
+  .  Fn3 (ObjectStore -> CursorSource) (Index -> CursorSource) cursor CursorSource
 
 
-foreign import _update :: forall cursor e. Fn2 cursor Foreign (Aff (idb :: IDB | e) Key)
+foreign import _update
+  :: forall cursor e
+  . Fn2 cursor Foreign (Aff (idb :: IDB | e) Key)
 
 
-foreign import _value :: forall cursor val. cursor -> val
+foreign import _value
+  :: forall cursor val
+  .  cursor
+  -> val

@@ -59,11 +59,23 @@ exports._direction = function _direction(fromString, cursor) {
 };
 
 exports._key = function _key(cursor) {
-    return cursor.key;
+    return function aff(success, error) {
+        try {
+            success(cursor.key);
+        } catch (e) {
+            error(new Error(e.name));
+        }
+    };
 };
 
 exports._primaryKey = function _primaryKey(cursor) {
-    return cursor.primaryKey;
+    return function aff(success, error) {
+        try {
+            success(cursor.primaryKey);
+        } catch (e) {
+            error(new Error(e.name));
+        }
+    };
 };
 
 exports._source = function _source(IDBObjectStore, IDBIndex, cursor) {
