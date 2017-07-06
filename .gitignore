@@ -71,9 +71,9 @@ typings/
 # Generated files
 output
 generated-docs
+releases
 .pulp-cache
 .psc*
 .purs*
 .psa*
 dist
-src/Main.purs
