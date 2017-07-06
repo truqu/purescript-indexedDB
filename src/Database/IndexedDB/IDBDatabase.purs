@@ -69,7 +69,7 @@ objectStoreNames =
   _objectStoreNames
 
 
--- | Returns the version of the database
+-- | Returns the version of the database.
 version
     :: Database
     -> Int
@@ -80,7 +80,7 @@ version =
 --------------------
 -- EVENT HANDLERS
 --
--- | Event handler for the `abort` event
+-- | Event handler for the `abort` event.
 onAbort
     :: forall e e'
     .  Database
@@ -90,7 +90,7 @@ onAbort db f =
   Fn.runFn2 _onAbort db f
 
 
--- | Event handler for the `close` event
+-- | Event handler for the `close` event.
 onClose
     :: forall e e'
     .  Database
@@ -100,7 +100,7 @@ onClose db f =
   Fn.runFn2 _onClose db f
 
 
--- | Event handler for the `error` event
+-- | Event handler for the `error` event.
 onError
     :: forall e e'
     .  Database
@@ -110,7 +110,7 @@ onError db f =
   Fn.runFn2 _onError db f
 
 
--- | Event handler for the `versionchange` event
+-- | Event handler for the `versionchange` event.
 onVersionChange
     :: forall e e'
     .  Database

@@ -1,3 +1,5 @@
+-- | An index allows looking up records in an object store using properties of the values
+-- | in the object stores records.
 module Database.IndexedDB.IDBIndex
   ( module Database.IndexedDB.IDBIndex.Internal
   ) where

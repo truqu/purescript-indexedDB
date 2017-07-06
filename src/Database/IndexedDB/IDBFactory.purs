@@ -17,18 +17,18 @@ import Database.IndexedDB.Core
 --------------------
 -- INTERFACE
 --
--- Type alias for binding listeners to an initial open action
+-- Type alias for binding listeners to an initial open action.
 type OpenRequest e =
   { onBlocked       :: Maybe (Eff (| e) Unit)
   , onUpgradeNeeded :: Maybe (Database -> Transaction -> Eff (| e) Unit)
   }
 
 
--- | Type alias for DatabaseName
+-- | Type alias for DatabaseName.
 type DatabaseName = String
 
 
--- | Type alias for Version
+-- | Type alias for Version.
 type Version = Int
 
 
