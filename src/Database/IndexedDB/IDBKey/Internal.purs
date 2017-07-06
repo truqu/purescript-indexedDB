@@ -1,3 +1,6 @@
+-- | A key has an associated type which is one of: number, date, string, or array.
+-- |
+-- | NOTE: Binary keys aren't supported yet.
 module Database.IndexedDB.IDBKey.Internal
     ( Key(..)
     , class IDBKey, toKey , fromKey , unsafeFromKey
@@ -28,7 +31,9 @@ import Data.Traversable            (traverse)
 newtype Key = Key Foreign
 
 
-extractForeign :: Key -> Foreign
+extractForeign
+    :: Key
+    -> Foreign
 extractForeign (Key f) =
   f
 
@@ -36,6 +41,9 @@ extractForeign (Key f) =
 --------------------
 -- INTERFACES
 --
+-- | Interface describing a key. Use the `unsafeFromKey` to convert a key
+-- | to a known type (e.g if you only strings as keys, or perfectly knows the
+-- | type of a given key).
 class IDBKey a where
   toKey         :: a -> Key
   fromKey       :: Key -> F a
@@ -137,19 +145,34 @@ instance idbKeyArray :: IDBKey a => IDBKey (Array a) where
   unsafeFromKey (Key f) = map unsafeFromKey (Foreign.unsafeFromForeign f)
 
 
-dateTime :: Int -> Int -> Int -> Int -> Int -> Int -> Int -> Nullable DateTime
+-- FFI constructor to build a DateTime from years, months, days, hours, minutes, seconds and millis
+dateTime
+    :: Int -- ^ years
+    -> Int -- ^ months
+    -> Int -- ^ days
+    -> Int -- ^ hours
+    -> Int -- ^ minutes
+    -> Int -- ^ seconds
+    -> Int -- ^ milliseconds
+    -> Nullable DateTime
 dateTime y m d h mi s ms =
   toNullable $ DateTime
   <$> (Date.canonicalDate <$> toEnum y <*> toEnum m <*> toEnum d)
   <*> (Time <$> toEnum h <*> toEnum mi <*> toEnum s <*> toEnum ms)
 
 
-dateTimeF :: DateTime -> F DateTime
+-- FFI constructor to convert a JS `Date` into a successful `F DateTime`
+dateTimeF
+    :: DateTime
+    -> F DateTime
 dateTimeF =
   Right >>> Identity >>> ExceptT
 
 
-dateTimeE :: String -> F DateTime
+-- FFI constructor to convert a string into an errored `F DateTime`
+dateTimeE
+    :: String
+    -> F DateTime
 dateTimeE =
   Foreign.TypeMismatch "Date" >>> flip NonEmpty Nil >>> NonEmptyList >>> Left >>> Identity >>> ExceptT
 
@@ -157,10 +180,13 @@ dateTimeE =
 --------------------
 -- FFI
 --
-foreign import _dateTimeToForeign  :: Fn7 Int Int Int Int Int Int Int Foreign
+foreign import _dateTimeToForeign
+    :: Fn7 Int Int Int Int Int Int Int Foreign
 
 
-foreign import _readDateTime :: Fn4 (Int -> Int -> Int -> Int -> Int -> Int -> Int -> Nullable DateTime) (DateTime -> F DateTime) (String -> F DateTime) Foreign (F DateTime)
+foreign import _readDateTime
+    :: Fn4 (Int -> Int -> Int -> Int -> Int -> Int -> Int -> Nullable DateTime) (DateTime -> F DateTime) (String -> F DateTime) Foreign (F DateTime)
 
 
-foreign import _unsafeReadDateTime :: Fn2 (Int -> Int -> Int -> Int -> Int -> Int -> Int -> Nullable DateTime) Foreign DateTime
+foreign import _unsafeReadDateTime
+    :: Fn2 (Int -> Int -> Int -> Int -> Int -> Int -> Int -> Nullable DateTime) Foreign DateTime
