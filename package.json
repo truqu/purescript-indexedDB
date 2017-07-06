@@ -5,7 +5,7 @@
   "scripts": {
     "prepare:release": "mkdir -p releases/github && cp -r README.md LICENSE src bower.json releases/github",
     "test:build": "mkdir -p dist/karma && pulp browserify -j 4 --main \"Test.Main\" -I test --to dist/karma/index.js",
-    "test:run": "karma start --single-run karma.conf.js",
+    "test:run": "karma start karma.conf.js",
     "test:run:browserstack": "karma start karma.browserstack.conf.js",
     "test:browserstack": "npm run test:build && npm run test:run:browserstack",
     "test": "npm run test:build && npm run test:run",

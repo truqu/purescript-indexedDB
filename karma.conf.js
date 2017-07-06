@@ -1,6 +1,7 @@
 module.exports = config => {
     config.set({
         autoWatch: true,
+        singleRun: true,
         browsers: ["Chrome"],
         files: [
             "dist/karma/index.js",
@@ -15,7 +16,6 @@ module.exports = config => {
             "karma-mocha",
         ],
         reporters: ["spec"],
-        singleRun: false,
         client: {
             mocha: {
                 timeout: 10000
