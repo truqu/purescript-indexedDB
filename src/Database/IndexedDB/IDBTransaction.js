@@ -9,6 +9,10 @@ exports._abort = function _abort(tx) {
     };
 };
 
+exports._db = function _db(tx) {
+    return tx.db;
+};
+
 exports._error = function _error(tx) {
     return tx.error == null
         ? null
@@ -34,6 +38,10 @@ exports._objectStore = function _objectStore(tx, name) {
             error(new Error(e.name));
         }
     };
+};
+
+exports._objectStoreNames = function _objectStoreNames(tx) {
+    return tx.objectStoreNames;
 };
 
 exports._onAbort = function _onAbort(tx, f) {
