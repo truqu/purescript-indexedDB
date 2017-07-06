@@ -46,7 +46,7 @@ Tested in the cloud on multiple browsers and operating systems thanks to [Browse
 
 | IE / Edge | Chrome | Firefox | Safari  | Opera | Android | iOS Safari |
 | ----------| ------ | ------- | ------- | ----- | ------- | ---------- |
-| -         | >= 56  | >= 51   | >= 10.1 | >= 43 | >= 4.4  | >= 10.3    |
+| -         | >= 57  | >= 51   | -       | >= 46 | -       | -          |
 
 <p align="center">
   <a href="https://www.browserstack.com"><img alt="browserstack" src=".github/browserstack.png" /></a>
