@@ -25,13 +25,14 @@
     "url": "git://github.com/KtorZ/purescript-ifrit.git"
   },
   "dependencies": {
-    "purescript-maybe": "3.0.0",
-    "purescript-aff": "3.1.0",
-    "purescript-datetime": "3.2.0"
+    "purescript-maybe": "^3.0.0",
+    "purescript-aff": "^3.1.0",
+    "purescript-datetime": "^3.2.0"
   },
   "devDependencies": {
-    "purescript-spec": "1.0.0",
-    "purescript-psci-support": "3.0.0",
-    "purescript-now": "3.0.0"
+    "purescript-spec": "^1.0.0",
+    "purescript-psci-support": "^3.0.0",
+    "purescript-now": "^3.0.0",
+    "purescript-spec-mocha": "https://github.com/truqu/purescript-spec-mocha.git#0.5.0"
   }
 }
