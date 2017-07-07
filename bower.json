@@ -1,7 +1,7 @@
 {
   "name": "purescript-indexeddb",
   "description": "An API wrapper around IndexedDB",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "authors": [
     "Matthias Benkort <matthias.benkort@truqu.com>"
   ],
@@ -19,10 +19,10 @@
     "deploy.sh"
   ],
   "license": "MIT",
-  "homepage": "https://github.com/truqu/purescript-indexeddb",
+  "homepage": "https://github.com/truqu/purescript-indexedDB",
   "repository": {
     "type": "git",
-    "url": "git://github.com/KtorZ/purescript-ifrit.git"
+    "url": "git://github.com/truqu/purescript-indexedDB.git"
   },
   "dependencies": {
     "purescript-maybe": "^3.0.0",
