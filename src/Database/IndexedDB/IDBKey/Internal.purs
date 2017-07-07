@@ -3,6 +3,7 @@
 -- | NOTE: Binary keys aren't supported yet.
 module Database.IndexedDB.IDBKey.Internal
     ( Key(..)
+    , none
     , class IDBKey, toKey , fromKey , unsafeFromKey
     , extractForeign
     ) where
@@ -22,6 +23,7 @@ import Data.List.NonEmpty          (NonEmptyList(..))
 import Data.List.Types             (List(..))
 import Data.NonEmpty               (NonEmpty(..))
 import Data.Either                 (Either(..), either, isRight)
+import Data.Maybe                  (Maybe(..))
 import Data.Identity               (Identity(..))
 import Data.Nullable               (Nullable, toNullable)
 import Data.Time                    as Time
@@ -48,6 +50,11 @@ class IDBKey a where
   toKey         :: a -> Key
   fromKey       :: Key -> F a
   unsafeFromKey :: Key -> a
+
+
+none :: Maybe Key
+none =
+  Nothing
 
 
 --------------------
