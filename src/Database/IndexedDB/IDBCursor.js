@@ -26,6 +26,7 @@ exports._continue = function _continue(cursor, key) {
     return function aff(success, error) {
         try {
             cursor.continue(key || undefined);
+            success();
         } catch (e) {
             error(new Error(e.name));
         }
@@ -36,6 +37,7 @@ exports._continuePrimaryKey = function _continuePrimaryKey(cursor, key, primaryK
     return function aff(success, error) {
         try {
             cursor.continuePrimaryKey(key, primaryKey);
+            success();
         } catch (e) {
             error(new Error(e.name));
         }
