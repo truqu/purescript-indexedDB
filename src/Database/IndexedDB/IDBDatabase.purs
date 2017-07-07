@@ -30,23 +30,41 @@ import Database.IndexedDB.IDBObjectStore (IDBObjectStoreParameters)
 -- | The IDBDatabase interface represents a connection to a database.
 class IDBDatabase db where
   -- | Closes the connection once all running transactions have finished.
-  close :: forall e. db -> Aff (idb :: IDB | e) Unit
+  close
+    :: forall e
+    .  db
+    -> Aff (idb :: IDB | e) Unit
 
   -- | Creates a new object store with the given name and options and returns a new IDBObjectStore.
   -- |
   -- | Throws a "InvalidStateError" DOMException if not called within an upgrade transaction
-  createObjectStore :: forall e. db -> StoreName -> IDBObjectStoreParameters -> Aff (idb :: IDB | e) ObjectStore
+  createObjectStore
+    :: forall e
+    .  db
+    -> StoreName
+    -> IDBObjectStoreParameters
+    -> Aff (idb :: IDB | e) ObjectStore
 
   -- | Deletes the object store with the given name.
   -- |
   -- | Throws a "InvalidStateError" DOMException if not called within an upgrade transaction.
-  deleteObjectStore :: forall e.  db -> StoreName -> Aff (idb :: IDB | e) ObjectStore
+  deleteObjectStore
+    :: forall e
+    .  db
+    -> StoreName
+    -> Aff (idb :: IDB | e) ObjectStore
 
   -- | Returns a new transaction with the given mode (ReadOnly|ReadWrite)
   -- | and scope which in the form of an array of object store names.
-  transaction :: forall e. db -> Array StoreName -> TransactionMode -> Aff (idb :: IDB | e) Transaction
+  transaction
+    :: forall e
+    .  db
+    -> Array StoreName
+    -> TransactionMode
+    -> Aff (idb :: IDB | e) Transaction
 
 
+-- | Type alias for StoreName
 type StoreName = String
 
 

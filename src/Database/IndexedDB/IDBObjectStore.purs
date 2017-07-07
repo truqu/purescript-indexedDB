@@ -38,10 +38,18 @@ class IDBObjectStore store where
   -- |
   -- | If add() is used, and if a record with the key already exists the request will fail,
   -- | with a "ConstraintError" DOMException.
-  add :: forall v k e. (IDBKey k) => store -> v -> Maybe k -> Aff (idb :: IDB | e) Key
+  add
+    :: forall v k e. (IDBKey k)
+    => store
+    -> v
+    -> Maybe k
+    -> Aff (idb :: IDB | e) Key
 
   -- | Deletes all records in store.
-  clear :: forall e. store -> Aff (idb :: IDB | e) Unit
+  clear
+    :: forall e
+    .  store
+    -> Aff (idb :: IDB | e) Unit
 
   -- | Creates a new index in store with the given name, keyPath and options and
   -- | returns a new IDBIndex. If the keyPath and options define constraints that
@@ -49,18 +57,36 @@ class IDBObjectStore store where
   -- | will abort with a "ConstraintError" DOMException.
   -- |
   -- | Throws an "InvalidStateError" DOMException if not called within an upgrade transaction.
-  createIndex :: forall e. store -> IndexName -> KeyPath -> IDBIndexParameters -> Aff (idb :: IDB | e) Index
+  createIndex
+    :: forall e
+    .  store
+    -> IndexName
+    -> KeyPath
+    -> IDBIndexParameters
+    -> Aff (idb :: IDB | e) Index
 
   -- | Deletes records in store with the given key or in the given key range in query.
-  delete :: forall e. store -> KeyRange -> Aff (idb :: IDB | e) Unit
+  delete
+    :: forall e
+    .  store
+    -> KeyRange
+    -> Aff (idb :: IDB | e) Unit
 
   -- | Deletes the index in store with the given name.
   -- |
   -- | Throws an "InvalidStateError" DOMException if not called within an upgrade transaction.
-  deleteIndex :: forall e. store -> IndexName -> Aff (idb :: IDB | e) Unit
+  deleteIndex
+    :: forall e
+    .  store
+    -> IndexName
+    -> Aff (idb :: IDB | e) Unit
 
   -- | Returns an IDBIndex for the index named name in store.
-  index :: forall e. store -> IndexName -> Aff (idb :: IDB | e) Index
+  index
+    :: forall e
+    .  store
+    -> IndexName
+    -> Aff (idb :: IDB | e) Index
 
   -- | Adds or updates a record in store with the given value and key.
   -- |
@@ -68,7 +94,12 @@ class IDBObjectStore store where
   -- | will be thrown.
   -- |
   -- | If put() is used, any existing record with the key will be replaced.
-  put :: forall v k e. (IDBKey k) => store -> v -> Maybe k -> Aff (idb :: IDB | e) Key
+  put
+    :: forall v k e. (IDBKey k)
+    => store
+    -> v
+    -> Maybe k
+    -> Aff (idb :: IDB | e) Key
 
 
 -- | Type alias for IndexName

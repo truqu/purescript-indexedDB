@@ -29,10 +29,17 @@ import Database.IndexedDB.Core     (IDB, Database, ObjectStore, Transaction, Tra
 class IDBTransaction tx where
   -- | Aborts the transaction. All pending requests will fail with a "AbortError"
   -- | DOMException and all changes made to the database will be reverted.
-  abort :: forall e. tx -> Aff (idb :: IDB | e) Unit
+  abort
+    :: forall e
+    .  tx
+    -> Aff (idb :: IDB | e) Unit
 
   -- | Returns an IDBObjectStore in the transaction's scope.
-  objectStore :: forall e. tx -> String -> Aff (idb :: IDB | e) ObjectStore
+  objectStore
+    :: forall e
+    .  tx
+    -> String
+    -> Aff (idb :: IDB | e) ObjectStore
 
 
 --------------------
@@ -99,8 +106,8 @@ onError
   .  Transaction
   -> (Error -> Eff ( | e') Unit)
   -> Aff (idb :: IDB | e) Unit
-onError db f =
-  Fn.runFn2 _onError db f
+onError db' f =
+  Fn.runFn2 _onError db' f
 
 
 --------------------
