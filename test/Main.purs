@@ -16,10 +16,11 @@ import Data.DateTime.Instant             (toDateTime)
 import Data.Either                       (Either(..))
 import Data.Enum                         (toEnum)
 import Data.Maybe                        (Maybe(..), isNothing, maybe)
+import Data.Array                        (head, drop)
 import Data.Time.Duration                (Milliseconds(..))
 import Data.Traversable                  (traverse)
 import Data.Tuple                        (Tuple(..), uncurry)
-import Test.Spec                         (describe, describe, it, it)
+import Test.Spec                         (describe, describeOnly, it)
 import Test.Spec.Assertions              (shouldEqual, fail)
 import Test.Spec.Mocha                   (MOCHA, runMocha)
 
@@ -276,7 +277,7 @@ main = runMocha do
     it "can access attributes of a range" do
       let range = IDBKeyRange.lowerBound 14 false
       IDBKeyRange.lower range `shouldEqual` (Just $ toKey 14)
-      IDBKeyRange.upper range `shouldEqual` (Nothing :: Maybe Key)
+      IDBKeyRange.upper range `shouldEqual` none
       IDBKeyRange.lowerOpen range `shouldEqual` false
       IDBKeyRange.upperOpen range `shouldEqual` true
 
@@ -368,7 +369,7 @@ main = runMocha do
         { storeParams: { autoIncrement: true, keyPath: [] }
         , onUpgradeNeeded: Just $ \_ store -> launchAff' do
             -- no key
-            key <- IDBObjectStore.add store "patate" (Nothing :: Maybe Key)
+            key <- IDBObjectStore.add store "patate" none
             (toKey 1) `shouldEqual` key
 
             -- int key
@@ -424,7 +425,7 @@ main = runMocha do
             mkey `shouldEqual` (Just key)
 
             mkey <- IDBObjectStore.getKey store (IDBKeyRange.only 42)
-            mkey `shouldEqual` (Nothing :: Maybe Key)
+            mkey `shouldEqual` none
           }
       tearDown db
 
@@ -455,27 +456,37 @@ main = runMocha do
       tearDown db
 
     it "openCursor()" do
+      let cb =
+            { onSuccess : const $ pure unit
+            , onError   : show >>> fail >>> launchAff'
+            , onComplete: pure unit
+            }
       { db } <- setup
         { storeParams: IDBObjectStore.defaultParameters
         , onUpgradeNeeded: Just $ \_ store -> launchAff' do
-            _ <- IDBObjectStore.openCursor store Nothing Next
-            _ <- IDBObjectStore.openCursor store Nothing NextUnique
-            _ <- IDBObjectStore.openCursor store Nothing Prev
-            _ <- IDBObjectStore.openCursor store Nothing PrevUnique
-            _ <- IDBObjectStore.openCursor store (Just $ IDBKeyRange.upperBound 1 true) Next
+            _ <- IDBObjectStore.openCursor store Nothing Next cb
+            _ <- IDBObjectStore.openCursor store Nothing NextUnique cb
+            _ <- IDBObjectStore.openCursor store Nothing Prev cb
+            _ <- IDBObjectStore.openCursor store Nothing PrevUnique cb
+            _ <- IDBObjectStore.openCursor store (Just $ IDBKeyRange.upperBound 1 true) Next cb
             pure unit
         }
       tearDown db
 
     it "openKeyCursor()" do
+      let cb =
+            { onSuccess : const $ pure unit
+            , onError   : show >>> fail >>> launchAff'
+            , onComplete: pure unit
+            }
       { db } <- setup
         { storeParams: IDBObjectStore.defaultParameters
         , onUpgradeNeeded: Just $ \_ store -> launchAff' do
-            _ <- IDBObjectStore.openKeyCursor store Nothing Next
-            _ <- IDBObjectStore.openKeyCursor store Nothing NextUnique
-            _ <- IDBObjectStore.openKeyCursor store Nothing Prev
-            _ <- IDBObjectStore.openKeyCursor store Nothing PrevUnique
-            _ <- IDBObjectStore.openKeyCursor store (Just $ IDBKeyRange.lowerBound 1 true) Next
+            _ <- IDBObjectStore.openKeyCursor store Nothing Next cb
+            _ <- IDBObjectStore.openKeyCursor store Nothing NextUnique cb
+            _ <- IDBObjectStore.openKeyCursor store Nothing Prev cb
+            _ <- IDBObjectStore.openKeyCursor store Nothing PrevUnique cb
+            _ <- IDBObjectStore.openKeyCursor store (Just $ IDBKeyRange.lowerBound 1 true) Next cb
             pure unit
         }
       tearDown db
@@ -637,10 +648,15 @@ main = runMocha do
         , values          : [ { key: 14, indexedProperty: "patate" } :+: Nothing
                             ]
         , onUpgradeNeeded : Just $ \db tx index -> launchAff' do
+            let cb =
+                  { onSuccess : const $ pure unit
+                  , onError   : show >>> fail >>> launchAff'
+                  , onComplete: pure unit
+                  }
             IDBTransaction.onAbort tx (pure unit)
             IDBDatabase.onAbort db (pure unit)
             IDBTransaction.abort tx
-            cursor <- attempt $ IDBIndex.openKeyCursor index Nothing Next
+            cursor <- attempt $ IDBIndex.openKeyCursor index Nothing Next cb
             case cursor of
               Right _  -> fail "expected InvalidStateError"
               Left err -> message err `shouldEqual` "InvalidStateError"
@@ -658,13 +674,17 @@ main = runMocha do
                             ]
         , onUpgradeNeeded : Nothing
         }
-
+      let cb =
+            { onSuccess : const $ pure unit
+            , onError   : show >>> fail >>> launchAff'
+            , onComplete: pure unit
+            }
       tx    <- IDBDatabase.transaction db ["store"] ReadOnly
       store <- IDBTransaction.objectStore tx "store"
       index <- IDBObjectStore.index store "index"
       IDBTransaction.onAbort tx (pure unit)
       IDBTransaction.abort tx
-      cursor <- attempt $ IDBIndex.openKeyCursor index Nothing Next
+      cursor <- attempt $ IDBIndex.openKeyCursor index Nothing Next cb
       case cursor of
         Right _  -> fail "expected TransactionInactiveError"
         Left err -> message err `shouldEqual` "TransactionInactiveError"
@@ -679,9 +699,14 @@ main = runMocha do
         , values          : [ { key: 14, indexedProperty: "patate" } :+: Nothing
                             ]
         , onUpgradeNeeded : Just $ \db tx index -> launchAff' do
+            let cb =
+                  { onSuccess : const $ pure unit
+                  , onError   : show >>> fail >>> launchAff'
+                  , onComplete: pure unit
+                  }
             store <- IDBTransaction.objectStore tx "store"
             IDBObjectStore.deleteIndex store "index"
-            cursor <- attempt $ IDBIndex.openKeyCursor index Nothing Next
+            cursor <- attempt $ IDBIndex.openKeyCursor index Nothing Next cb
             case cursor of
               Right _  -> fail "expected InvalidStateError"
               Left err -> message err `shouldEqual` "InvalidStateError"
@@ -697,10 +722,15 @@ main = runMocha do
         , values          : [ { key: 14, indexedProperty: "patate" } :+: Nothing
                             ]
         , onUpgradeNeeded : Just $ \db tx index -> launchAff' do
+            let cb =
+                  { onSuccess : const $ pure unit
+                  , onError   : show >>> fail >>> launchAff'
+                  , onComplete: pure unit
+                  }
             IDBTransaction.onAbort tx (pure unit)
             IDBDatabase.onAbort db (pure unit)
             IDBTransaction.abort tx
-            cursor <- attempt $ IDBIndex.openCursor index Nothing Next
+            cursor <- attempt $ IDBIndex.openCursor index Nothing Next cb
             case cursor of
               Right _  -> fail "expected InvalidStateError"
               Left err -> message err `shouldEqual` "InvalidStateError"
@@ -718,13 +748,17 @@ main = runMocha do
                             ]
         , onUpgradeNeeded : Nothing
         }
-
+      let cb =
+            { onSuccess : const $ pure unit
+            , onError   : show >>> fail >>> launchAff'
+            , onComplete: pure unit
+            }
       tx    <- IDBDatabase.transaction db ["store"] ReadOnly
       store <- IDBTransaction.objectStore tx "store"
       index <- IDBObjectStore.index store "index"
       IDBTransaction.onAbort tx (pure unit)
       IDBTransaction.abort tx
-      cursor <- attempt $ IDBIndex.openCursor index Nothing Next
+      cursor <- attempt $ IDBIndex.openCursor index Nothing Next cb
       case cursor of
         Right _  -> fail "expected TransactionInactiveError"
         Left err -> message err `shouldEqual` "TransactionInactiveError"
@@ -739,9 +773,14 @@ main = runMocha do
         , values          : [ { key: 14, indexedProperty: "patate" } :+: Nothing
                             ]
         , onUpgradeNeeded : Just $ \db tx index -> launchAff' do
+            let cb =
+                  { onSuccess : const $ pure unit
+                  , onError   : show >>> fail >>> launchAff'
+                  , onComplete: pure unit
+                  }
             store <- IDBTransaction.objectStore tx "store"
             IDBObjectStore.deleteIndex store "index"
-            cursor <- attempt $ IDBIndex.openCursor index Nothing Next
+            cursor <- attempt $ IDBIndex.openCursor index Nothing Next cb
             case cursor of
               Right _  -> fail "expected InvalidStateError"
               Left err -> message err `shouldEqual` "InvalidStateError"
@@ -788,4 +827,245 @@ main = runMocha do
       val   <- IDBIndex.get index (IDBKeyRange.lowerBound "autruche" false)
       ((\r -> r.key) <$> val) `shouldEqual` (Just 42)
 
+      tearDown db
+
+  describe "IDBCursor" do
+    let
+        tearDown db = do
+          IDBDatabase.close db
+          _ <- IDBFactory.deleteDatabase (IDBDatabase.name db)
+          pure unit
+
+        setup :: forall value e e'.
+                 { storeParams     :: { keyPath :: Array String, autoIncrement :: Boolean }
+                 , indexParams     :: { unique :: Boolean, multiEntry :: Boolean }
+                 , values          :: Array (Tuple value (Maybe Key))
+                 , keyPath         :: Array String
+                 , onUpgradeNeeded :: Maybe (Database -> Transaction -> Index -> Eff (idb :: IDB, avar :: AVAR, exception :: EXCEPTION | e') Unit)
+               } -> Aff (idb :: IDB, avar :: AVAR | e) { db :: Database, index :: Index, store :: ObjectStore }
+        setup { storeParams, indexParams, values, keyPath, onUpgradeNeeded } = do
+          let onUpgradeNeeded' var db tx = launchAff' do
+                store <- IDBDatabase.createObjectStore db "store" storeParams
+                _     <- traverse (uncurry (IDBObjectStore.add store)) values
+                index <- IDBObjectStore.createIndex store "index" keyPath indexParams
+                liftEff $ maybe (pure unit) id (onUpgradeNeeded <*> pure db <*> pure tx <*> pure index)
+                putVar var { db, index, store }
+
+          var <- makeVar
+          db  <- IDBFactory.open "db" Nothing
+            { onUpgradeNeeded : Just (onUpgradeNeeded' var)
+            , onBlocked : Nothing
+            }
+          takeVar var
+
+    it "continue() - iterate to the next record" do
+      { db } <- setup
+        { storeParams     : IDBObjectStore.defaultParameters
+        , indexParams     : IDBIndex.defaultParameters
+        , keyPath         : []
+        , values          : [ "cupcake" :+: (Just $ toKey 4)
+                            , "pancake" :+: (Just $ toKey 2)
+                            , "pie"     :+: (Just $ toKey 1)
+                            , "pie"     :+: (Just $ toKey 3)
+                            ]
+        , onUpgradeNeeded: Nothing
+        }
+      let cb vdone vvals =
+            { onComplete: launchAff' do
+                putVar vdone unit
+
+            , onError: \error  -> launchAff' do
+                fail $ "unexpected error: " <> show error
+
+            , onSuccess: \cursor -> launchAff' do
+                vals <- takeVar vvals
+                pure (IDBCursor.value cursor) >>= shouldEqual (maybe "" _.v $ head vals)
+                IDBCursor.primaryKey cursor   >>= shouldEqual (maybe (toKey 0) _.k $ head vals)
+                putVar vvals (drop 1 vals)
+                IDBCursor.continue cursor none
+            }
+      vdone <- makeVar
+      vvals <- makeVar'
+        [ { v: "pie"    , k: toKey 1 }
+        , { v: "pancake", k: toKey 2 }
+        , { v: "pie"    , k: toKey 3 }
+        , { v: "cupcake", k: toKey 4 }
+        ]
+      tx    <- IDBDatabase.transaction db ["store"] ReadOnly
+      store <- IDBTransaction.objectStore tx "store"
+      IDBObjectStore.openCursor store Nothing Next (cb vdone vvals)
+      takeVar vdone
+      tearDown db
+
+    it "continue() - attempt to iterate in the wrong direction" do
+      { db } <- setup
+        { storeParams     : IDBObjectStore.defaultParameters
+        , indexParams     : IDBIndex.defaultParameters
+        , keyPath         : []
+        , values          : [ "cupcake" :+: (Just $ toKey 4)
+                            , "pancake" :+: (Just $ toKey 2)
+                            , "pie"     :+: (Just $ toKey 1)
+                            , "pie"     :+: (Just $ toKey 3)
+                            ]
+        , onUpgradeNeeded: Nothing
+        }
+      let cb vdone =
+            { onComplete: launchAff' do
+                fail $ "shouldn't complete"
+
+            , onError: \error  -> launchAff' do
+                fail $ "unexpected error: " <> show error
+
+            , onSuccess: \cursor -> launchAff' do
+                res <- attempt $ IDBCursor.continue cursor (Just 1)
+                case res of
+                  Left err  -> do
+                    message err `shouldEqual` "DataError"
+                    putVar vdone unit
+                  Right _ -> do
+                    fail "expected continue to fail"
+            }
+      vdone <- makeVar
+      tx    <- IDBDatabase.transaction db ["store"] ReadOnly
+      store <- IDBTransaction.objectStore tx "store"
+      IDBObjectStore.openCursor store Nothing Next (cb vdone)
+      takeVar vdone
+      tearDown db
+
+
+    it "advance() - iterate cursor number of times specified by count" do
+      { db } <- setup
+        { storeParams     : { keyPath: ["pKey"], autoIncrement: false }
+        , indexParams     : IDBIndex.defaultParameters
+        , keyPath         : []
+        , values          : [ { pKey: "pkey_0", iKey: "ikey_0" } :+: Nothing
+                            , { pKey: "pkey_1", iKey: "ikey_1" } :+: Nothing
+                            , { pKey: "pkey_2", iKey: "ikey_2" } :+: Nothing
+                            , { pKey: "pkey_3", iKey: "ikey_3" } :+: Nothing
+                            ]
+        , onUpgradeNeeded: Nothing
+        }
+      let cb vdone vjump =
+            { onComplete: launchAff' do
+                putVar vdone unit
+
+            , onError: \error  -> launchAff' do
+                fail $ "unexpected error: " <> show error
+
+            , onSuccess: \cursor -> launchAff' do
+                jump <- takeVar vjump
+                if jump
+                   then do
+                     IDBCursor.advance cursor 3
+                   else do
+                     let value = IDBCursor.value cursor
+                     value.pKey `shouldEqual` "pkey_3"
+                     value.iKey `shouldEqual` "ikey_3"
+                     IDBCursor.continue cursor none
+                putVar vjump false
+            }
+      vdone <- makeVar
+      vjump <- makeVar' true
+      tx    <- IDBDatabase.transaction db ["store"] ReadOnly
+      store <- IDBTransaction.objectStore tx "store"
+      IDBObjectStore.openCursor store Nothing Next (cb vdone vjump)
+      takeVar vdone
+      tearDown db
+
+    it "delete() - remove a record from the object store" do
+      { db } <- setup
+        { storeParams     : { keyPath: ["pKey"], autoIncrement: false }
+        , indexParams     : IDBIndex.defaultParameters
+        , keyPath         : []
+        , values          : [ { pKey: "pkey_0", iKey: "ikey_0" } :+: Nothing
+                            , { pKey: "pkey_1", iKey: "ikey_1" } :+: Nothing
+                            , { pKey: "pkey_2", iKey: "ikey_2" } :+: Nothing
+                            , { pKey: "pkey_3", iKey: "ikey_3" } :+: Nothing
+                            ]
+        , onUpgradeNeeded: Nothing
+        }
+      let cb vdone store =
+            { onComplete: launchAff' do
+                mval <- map _.pKey <$> IDBIndex.get store (IDBKeyRange.only "pkey_0")
+                mval `shouldEqual` (Nothing :: Maybe String)
+                putVar vdone unit
+
+            , onError: \error  -> launchAff' do
+                fail $ "unexpected error: " <> show error
+
+            , onSuccess: \cursor -> launchAff' do
+                let value = IDBCursor.value cursor
+                value.pKey `shouldEqual` "pkey_0"
+                IDBCursor.delete cursor
+                IDBCursor.advance cursor 4
+            }
+      vdone <- makeVar
+      tx    <- IDBDatabase.transaction db ["store"] ReadWrite
+      store <- IDBTransaction.objectStore tx "store"
+      IDBObjectStore.openCursor store Nothing Next (cb vdone store)
+      takeVar vdone
+      tearDown db
+
+    it "update() - modify a record in the object store" do
+      { db } <- setup
+        { storeParams     : { keyPath: ["pKey"], autoIncrement: false }
+        , indexParams     : IDBIndex.defaultParameters
+        , keyPath         : []
+        , values          : [ { pKey: "pkey_0", iKey: "ikey_0" } :+: Nothing
+                            ]
+        , onUpgradeNeeded: Nothing
+        }
+      let cb vdone store =
+            { onComplete: launchAff' do
+                mval <- map _.iKey <$> IDBIndex.get store (IDBKeyRange.only "pkey_0")
+                mval `shouldEqual` (Just "patate")
+                putVar vdone unit
+
+            , onError: \error  -> launchAff' do
+                fail $ "unexpected error: " <> show error
+
+            , onSuccess: \cursor -> launchAff' do
+                let value = IDBCursor.value cursor
+                value.pKey `shouldEqual` "pkey_0"
+                key <- IDBCursor.update cursor { pKey: "pkey_0", iKey: "patate" }
+                key `shouldEqual` toKey "pkey_0"
+                IDBCursor.advance cursor 4
+            }
+      vdone <- makeVar
+      tx    <- IDBDatabase.transaction db ["store"] ReadWrite
+      store <- IDBTransaction.objectStore tx "store"
+      IDBObjectStore.openCursor store Nothing Next (cb vdone store)
+      takeVar vdone
+      tearDown db
+
+    it "update() - throw ReadOnlyError after update on ReadOnly transaction" do
+      { db } <- setup
+        { storeParams     : { keyPath: ["pKey"], autoIncrement: false }
+        , indexParams     : IDBIndex.defaultParameters
+        , keyPath         : []
+        , values          : [ { pKey: "pkey_0", iKey: "ikey_0" } :+: Nothing
+                            ]
+        , onUpgradeNeeded: Nothing
+        }
+      let cb vdone =
+            { onComplete: launchAff' do
+                fail $ "shouldn't complete"
+
+            , onError: \error  -> launchAff' do
+                fail $ "unexpected error: " <> show error
+
+            , onSuccess: \cursor -> launchAff' do
+                res <- attempt $ IDBCursor.update cursor "patate"
+                case res of
+                  Left err -> do
+                    message err `shouldEqual` "ReadOnlyError"
+                    putVar vdone unit
+                  Right _ ->
+                    fail $ "expected ReadOnlyError"
+            }
+      vdone <- makeVar
+      tx    <- IDBDatabase.transaction db ["store"] ReadOnly
+      store <- IDBTransaction.objectStore tx "store"
+      IDBObjectStore.openCursor store Nothing Next (cb vdone)
+      takeVar vdone
       tearDown db
