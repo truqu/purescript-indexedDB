@@ -5,6 +5,14 @@ This package offers complete bindings and type-safety upon the [IndexedDB API](h
 
 ## Overview 
 
+The `IDBCore` and `IDBFactory` are the two entry points required to create and connect to an
+indexed database. From there, modules are divided such that each of them covers a specific IDB
+interface. 
+
+They are designed to be used as qualified imports such that each method gets prefixed with a
+menaingful namespace (e.g `IDBIndex.get`, `IDBObjectStore.openCursor` ...)
+
+Here's a quick example of what it look likes. 
 ```purescript
 main :: Eff (idb :: IDB, exception :: EXCEPTION, console :: CONSOLE) Unit
 main = launchAff' do
@@ -27,14 +35,28 @@ onUpgradeNeeded db _ = launchAff' do
   pure unit
 ```
 
+## Notes
+
+### Errors
+Errors normally thrown by the IDB\* interfaces are wrapped in the `Aff` Monad as `Error`
+where the `message` corresponds to the error's name (e.g. "InvalidStateError").
+Pattern matching can therefore be done on any error message to handle specific errors thrown
+by the API.
+
+### Examples
+The `test` folder contains a great amount of examples showing practical usage of the IDB\*
+interfaces. Do not hesitate to have a peek should you wonder how to use one of the module. The
+wrapper tries to keep as much as possible an API consistent with the original IndexedDB API.
+Hence, it should be quite straightforward to translate any JavaScript example to a PureScript
+one. 
+
 ## Changelog
 
-- Release incoming
+#### v0.9.0
 
-#### TODO
-
-- Add support for `index.getAll` method
-- Complete the specifications with the [official tests list](https://github.com/w3c/web-platform-tests/blob/master/IndexedDB/README.md) provided by W3C
+- [Indexed Database API 2.0](https://w3c.github.io/IndexedDB/) totally covered apart from 
+  - `index.getAll` method (and the associated one for the IDBObjectStore)
+  - binary keys
 
 ## Documentation
 
