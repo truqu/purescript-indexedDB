@@ -18,7 +18,7 @@ import Database.IndexedDB.Core
 -- INTERFACE
 --
 -- Type alias for binding listeners to an initial open action.
-type OpenRequest e =
+type Callbacks e =
   { onBlocked       :: Maybe (Eff (| e) Unit)
   , onUpgradeNeeded :: Maybe (Database -> Transaction -> Eff (| e) Unit)
   }
@@ -55,7 +55,7 @@ open
     :: forall e e'
     .  DatabaseName
     -> Maybe Version
-    -> OpenRequest e'
+    -> Callbacks e'
     -> Aff (idb :: IDB | e) Database
 open name mver req =
   Fn.runFn4 _open fromMaybe name mver req
@@ -72,4 +72,4 @@ foreign import _deleteDatabase
 
 foreign import _open
     :: forall a e e'
-    .  Fn4 (a -> Maybe a -> a) String (Maybe Int) (OpenRequest e') (Aff (idb :: IDB | e) Database)
+    .  Fn4 (a -> Maybe a -> a) String (Maybe Int) (Callbacks e') (Aff (idb :: IDB | e) Database)

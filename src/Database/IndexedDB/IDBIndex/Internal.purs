@@ -4,17 +4,17 @@ module Database.IndexedDB.IDBIndex.Internal where
 
 import Prelude
 
-import Control.Monad.Aff           (Aff)
-import Control.Monad.Eff           (Eff)
-import Control.Monad.Eff.Exception (Error)
-import Data.Foreign                (Foreign, unsafeFromForeign)
-import Data.Function.Uncurried      as Fn
-import Data.Function.Uncurried     (Fn2, Fn3, Fn4)
-import Data.Maybe                  (Maybe)
-import Data.Nullable               (Nullable, toMaybe, toNullable)
+import Control.Monad.Aff                  (Aff)
+import Control.Monad.Eff                  (Eff)
+import Control.Monad.Eff.Exception        (Error)
+import Data.Foreign                       (Foreign, unsafeFromForeign)
+import Data.Function.Uncurried             as Fn
+import Data.Function.Uncurried            (Fn2, Fn3, Fn4)
+import Data.Maybe                         (Maybe)
+import Data.Nullable                      (Nullable, toMaybe, toNullable)
 
-import Database.IndexedDB.Core     (IDB, CursorDirection, Index, Key, KeyCursor, KeyRange,
-                                    KeyPath, ObjectStore, ValueCursor)
+import Database.IndexedDB.Core            (IDB, CursorDirection, Index, Key, KeyCursor, KeyRange, KeyPath, ObjectStore, ValueCursor)
+import Database.IndexedDB.IDBKey.Internal (class IDBKey, Key(..))
 
 
 --------------------
@@ -166,10 +166,10 @@ instance idbIndexIndex :: IDBIndex Index where
     (toMaybe >>> map unsafeFromForeign) <$> Fn.runFn2 _get index range
 
   getAllKeys index range count =
-    Fn.runFn3 _getAllKeys index (toNullable range) (toNullable count)
+    map Key <$> Fn.runFn3 _getAllKeys index (toNullable range) (toNullable count)
 
   getKey index range =
-    toMaybe <$> Fn.runFn2 _getKey index range
+    (toMaybe >>> map Key) <$> Fn.runFn2 _getKey index range
 
   openCursor index range dir cb =
     Fn.runFn4 _openCursor index (toNullable range) (show dir) cb
@@ -186,10 +186,10 @@ instance idbIndexObjectStore :: IDBIndex ObjectStore where
     (toMaybe >>> map unsafeFromForeign) <$> Fn.runFn2 _get store range
 
   getAllKeys store range count =
-    Fn.runFn3 _getAllKeys store (toNullable range) (toNullable count)
+    map Key <$> Fn.runFn3 _getAllKeys store (toNullable range) (toNullable count)
 
   getKey store range =
-    toMaybe <$> Fn.runFn2 _getKey store range
+    (toMaybe >>> map Key) <$> Fn.runFn2 _getKey store range
 
   openCursor store range dir cb =
     Fn.runFn4 _openCursor store (toNullable range) (show dir) cb
@@ -238,12 +238,12 @@ foreign import _get
 
 foreign import _getAllKeys
     :: forall index e
-    .  Fn3 index (Nullable KeyRange) (Nullable Int) (Aff (idb :: IDB | e) (Array Key))
+    .  Fn3 index (Nullable KeyRange) (Nullable Int) (Aff (idb :: IDB | e) (Array Foreign))
 
 
 foreign import _getKey
     :: forall index e
-    .  Fn2 index KeyRange (Aff (idb :: IDB | e) (Nullable Key))
+    .  Fn2 index KeyRange (Aff (idb :: IDB | e) (Nullable Foreign))
 
 
 foreign import _openCursor

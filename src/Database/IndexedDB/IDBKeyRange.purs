@@ -29,8 +29,7 @@ import Database.IndexedDB.IDBKey.Internal (class IDBKey, Key(..), toKey, extract
 -- | The IDBKeyRange interface represents a key range.
 class IDBKeyRange range where
   -- | Returns true if key is included in the range, and false otherwise.
-  includes :: range -> Key -> Boolean
-
+  includes :: forall k. (IDBKey k) => range -> k -> Boolean
 
 -- | Type alias for open
 type Open = Boolean
@@ -121,34 +120,49 @@ upperOpen =
 --
 instance idbKeyRangeKeyRange :: IDBKeyRange KeyRange where
   includes range =
-    extractForeign >>> Fn.runFn2 _includes range
+    toKey >>> extractForeign >>> Fn.runFn2 _includes range
 
 
 --------------------
 -- FFI
 --
-foreign import _bound :: Fn4 Foreign Foreign Boolean Boolean (Nullable KeyRange)
+foreign import _bound
+  :: Fn4 Foreign Foreign Boolean Boolean (Nullable KeyRange)
 
 
-foreign import _includes :: forall range. Fn2 range Foreign Boolean
+foreign import _includes
+  :: forall range
+  .  Fn2 range Foreign Boolean
 
 
-foreign import _lower :: KeyRange -> Nullable Foreign
+foreign import _lower
+  :: KeyRange
+  -> Nullable Foreign
 
 
-foreign import _lowerBound :: Fn2 Foreign Boolean KeyRange
+foreign import _lowerBound
+  :: Fn2 Foreign Boolean KeyRange
 
 
-foreign import _lowerOpen :: KeyRange -> Boolean
+foreign import _lowerOpen
+  :: KeyRange
+  -> Boolean
 
 
-foreign import _only :: Foreign -> KeyRange
+foreign import _only
+  :: Foreign
+  -> KeyRange
 
 
-foreign import _upper :: KeyRange -> Nullable Foreign
+foreign import _upper
+  :: KeyRange
+  -> Nullable Foreign
 
 
-foreign import _upperBound :: Fn2 Foreign Boolean KeyRange
+foreign import _upperBound
+  :: Fn2 Foreign Boolean KeyRange
 
 
-foreign import _upperOpen :: KeyRange -> Boolean
+foreign import _upperOpen
+  :: KeyRange
+  -> Boolean
