@@ -52,7 +52,7 @@ one.
 
 ## Changelog
 
-#### v0.9.0
+#### v1.0.0
 
 - [Indexed Database API 2.0](https://w3c.github.io/IndexedDB/) totally covered apart from 
   - `index.getAll` method (and the associated one for the IDBObjectStore)

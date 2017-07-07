@@ -1,3 +1,6 @@
 #!/bin/sh
 
-test -n "$TRAVIS_TAG" && ( yes | pulp publish --no-push )
+git stash save
+git clean -df
+yes | pulp publish --no-push
+git stash pop
