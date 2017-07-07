@@ -1,4 +1,4 @@
-PureScript IndexedDB [![](https://img.shields.io/badge/doc-pursuit-60b5cc.svg)](http://pursuit.purescript.org/packages/purescript-indexeddb) [![Build Status](https://travis-ci.org/truqu/purescript-indexeddb.svg?branch=master)](https://travis-ci.org/truqu/purescript-indexeddb)
+PureScript IndexedDB [![](https://img.shields.io/badge/doc-pursuit-60b5cc.svg)](http://pursuit.purescript.org/packages/purescript-indexeddb) [![Build Status](https://travis-ci.org/truqu/purescript-indexedDB.svg?branch=master)](https://travis-ci.org/truqu/purescript-indexedDB)
 =====
 
 This package offers complete bindings and type-safety upon the [IndexedDB API](https://w3c.github.io/IndexedDB).
