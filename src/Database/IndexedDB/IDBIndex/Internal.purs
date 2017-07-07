@@ -4,15 +4,17 @@ module Database.IndexedDB.IDBIndex.Internal where
 
 import Prelude
 
-import Control.Monad.Aff       (Aff)
-import Data.Foreign            (Foreign, unsafeFromForeign)
-import Data.Function.Uncurried  as Fn
-import Data.Function.Uncurried (Fn2, Fn3)
-import Data.Maybe              (Maybe)
-import Data.Nullable           (Nullable, toMaybe, toNullable)
+import Control.Monad.Aff           (Aff)
+import Control.Monad.Eff           (Eff)
+import Control.Monad.Eff.Exception (Error)
+import Data.Foreign                (Foreign, unsafeFromForeign)
+import Data.Function.Uncurried      as Fn
+import Data.Function.Uncurried     (Fn2, Fn3, Fn4)
+import Data.Maybe                  (Maybe)
+import Data.Nullable               (Nullable, toMaybe, toNullable)
 
-import Database.IndexedDB.Core (IDB, CursorDirection, Index, Key, KeyCursor, KeyRange,
-                                KeyPath, ObjectStore, ValueCursor)
+import Database.IndexedDB.Core     (IDB, CursorDirection, Index, Key, KeyCursor, KeyRange,
+                                    KeyPath, ObjectStore, ValueCursor)
 
 
 --------------------
@@ -23,28 +25,57 @@ import Database.IndexedDB.Core (IDB, CursorDirection, Index, Key, KeyCursor, Key
 -- | if called when the transaction is not active.
 class IDBIndex index where
   -- | Retrieves the number of records matching the key range in query.
-  count :: forall e. index -> Maybe KeyRange -> Aff (idb :: IDB | e) Int
+  count
+    :: forall e
+    .  index
+    -> Maybe KeyRange
+    -> Aff (idb :: IDB | e) Int
 
   -- | Retrieves the value of the first record matching the given key range in query.
   -- |
   -- | NOTE
   -- | The coercion from `a` to any type is unsafe and might throw a runtime error if incorrect.
-  get :: forall a e. index -> KeyRange -> Aff (idb :: IDB | e) (Maybe a)
+  get
+    :: forall a e
+    .  index
+    -> KeyRange
+    -> Aff (idb :: IDB | e) (Maybe a)
 
   -- | Retrieves the keys of records matching the given key range in query
   -- | (up to the number given if given).
-  getAllKeys :: forall e. index -> Maybe KeyRange -> Maybe Int -> Aff (idb :: IDB | e) (Array Key)
+  getAllKeys
+    :: forall e
+    .  index
+    -> Maybe KeyRange
+    -> Maybe Int
+    -> Aff (idb :: IDB | e) (Array Key)
 
   -- | Retrieves the key of the first record matching the given key or key range in query.
-  getKey :: forall e. index -> KeyRange -> Aff (idb :: IDB | e) (Maybe Key)
+  getKey
+    :: forall e
+    .  index
+    -> KeyRange
+    -> Aff (idb :: IDB | e) (Maybe Key)
 
   -- | Opens a ValueCursor over the records matching query, ordered by direction.
   -- | If query is `Nothing`, all records in index are matched.
-  openCursor :: forall e. index -> Maybe KeyRange -> CursorDirection -> Aff (idb :: IDB | e) ValueCursor
+  openCursor
+    :: forall e e'
+    .  index
+    -> Maybe KeyRange
+    -> CursorDirection
+    -> Callbacks ValueCursor e'
+    -> Aff (idb :: IDB | e) Unit
 
   -- | Opens a KeyCursor over the records matching query, ordered by direction.
   -- | If query is `Nothing`, all records in index are matched.
-  openKeyCursor :: forall e. index -> Maybe KeyRange -> CursorDirection -> Aff (idb :: IDB | e) KeyCursor
+  openKeyCursor
+    :: forall e e'
+    .  index
+    -> Maybe KeyRange
+    -> CursorDirection
+    -> Callbacks KeyCursor e'
+    -> Aff (idb :: IDB | e) Unit
 
 
 -- | Flags to set on the index.
@@ -63,6 +94,14 @@ class IDBIndex index where
 type IDBIndexParameters =
   { unique     :: Boolean
   , multiEntry :: Boolean
+  }
+
+
+-- | Callbacks to manipulate a cursor from an Open*Cursor call
+type Callbacks cursor e =
+  { onSuccess  :: cursor -> Eff ( | e) Unit
+  , onError    :: Error -> Eff ( | e) Unit
+  , onComplete :: Eff ( | e) Unit
   }
 
 
@@ -132,11 +171,11 @@ instance idbIndexIndex :: IDBIndex Index where
   getKey index range =
     toMaybe <$> Fn.runFn2 _getKey index range
 
-  openCursor index range dir =
-    Fn.runFn3 _openCursor index (toNullable range) (show dir)
+  openCursor index range dir cb =
+    Fn.runFn4 _openCursor index (toNullable range) (show dir) cb
 
-  openKeyCursor index range dir =
-    Fn.runFn3 _openKeyCursor index (toNullable range) (show dir)
+  openKeyCursor index range dir cb =
+    Fn.runFn4 _openKeyCursor index (toNullable range) (show dir) cb
 
 
 instance idbIndexObjectStore :: IDBIndex ObjectStore where
@@ -152,11 +191,11 @@ instance idbIndexObjectStore :: IDBIndex ObjectStore where
   getKey store range =
     toMaybe <$> Fn.runFn2 _getKey store range
 
-  openCursor store range dir =
-    Fn.runFn3 _openCursor store (toNullable range) (show dir)
+  openCursor store range dir cb =
+    Fn.runFn4 _openCursor store (toNullable range) (show dir) cb
 
-  openKeyCursor store range dir =
-    Fn.runFn3 _openKeyCursor store (toNullable range) (show dir)
+  openKeyCursor store range dir cb =
+    Fn.runFn4 _openKeyCursor store (toNullable range) (show dir) cb
 
 
 --------------------
@@ -208,10 +247,10 @@ foreign import _getKey
 
 
 foreign import _openCursor
-    :: forall index e
-    .  Fn3 index (Nullable KeyRange) String (Aff (idb :: IDB | e) ValueCursor)
+    :: forall index e e'
+    .  Fn4 index (Nullable KeyRange) String (Callbacks ValueCursor e') (Aff (idb :: IDB | e) Unit)
 
 
 foreign import _openKeyCursor
-    :: forall index e
-    .  Fn3 index (Nullable KeyRange) String (Aff (idb :: IDB | e) KeyCursor)
+    :: forall index e e'
+    .  Fn4 index (Nullable KeyRange) String (Callbacks KeyCursor e') (Aff (idb :: IDB | e) Unit)

@@ -104,24 +104,42 @@ exports._getKey = function _getKey(index, range) {
     };
 };
 
-exports._openCursor = function _openCursor(index, query, dir) {
+exports._openCursor = function _openCursor(index, query, dir, cb) {
     return function aff(success, error) {
         try {
             const request = index.openCursor(query, dir);
-            request.onsuccess = successHandler(success);
-            request.onerror = errorHandler(error);
+            request.onsuccess = function onSuccess(e) {
+                if (e.target.result != null) {
+                    cb.onSuccess(e.target.result)();
+                } else {
+                    cb.onComplete();
+                }
+            };
+            request.onerror = function onError(e) {
+                cb.onError(new Error(e.target.error.name));
+            };
+            success();
         } catch (e) {
             error(new Error(e.name));
         }
     };
 };
 
-exports._openKeyCursor = function _openKeyCursor(index, query, dir) {
+exports._openKeyCursor = function _openKeyCursor(index, query, dir, cb) {
     return function aff(success, error) {
         try {
             const request = index.openKeyCursor(query, dir);
-            request.onsuccess = successHandler(success);
-            request.onerror = errorHandler(error);
+            request.onsuccess = function onSuccess(e) {
+                if (e.target.result != null) {
+                    cb.onSuccess(e.target.result)();
+                } else {
+                    cb.onComplete();
+                }
+            };
+            request.onerror = function onError(e) {
+                cb.onError(new Error(e.target.error.name));
+            };
+            success();
         } catch (e) {
             error(new Error(e.name));
         }
