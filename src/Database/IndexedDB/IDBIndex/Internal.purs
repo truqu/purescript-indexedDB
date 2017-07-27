@@ -13,7 +13,8 @@ import Data.Function.Uncurried            (Fn2, Fn3, Fn4)
 import Data.Maybe                         (Maybe)
 import Data.Nullable                      (Nullable, toMaybe, toNullable)
 
-import Database.IndexedDB.Core            (IDB, CursorDirection, Index, Key, KeyCursor, KeyRange, KeyPath, ObjectStore, ValueCursor)
+import Database.IndexedDB.Core            (IDB, Index, Key, KeyRange, KeyPath, ObjectStore)
+import Database.IndexedDB.IDBCursor       (CursorDirection, KeyCursor, ValueCursor)
 import Database.IndexedDB.IDBKey.Internal (class IDBKey, Key(..))
 
 

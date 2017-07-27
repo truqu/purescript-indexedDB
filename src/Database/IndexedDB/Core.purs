@@ -9,17 +9,14 @@
 
 module Database.IndexedDB.Core
   ( IDB
-  , CursorDirection(..)
   , CursorSource(..)
   , Database
   , Index
-  , KeyCursor
   , KeyRange
   , KeyPath
   , ObjectStore
   , Transaction
   , TransactionMode(..)
-  , ValueCursor
   , module Database.IndexedDB.IDBKey
   ) where
 
@@ -33,18 +30,6 @@ import Database.IndexedDB.IDBKey
 
 -- | IDB Effects, manifestation that something happened with the IndexedDB
 foreign import data IDB :: Effect
-
-
--- | A cursor has a direction that determines whether it moves in monotonically
--- | increasing or decreasing order of the record keys when iterated, and if it
--- | skips duplicated values when iterating indexes.
--- | The direction of a cursor also determines if the cursor initial position is at
--- | the start of its source or at its end.
-data CursorDirection
-  = Next
-  | NextUnique
-  | Prev
-  | PrevUnique
 
 
 -- | If the source of a cursor is an object store, the effective object store of
@@ -86,11 +71,6 @@ foreign import data Database :: Type
 foreign import data Index :: Type
 
 
--- | A cursor is used to iterate over a range of records in an index or an object store
--- | in a specific direction. A KeyCursor doesn't hold any value.
-foreign import data KeyCursor :: Type
-
-
 -- | A key range is a continuous interval over some data type used for keys.
 foreign import data KeyRange :: Type
 
@@ -102,20 +82,6 @@ foreign import data ObjectStore :: Type
 -- | A Transaction is used to interact with the data in a database.
 -- | Whenever data is read or written to the database it is done by using a transaction.
 foreign import data Transaction :: Type
-
-
--- | A cursor is used to iterate over a range of records in an index or an object store
--- | in a specific direction. A ValueCursor also holds the value corresponding to matching key.
-foreign import data ValueCursor :: Type
-
-
-foreign import _showCursor :: forall cursor. cursor -> String
-instance showKeyCursor :: Show KeyCursor where
-  show = _showCursor
-
-
-instance showValueCursor :: Show ValueCursor where
-  show = _showCursor
 
 
 foreign import _showDatabase
@@ -153,31 +119,12 @@ instance showTransaction :: Show Transaction where
   show = _showTransaction
 
 
-instance showCursorDirection :: Show CursorDirection where
-  show x =
-    case x of
-      Next       -> "next"
-      NextUnique -> "nextunique"
-      Prev       -> "prev"
-      PrevUnique -> "prevunique"
-
-
 instance showTransactionMode :: Show TransactionMode where
   show x =
     case x of
       ReadOnly      -> "readonly"
       ReadWrite     -> "readwrite"
       VersionChange -> "versionchange"
-
-
-instance readCursorDirection :: Read CursorDirection where
-  read s =
-    case s of
-      "next"       -> Just Next
-      "nextunique" -> Just NextUnique
-      "prev"       -> Just Prev
-      "prevunique" -> Just PrevUnique
-      _            -> Nothing
 
 
 instance readTransactionMode :: Read TransactionMode where
