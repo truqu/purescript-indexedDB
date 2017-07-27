@@ -8,8 +8,7 @@
 -- | by the API.
 
 module Database.IndexedDB.Core
-  ( class FromString, parse
-  , IDB
+  ( IDB
   , CursorDirection(..)
   , CursorSource(..)
   , Database
@@ -28,6 +27,7 @@ import Prelude                     (class Show)
 
 import Control.Monad.Eff           (kind Effect)
 import Data.Maybe                  (Maybe(..))
+import Data.String.Read            (class Read)
 
 import Database.IndexedDB.IDBKey
 
@@ -109,11 +109,6 @@ foreign import data Transaction :: Type
 foreign import data ValueCursor :: Type
 
 
--- | FromString represents enumerations that can be represented as Strings.
-class FromString a where
-  parse :: String -> Maybe a
-
-
 foreign import _showCursor :: forall cursor. cursor -> String
 instance showKeyCursor :: Show KeyCursor where
   show = _showCursor
@@ -175,8 +170,8 @@ instance showTransactionMode :: Show TransactionMode where
       VersionChange -> "versionchange"
 
 
-instance fromStringCursorDirection :: FromString CursorDirection where
-  parse s =
+instance readCursorDirection :: Read CursorDirection where
+  read s =
     case s of
       "next"       -> Just Next
       "nextunique" -> Just NextUnique
@@ -185,8 +180,8 @@ instance fromStringCursorDirection :: FromString CursorDirection where
       _            -> Nothing
 
 
-instance fromStringTransactionMode :: FromString TransactionMode where
-  parse s =
+instance readTransactionMode :: Read TransactionMode where
+  read s =
     case s of
       "readonly"      -> Just ReadOnly
       "readwrite"     -> Just ReadWrite

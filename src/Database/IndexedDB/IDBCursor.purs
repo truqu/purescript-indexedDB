@@ -16,11 +16,12 @@ module Database.IndexedDB.IDBCursor
 import Prelude                            (Unit, ($), (>>>), map)
 
 import Control.Monad.Aff                  (Aff)
+import Data.Foreign                       (Foreign, toForeign, unsafeFromForeign)
 import Data.Function.Uncurried             as Fn
 import Data.Function.Uncurried            (Fn2, Fn3)
 import Data.Maybe                         (Maybe)
 import Data.Nullable                      (Nullable, toNullable)
-import Data.Foreign                       (Foreign, toForeign, unsafeFromForeign)
+import Data.String.Read                   (read)
 
 import Database.IndexedDB.Core
 import Database.IndexedDB.IDBKey.Internal (class IDBKey, Key(..), toKey, extractForeign)
@@ -80,7 +81,7 @@ direction'
   :: KeyCursor
   -> CursorDirection
 direction' =
-  Fn.runFn2 _direction (parse >>> toNullable)
+  Fn.runFn2 _direction (read >>> toNullable)
 
 
 -- | Returns the key of the cursor. Throws a "InvalidStateError" DOMException
@@ -122,7 +123,7 @@ direction
   :: ValueCursor
   -> CursorDirection
 direction =
-  Fn.runFn2 _direction (parse >>> toNullable)
+  Fn.runFn2 _direction (read >>> toNullable)
 
 
 -- | Returns the key of the cursor. Throws a "InvalidStateError" DOMException
