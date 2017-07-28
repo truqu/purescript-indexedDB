@@ -38,10 +38,9 @@ onUpgradeNeeded db _ = launchAff' do
 ## Notes
 
 ### Errors
-Errors normally thrown by the IDB\* interfaces are wrapped in the `Aff` Monad as `Error`
-where the `message` corresponds to the error's name (e.g. "InvalidStateError").
-Pattern matching can therefore be done on any error message to handle specific errors thrown
-by the API.
+Errors normally thrown by the IDB\* interfaces are wrapped in the `Aff` Monad as `Error` where
+the `name` corresponds to the error's name (e.g. "InvalidStateError"). Pattern matching can
+therefore be done on any error to handle specific errors thrown by the API.
 
 ### Examples
 The `test` folder contains a great amount of examples showing practical usage of the IDB\*
@@ -51,6 +50,16 @@ Hence, it should be quite straightforward to translate any JavaScript example to
 one. 
 
 ## Changelog
+
+#### v2.0.0
+
+- review interface implementation (use of opaque classes to improve readability without compromising
+  the reusability). The API doesn't really change from a user perspective though.
+
+- make the Key more opaque (by having an IDBKey instance for Foreign types)
+
+- Upgrade purescript-exceptions to 3.1.0 and leverage the new `name` accessor
+
 
 #### v1.0.0
 

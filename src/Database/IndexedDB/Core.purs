@@ -1,12 +1,5 @@
 -- | The Core module gathers types used across the library and provides basic Show instances for
 -- | those types.
--- |
--- | NOTE:
--- | Errors normally thrown by the IDB* interfaces are wrapped in the `Aff` Monad as `Error`
--- | where the `message` corresponds to the error's name (e.g. "InvalidStateError").
--- | Pattern matching can therefore be done on any error message to handle specific errors thrown
--- | by the API.
-
 module Database.IndexedDB.Core
   -- * Effects
   ( IDB
