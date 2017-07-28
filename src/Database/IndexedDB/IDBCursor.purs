@@ -28,7 +28,6 @@ import Data.String.Read                   (read)
 
 import Database.IndexedDB.Core
 import Database.IndexedDB.IDBKey.Internal (class IDBKey, Key, toKey, unsafeFromKey)
-import Database.IndexedDB.IDBKey.Internal as IDBKey
 
 
 --------------------

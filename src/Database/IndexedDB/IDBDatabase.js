@@ -3,14 +3,6 @@ const toArray = function toArray(xs) {
 };
 
 
-exports._showDatabase = function _showDatabase(db) {
-    return '(IDBDatabase ' +
-        '{ name: ' + db.name +
-        ', objectStoreNames: [' + toArray(db.objectStoreNames).join(', ') + ']' +
-        ', version: ' + db.version +
-        ' })';
-};
-
 exports._close = function _close(db) {
     return function aff(success, error) {
         try {
