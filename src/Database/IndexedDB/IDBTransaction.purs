@@ -1,9 +1,14 @@
--- | A Transaction is used to interact with the data in a database.
--- | Whenever data is read or written to the database it is done by using a transaction.
+-- | An object store is the primary storage mechanism for storing data in a database.
 module Database.IndexedDB.IDBTransaction
-  (class IDBTransaction, abort, objectStore
+  -- * Interface
+  ( abort
+  , objectStore
+
+  -- * Attributes
   , error
   , mode
+
+  -- * Event Handlers
   , onAbort
   , onComplete
   , onError
@@ -19,33 +24,38 @@ import Data.Function.Uncurried     (Fn2, Fn4)
 import Data.Maybe                  (Maybe)
 import Data.Nullable               (Nullable, toMaybe)
 
-import Database.IndexedDB.Core     (IDB, Database, ObjectStore, Transaction, TransactionMode(..))
+import Database.IndexedDB.Core
 
 
 --------------------
 -- INTERFACES
 --
--- | The IDBtransaction interface.
-class IDBTransaction tx where
-  -- | Aborts the transaction. All pending requests will fail with a "AbortError"
-  -- | DOMException and all changes made to the database will be reverted.
-  abort
-    :: forall e
-    .  tx
-    -> Aff (idb :: IDB | e) Unit
 
-  -- | Returns an IDBObjectStore in the transaction's scope.
-  objectStore
-    :: forall e
-    .  tx
-    -> String
-    -> Aff (idb :: IDB | e) ObjectStore
+-- | Aborts the transaction. All pending requests will fail with a "AbortError"
+-- | DOMException and all changes made to the database will be reverted.
+abort
+  :: forall e tx. (IDBTransaction tx)
+  => tx
+  -> Aff (idb :: IDB | e) Unit
+abort =
+  _abort
+
+
+-- | Returns an IDBObjectStore in the transaction's scope.
+objectStore
+  :: forall e tx. (IDBTransaction tx)
+  => tx
+  -> String
+  -> Aff (idb :: IDB | e) ObjectStore
+objectStore tx name =
+    Fn.runFn2 _objectStore tx name
 
 
 --------------------
 -- ATTRIBUTES
 --
--- | Returns the transaction’s connection.
+
+--- | Returns the transaction’s connection.
 db
   :: Transaction
   -> Database
@@ -59,6 +69,7 @@ error
   -> Maybe Error
 error =
   _error >>> toMaybe
+
 
 -- | Returns the mode the transaction was created with (`ReadOnly|ReadWrite`)
 -- | , or `VersionChange` for an upgrade transaction.
@@ -77,17 +88,19 @@ objectStoreNames
 objectStoreNames =
   _objectStoreNames
 
+
 --------------------
 -- EVENT HANDLERS
 --
+
 -- | Event handler for the `abort` event.
 onAbort
   :: forall e e'
   .  Transaction
   -> Eff ( | e') Unit
   -> Aff (idb :: IDB | e) Unit
-onAbort db f =
-  Fn.runFn2 _onAbort db f
+onAbort db' f =
+  Fn.runFn2 _onAbort db' f
 
 
 -- | Event handler for the `complete` event.
@@ -96,8 +109,8 @@ onComplete
   .  Transaction
   -> Eff ( | e') Unit
   -> Aff (idb :: IDB | e) Unit
-onComplete db f =
-  Fn.runFn2 _onComplete db f
+onComplete db' f =
+  Fn.runFn2 _onComplete db' f
 
 
 -- | Event handler for the `error` event.
@@ -111,19 +124,9 @@ onError db' f =
 
 
 --------------------
--- INSTANCES
---
-instance idbTransactionTransaction :: IDBTransaction Transaction where
-  objectStore tx name =
-    Fn.runFn2 _objectStore tx name
-
-  abort =
-    _abort
-
-
---------------------
 -- FFI
 --
+
 foreign import _abort
   :: forall tx e
   .  tx
@@ -167,4 +170,3 @@ foreign import _onComplete
 foreign import _onError
   :: forall tx e e'
   . Fn2 tx (Error -> Eff ( | e') Unit) (Aff (idb :: IDB | e) Unit)
-

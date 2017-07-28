@@ -2,41 +2,41 @@
 -- |
 -- | NOTE: Binary keys aren't supported yet.
 module Database.IndexedDB.IDBKey.Internal
-    ( Key(..)
-    , none
-    , class IDBKey, toKey , fromKey , unsafeFromKey
-    , extractForeign
-    ) where
+  ( Key
+  , class IDBKey, toKey , fromKey , unsafeFromKey
+  , none
+  , toForeign
+  ) where
 
 import Prelude
 
-import Control.Alt                 ((<|>))
-import Control.Monad.Except        (ExceptT(..), runExceptT)
-import Data.Date                    as Date
-import Data.DateTime               (DateTime(..), Time(..))
-import Data.Enum                   (fromEnum, toEnum)
-import Data.Foreign                 as Foreign
-import Data.Foreign                (Foreign, F)
-import Data.Function.Uncurried      as Fn
-import Data.Function.Uncurried     (Fn2, Fn4, Fn7)
-import Data.List.NonEmpty          (NonEmptyList(..))
-import Data.List.Types             (List(..))
-import Data.NonEmpty               (NonEmpty(..))
-import Data.Either                 (Either(..), either, isRight)
-import Data.Maybe                  (Maybe(..))
-import Data.Identity               (Identity(..))
-import Data.Nullable               (Nullable, toNullable)
-import Data.Time                    as Time
-import Data.Traversable            (traverse)
+import Control.Alt             ((<|>))
+import Control.Monad.Except    (ExceptT(..), runExceptT)
+import Data.Date                as Date
+import Data.DateTime           (DateTime(..), Time(..))
+import Data.Either             (Either(..), either, isRight)
+import Data.Enum               (fromEnum, toEnum)
+import Data.Foreign             as Foreign
+import Data.Foreign            (Foreign, F)
+import Data.Function.Uncurried  as Fn
+import Data.Function.Uncurried (Fn2, Fn4, Fn7)
+import Data.Identity           (Identity(..))
+import Data.List.NonEmpty      (NonEmptyList(..))
+import Data.List.Types         (List(..))
+import Data.Maybe              (Maybe(..))
+import Data.NonEmpty           (NonEmpty(..))
+import Data.Nullable           (Nullable, toNullable)
+import Data.Time                as Time
+import Data.Traversable        (traverse)
 
 
 newtype Key = Key Foreign
 
 
-extractForeign
+toForeign
     :: Key
     -> Foreign
-extractForeign (Key f) =
+toForeign (Key f) =
   f
 
 

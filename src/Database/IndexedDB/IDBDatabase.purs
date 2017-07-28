@@ -1,76 +1,116 @@
 -- | Each origin has an associated set of databases. A database has zero or more object
 -- | stores which hold the data stored in the database.
 module Database.IndexedDB.IDBDatabase
-  ( class IDBDatabase, close, createObjectStore, deleteObjectStore, transaction
-  , StoreName
+  -- * Types
+  ( StoreName
+  , ObjectStoreParameters
+  , defaultParameters
+
+  -- * Interface
+  , close
+  , createObjectStore
+  , deleteObjectStore
+  , transaction
+
+  -- * Attributes
   , name
   , objectStoreNames
   , version
+
+  -- * Event handlers
   , onAbort
   , onClose
   , onError
   , onVersionChange
   ) where
 
-import Prelude                           (Unit, show)
+import Prelude                     (Unit, show)
 
-import Control.Monad.Aff                 (Aff)
-import Control.Monad.Eff                 (Eff)
-import Control.Monad.Eff.Exception       (Error)
-import Data.Function.Uncurried            as Fn
-import Data.Function.Uncurried           (Fn2, Fn3)
+import Control.Monad.Aff           (Aff)
+import Control.Monad.Eff           (Eff)
+import Control.Monad.Eff.Exception (Error)
+import Data.Function.Uncurried      as Fn
+import Data.Function.Uncurried     (Fn2, Fn3)
 
 import Database.IndexedDB.Core
-import Database.IndexedDB.IDBObjectStore (IDBObjectStoreParameters)
 
 
 --------------------
--- INTERFACE
+-- TYPES
 --
--- | The IDBDatabase interface represents a connection to a database.
-class IDBDatabase db where
-  -- | Closes the connection once all running transactions have finished.
-  close
-    :: forall e
-    .  db
-    -> Aff (idb :: IDB | e) Unit
-
-  -- | Creates a new object store with the given name and options and returns a new IDBObjectStore.
-  -- |
-  -- | Throws a "InvalidStateError" DOMException if not called within an upgrade transaction
-  createObjectStore
-    :: forall e
-    .  db
-    -> StoreName
-    -> IDBObjectStoreParameters
-    -> Aff (idb :: IDB | e) ObjectStore
-
-  -- | Deletes the object store with the given name.
-  -- |
-  -- | Throws a "InvalidStateError" DOMException if not called within an upgrade transaction.
-  deleteObjectStore
-    :: forall e
-    .  db
-    -> StoreName
-    -> Aff (idb :: IDB | e) ObjectStore
-
-  -- | Returns a new transaction with the given mode (ReadOnly|ReadWrite)
-  -- | and scope which in the form of an array of object store names.
-  transaction
-    :: forall e
-    .  db
-    -> Array StoreName
-    -> TransactionMode
-    -> Aff (idb :: IDB | e) Transaction
-
 
 -- | Type alias for StoreName
 type StoreName = String
 
 
+-- | Options provided when creating an object store.
+type ObjectStoreParameters =
+  { keyPath       :: KeyPath
+  , autoIncrement :: Boolean
+  }
+
+
+defaultParameters :: ObjectStoreParameters
+defaultParameters =
+  { keyPath       : []
+  , autoIncrement : false
+  }
+
+
+--------------------
+-- INTERFACE
+--
+
+-- | Closes the connection once all running transactions have finished.
+close
+  :: forall e db. (IDBDatabase db)
+  => db
+  -> Aff (idb :: IDB | e) Unit
+close =
+  _close
+
+
+-- | Creates a new object store with the given name and options and returns a new IDBObjectStore.
+-- |
+-- | Throws a "InvalidStateError" DOMException if not called within an upgrade transaction
+createObjectStore
+  :: forall e db. (IDBDatabase db)
+  => db
+  -> StoreName
+  -> ObjectStoreParameters
+  -> Aff (idb :: IDB | e) ObjectStore
+createObjectStore db name' opts =
+  Fn.runFn3 _createObjectStore db name' opts
+
+
+-- | Deletes the object store with the given name.
+-- |
+-- | Throws a "InvalidStateError" DOMException if not called within an upgrade transaction.
+deleteObjectStore
+  :: forall e db. (IDBDatabase db)
+  => db
+  -> StoreName
+  -> Aff (idb :: IDB | e) ObjectStore
+deleteObjectStore db name' =
+  Fn.runFn2 _deleteObjectStore db name'
+
+
+-- | Returns a new transaction with the given mode (ReadOnly|ReadWrite)
+-- | and scope which in the form of an array of object store names.
+transaction
+  :: forall e db. (IDBDatabase db)
+  => db
+  -> Array StoreName
+  -> TransactionMode
+  -> Aff (idb :: IDB | e) Transaction
+transaction db stores mode' =
+  Fn.runFn3 _transaction db stores (show mode')
+
+
 --------------------
 -- ATTRIBUTES
 --
+
 -- | Returns the name of the database.
 name
     :: Database
@@ -140,25 +180,9 @@ onVersionChange db f =
 
 
 --------------------
--- INSTANCES
---
-instance idbDatabaseDatabase :: IDBDatabase Database where
-  close =
-    _close
-
-  createObjectStore db name' opts =
-    Fn.runFn3 _createObjectStore db name' opts
-
-  deleteObjectStore db name' =
-    Fn.runFn2 _deleteObjectStore db name'
-
-  transaction db stores mode' =
-    Fn.runFn3 _transaction db stores (show mode')
-
-
---------------------
 -- FFI
 --
+
 foreign import _close
     :: forall db e
     .  db

@@ -10,15 +10,6 @@ const successHandler = function successHandler(cb) {
     };
 };
 
-
-exports._showCursor = function _showCursor(cursor) {
-    return '(IDBCursor ' +
-        '{ direction: ' + cursor.direction +
-        ', key: ' + cursor.key +
-        ', primaryKey: ' + cursor.primaryKey +
-        ' })';
-};
-
 exports._advance = function _advance(cursor, count) {
     return function aff(success, error) {
         try {

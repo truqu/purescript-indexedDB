@@ -1,17 +1,14 @@
 -- | A cursor is used to iterate over a range of records in an index or
 -- | an object store in a specific direction.
 module Database.IndexedDB.IDBCursor
-  -- * Cursor Manipulation
-  ( KeyCursor
-  , ValueCursor
-  , CursorDirection(..)
-  , advance
+  -- * Interface
+  ( advance
   , continue
   , continuePrimaryKey
   , delete
   , update
 
-  -- * Concrete Cursor Manipulation
+  -- * Attributes
   , direction
   , key
   , primaryKey
@@ -19,45 +16,19 @@ module Database.IndexedDB.IDBCursor
   , value
   ) where
 
-import Prelude                            (class Show, Unit, ($), (>>>), map)
+import Prelude                            (Unit, ($), (>>>), map)
 
 import Control.Monad.Aff                  (Aff)
 import Data.Foreign                       (Foreign, toForeign, unsafeFromForeign)
 import Data.Function.Uncurried             as Fn
 import Data.Function.Uncurried            (Fn2, Fn3)
-import Data.Maybe                         (Maybe(..))
+import Data.Maybe                         (Maybe)
 import Data.Nullable                      (Nullable, toNullable)
-import Data.String.Read                   (class Read, read)
+import Data.String.Read                   (read)
 
 import Database.IndexedDB.Core
-import Database.IndexedDB.IDBKey.Internal (class IDBKey, Key(..), toKey, extractForeign)
-import Database.IndexedDB.Class           (class IDBCursor, class IDBConcreteCursor)
-
-
---------------------
--- TYPES
---
-
--- | A cursor is used to iterate over a range of records in an index or an object store
--- | in a specific direction. A KeyCursor doesn't hold any value.
-foreign import data KeyCursor :: Type
-
-
--- | A cursor is used to iterate over a range of records in an index or an object store
--- | in a specific direction. A ValueCursor also holds the value corresponding to matching key.
-foreign import data ValueCursor :: Type
-
-
--- | A cursor has a direction that determines whether it moves in monotonically
--- | increasing or decreasing order of the record keys when iterated, and if it
--- | skips duplicated values when iterating indexes.
--- | The direction of a cursor also determines if the cursor initial position is at
--- | the start of its source or at its end.
-data CursorDirection
-  = Next
-  | NextUnique
-  | Prev
-  | PrevUnique
+import Database.IndexedDB.IDBKey.Internal (class IDBKey, toKey)
+import Database.IndexedDB.IDBKey.Internal as IDBKey
 
 
 --------------------
@@ -81,7 +52,7 @@ continue
     -> Maybe k
     -> Aff (idb :: IDB | e) Unit
 continue c mk =
-  Fn.runFn2 _continue c (toNullable $ map (toKey >>> extractForeign) mk)
+  Fn.runFn2 _continue c (toNullable $ map (toKey >>> IDBKey.toForeign) mk)
 
 
 -- | Advances the cursor to the next record in range matching or after key and primaryKey. Throws an "InvalidAccessError" DOMException if the source is not an index.
@@ -92,7 +63,7 @@ continuePrimaryKey
     -> k
     -> Aff (idb :: IDB | e) Unit
 continuePrimaryKey c k1 k2 =
-  Fn.runFn3 _continuePrimaryKey c (extractForeign $ toKey k1) (extractForeign $ toKey k2)
+  Fn.runFn3 _continuePrimaryKey c (IDBKey.toForeign $ toKey k1) (IDBKey.toForeign $ toKey k2)
 
 
 -- | Delete the record pointed at by the cursor with a new value.
@@ -109,12 +80,12 @@ delete =
 -- | Throws a "DataError" DOMException if the effective object store uses
 -- | in-line keys and the key would have changed.
 update
-    :: forall val e cursor. (IDBCursor cursor)
+    :: forall val e cursor key. (IDBCursor cursor) => (IDBKey key)
     => cursor
     -> val
-    -> Aff (idb :: IDB | e) Key
+    -> Aff (idb :: IDB | e) key
 update c =
-  toForeign >>> Fn.runFn2 _update c >>> map Key
+  toForeign >>> Fn.runFn2 _update c
 
 
 --------------------
@@ -133,21 +104,21 @@ direction =
 -- | Returns the key of the cursor. Throws a "InvalidStateError" DOMException
 -- | if the cursor is advancing or is finished.
 key
-  :: forall e cursor. (IDBConcreteCursor cursor)
+  :: forall e cursor key. (IDBConcreteCursor cursor) => (IDBKey key)
   => cursor
-  -> Aff (idb :: IDB | e) Key
+  -> Aff (idb :: IDB | e) key
 key =
-  _key >>> map Key
+  _key
 
 
 -- | Returns the effective key of the cursor. Throws a "InvalidStateError" DOMException
 -- | if the cursor is advancing or is finished.
 primaryKey
-  :: forall e cursor. (IDBConcreteCursor cursor)
+  :: forall e cursor key. (IDBConcreteCursor cursor) => (IDBKey key)
   => cursor
-  -> Aff (idb :: IDB | e) Key
+  -> Aff (idb :: IDB | e) key
 primaryKey =
-  _primaryKey >>> map Key
+  _primaryKey
 
 
 -- | Returns the IDBObjectStore or IDBIndex the cursor was opened from.
@@ -168,58 +139,8 @@ value =
 
 
 --------------------
--- INSTANCES
---
-
-instance idbCursorKeyCursor :: IDBCursor KeyCursor
-
-
-instance idbCursorValueCursor :: IDBCursor ValueCursor
-
-
-instance idbConcreteCursorKeyCursor :: IDBConcreteCursor KeyCursor
-
-
-instance idbConcreteCursorValueCursor :: IDBConcreteCursor ValueCursor
-
-
-instance showKeyCursor :: Show KeyCursor where
-  show = _showCursor
-
-
-instance showValueCursor :: Show ValueCursor where
-  show = _showCursor
-
-
-instance showCursorDirection :: Show CursorDirection where
-  show x =
-    case x of
-      Next       -> "next"
-      NextUnique -> "nextunique"
-      Prev       -> "prev"
-      PrevUnique -> "prevunique"
-
-
-
-instance readCursorDirection :: Read CursorDirection where
-  read s =
-    case s of
-      "next"       -> Just Next
-      "nextunique" -> Just NextUnique
-      "prev"       -> Just Prev
-      "prevunique" -> Just PrevUnique
-      _            -> Nothing
-
-
---------------------
 -- FFI
 --
-
-foreign import _showCursor
-  :: forall cursor
-  .  cursor
-  -> String
-
 
 foreign import _advance
   :: forall cursor e
@@ -248,15 +169,15 @@ foreign import _direction
 
 
 foreign import _key
-  :: forall cursor e
-  .  cursor
-  -> Aff (idb :: IDB | e) Foreign
+  :: forall cursor e key. (IDBKey key)
+  => cursor
+  -> Aff (idb :: IDB | e) key
 
 
 foreign import _primaryKey
-  :: forall cursor e
-  .  cursor
-  -> Aff (idb :: IDB | e) Foreign
+  :: forall cursor e key. (IDBKey key)
+  => cursor
+  -> Aff (idb :: IDB | e) key
 
 
 foreign import _source
@@ -265,8 +186,8 @@ foreign import _source
 
 
 foreign import _update
-  :: forall cursor e
-  . Fn2 cursor Foreign (Aff (idb :: IDB | e) Foreign)
+  :: forall cursor e key. (IDBKey key)
+  => Fn2 cursor Foreign (Aff (idb :: IDB | e) key)
 
 
 foreign import _value

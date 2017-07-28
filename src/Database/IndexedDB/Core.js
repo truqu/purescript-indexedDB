@@ -3,6 +3,14 @@ const toArray = function toArray(xs) {
 };
 
 
+exports._showCursor = function _showCursor(cursor) {
+    return '(IDBCursor ' +
+        '{ direction: ' + cursor.direction +
+        ', key: ' + cursor.key +
+        ', primaryKey: ' + cursor.primaryKey +
+        ' })';
+};
+
 exports._showDatabase = function _showDatabase(db) {
     return '(IDBDatabase ' +
         '{ name: ' + db.name +

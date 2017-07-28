@@ -1,123 +1,170 @@
 -- | An object store is the primary storage mechanism for storing data in a database.
 module Database.IndexedDB.IDBObjectStore
-  ( class IDBObjectStore, add, clear, createIndex, delete, deleteIndex, index, put
-  , module Database.IndexedDB.IDBIndex.Internal
-  , IDBObjectStoreParameters
-  , IndexName
+  -- * Types
+  ( IndexName
+  , IndexParameters
+  , defaultParameters
+
+  -- * Interface
+  , add
+  , clear
+  , createIndex
+  , delete
+  , deleteIndex
+  , index
+  , put
+
+  -- * Attributes
   , autoIncrement
   , indexNames
   , keyPath
   , name
   , transaction
-  , defaultParameters
+
+  -- * Re-Exports
+  , module Database.IndexedDB.IDBIndex
   ) where
 
-import Prelude                              (Unit, ($), (<$>), (>>>))
+import Prelude                            (Unit, ($), (<$>), (>>>))
 
-import Control.Monad.Aff                    (Aff)
-import Data.Foreign                         (Foreign)
-import Data.Function.Uncurried               as Fn
-import Data.Function.Uncurried              (Fn2, Fn3, Fn4)
-import Data.Maybe                           (Maybe)
-import Data.Nullable                        (Nullable, toNullable)
+import Control.Monad.Aff                  (Aff)
+import Data.Foreign                       (Foreign)
+import Data.Function.Uncurried             as Fn
+import Data.Function.Uncurried            (Fn2, Fn3, Fn4)
+import Data.Maybe                         (Maybe)
+import Data.Nullable                      (Nullable, toNullable)
 
-import Database.IndexedDB.Core              (IDB, Index, KeyRange, KeyPath, ObjectStore, Transaction)
-import Database.IndexedDB.IDBIndex.Internal (class IDBIndex, IDBIndexParameters, count, get, getAllKeys, getKey, openCursor, openKeyCursor)
-import Database.IndexedDB.IDBKey.Internal   (class IDBKey, Key(Key), extractForeign, toKey)
-
+import Database.IndexedDB.Core
+import Database.IndexedDB.IDBIndex        (count, get, getAllKeys, getKey, openCursor, openKeyCursor)
+import Database.IndexedDB.IDBKey.Internal (class IDBKey, toForeign, toKey)
 
 --------------------
--- INTERFACES
+-- TYPES
 --
--- | The IDBObjectStore interface represents an object store handle.
-class IDBObjectStore store where
-  -- | Adds or updates a record in store with the given value and key.
-  -- |
-  -- | If the store uses in-line keys and key is specified a "DataError" DOMException
-  -- | will be thrown.
-  -- |
-  -- | If add() is used, and if a record with the key already exists the request will fail,
-  -- | with a "ConstraintError" DOMException.
-  add
-    :: forall v k e. (IDBKey k)
-    => store
-    -> v
-    -> Maybe k
-    -> Aff (idb :: IDB | e) Key
-
-  -- | Deletes all records in store.
-  clear
-    :: forall e
-    .  store
-    -> Aff (idb :: IDB | e) Unit
-
-  -- | Creates a new index in store with the given name, keyPath and options and
-  -- | returns a new IDBIndex. If the keyPath and options define constraints that
-  -- | cannot be satisfied with the data already in store the upgrade transaction
-  -- | will abort with a "ConstraintError" DOMException.
-  -- |
-  -- | Throws an "InvalidStateError" DOMException if not called within an upgrade transaction.
-  createIndex
-    :: forall e
-    .  store
-    -> IndexName
-    -> KeyPath
-    -> IDBIndexParameters
-    -> Aff (idb :: IDB | e) Index
-
-  -- | Deletes records in store with the given key or in the given key range in query.
-  delete
-    :: forall e
-    .  store
-    -> KeyRange
-    -> Aff (idb :: IDB | e) Unit
-
-  -- | Deletes the index in store with the given name.
-  -- |
-  -- | Throws an "InvalidStateError" DOMException if not called within an upgrade transaction.
-  deleteIndex
-    :: forall e
-    .  store
-    -> IndexName
-    -> Aff (idb :: IDB | e) Unit
-
-  -- | Returns an IDBIndex for the index named name in store.
-  index
-    :: forall e
-    .  store
-    -> IndexName
-    -> Aff (idb :: IDB | e) Index
-
-  -- | Adds or updates a record in store with the given value and key.
-  -- |
-  -- | If the store uses in-line keys and key is specified a "DataError" DOMException
-  -- | will be thrown.
-  -- |
-  -- | If put() is used, any existing record with the key will be replaced.
-  put
-    :: forall v k e. (IDBKey k)
-    => store
-    -> v
-    -> Maybe k
-    -> Aff (idb :: IDB | e) Key
-
 
 -- | Type alias for IndexName
 type IndexName = String
 
 
--- | Options provided when creating an object store.
-type IDBObjectStoreParameters =
-  { keyPath       :: KeyPath
-  , autoIncrement :: Boolean
+-- | Flags to set on the index.
+-- |
+-- | An index has a `unique` flag. When this flag is set, the index enforces that no
+-- | two records in the index has the same key. If a record in the index’s referenced
+-- | object store is attempted to be inserted or modified such that evaluating the index’s
+-- | key path on the records new value yields a result which already exists in the index,
+-- | then the attempted modification to the object store fails.
+-- |
+-- | An index has a `multiEntry` flag. This flag affects how the index behaves when the
+-- | result of evaluating the index’s key path yields an array key. If the `multiEntry` flag
+-- | is unset, then a single record whose key is an array key is added to the index.
+-- | If the `multiEntry` flag is true, then the one record is added to the index for each
+-- | of the subkeys.
+type IndexParameters =
+  { unique     :: Boolean
+  , multiEntry :: Boolean
   }
 
 
-defaultParameters :: IDBObjectStoreParameters
+defaultParameters :: IndexParameters
 defaultParameters =
-  { keyPath       : []
-  , autoIncrement : false
+  { unique     : false
+  , multiEntry : false
   }
+
+
+--------------------
+-- INTERFACES
+--
+
+-- | Adds or updates a record in store with the given value and key.
+-- |
+-- | If the store uses in-line keys and key is specified a "DataError" DOMException
+-- | will be thrown.
+-- |
+-- | If add() is used, and if a record with the key already exists the request will fail,
+-- | with a "ConstraintError" DOMException.
+add
+  :: forall e key val store. (IDBKey key) => (IDBObjectStore store)
+  => store
+  -> val
+  -> Maybe key
+  -> Aff (idb :: IDB | e) key
+add store value key =
+  Fn.runFn3 _add store value (toNullable $ (toKey >>> toForeign) <$> key)
+
+
+-- | Deletes all records in store.
+clear
+  :: forall e store. (IDBObjectStore store)
+  => store
+  -> Aff (idb :: IDB | e) Unit
+clear =
+  _clear
+
+
+-- | Creates a new index in store with the given name, keyPath and options and
+-- | returns a new IDBIndex. If the keyPath and options define constraints that
+-- | cannot be satisfied with the data already in store the upgrade transaction
+-- | will abort with a "ConstraintError" DOMException.
+-- |
+-- | Throws an "InvalidStateError" DOMException if not called within an upgrade transaction.
+createIndex
+  :: forall e store. (IDBObjectStore store)
+  => store
+  -> IndexName
+  -> KeyPath
+  -> IndexParameters
+  -> Aff (idb :: IDB | e) Index
+createIndex store name' path params =
+  Fn.runFn4 _createIndex store name' path params
+
+
+-- | Deletes records in store with the given key or in the given key range in query.
+delete
+  :: forall e store. (IDBObjectStore store)
+  => store
+  -> KeyRange
+  -> Aff (idb :: IDB | e) Unit
+delete store range =
+  Fn.runFn2 _delete store range
+
+
+-- | Deletes the index in store with the given name.
+-- |
+-- | Throws an "InvalidStateError" DOMException if not called within an upgrade transaction.
+deleteIndex
+  :: forall e store. (IDBObjectStore store)
+  => store
+  -> IndexName
+  -> Aff (idb :: IDB | e) Unit
+deleteIndex store name' =
+  Fn.runFn2 _deleteIndex store name'
+
+
+-- | Returns an IDBIndex for the index named name in store.
+index
+  :: forall e store. (IDBObjectStore store)
+  => store
+  -> IndexName
+  -> Aff (idb :: IDB | e) Index
+index store name' =
+  Fn.runFn2 _index store name'
+
+
+-- | Adds or updates a record in store with the given value and key.
+-- |
+-- | If the store uses in-line keys and key is specified a "DataError" DOMException
+-- | will be thrown.
+-- |
+-- | If put() is used, any existing record with the key will be replaced.
+put
+  :: forall e val key store. (IDBKey key) => (IDBObjectStore store)
+  => store
+  -> val
+  -> Maybe key
+  -> Aff (idb :: IDB | e) key
+put store value key =
+  Fn.runFn3 _put store value (toNullable $ (toKey >>> toForeign) <$> key)
 
 
 --------------------
@@ -164,37 +211,11 @@ transaction =
 
 
 --------------------
--- INSTANCES
---
-instance idbObjectStoreObjectStore :: IDBObjectStore ObjectStore where
-  add store value key =
-    Key <$> Fn.runFn3 _add store value (toNullable $ (toKey >>> extractForeign) <$> key)
-
-  clear =
-    _clear
-
-  createIndex store name' path params =
-    Fn.runFn4 _createIndex store name' path params
-
-  delete store range =
-    Fn.runFn2 _delete store range
-
-  deleteIndex store name' =
-    Fn.runFn2 _deleteIndex store name'
-
-  index store name' =
-    Fn.runFn2 _index store name'
-
-  put store value key =
-    Key <$> Fn.runFn3 _put store value (toNullable $ (toKey >>> extractForeign) <$> key)
-
-
---------------------
 -- FFI
 --
 foreign import _add
-  :: forall value e
-  .  Fn3 ObjectStore value (Nullable Foreign) (Aff (idb :: IDB | e) Foreign)
+  :: forall e key val store. (IDBKey key)
+  => Fn3 store val (Nullable Foreign) (Aff (idb :: IDB | e) key)
 
 
 foreign import _autoIncrement
@@ -203,29 +224,29 @@ foreign import _autoIncrement
 
 
 foreign import _clear
-  :: forall e
-  .  ObjectStore
+  :: forall e store
+  .  store
   -> Aff (idb :: IDB | e) Unit
 
 
 foreign import _createIndex
-  :: forall e
-  .  Fn4 ObjectStore String (Array String) { unique :: Boolean, multiEntry :: Boolean } (Aff (idb :: IDB | e) Index)
+  :: forall e store
+  .  Fn4 store String (Array String) { unique :: Boolean, multiEntry :: Boolean } (Aff (idb :: IDB | e) Index)
 
 
 foreign import _delete
-  :: forall e
-  .  Fn2 ObjectStore KeyRange (Aff (idb :: IDB | e) Unit)
+  :: forall e store
+  .  Fn2 store KeyRange (Aff (idb :: IDB | e) Unit)
 
 
 foreign import _deleteIndex
-  :: forall e
-  .  Fn2 ObjectStore String (Aff (idb :: IDB | e) Unit)
+  :: forall e store
+  .  Fn2 store String (Aff (idb :: IDB | e) Unit)
 
 
 foreign import _index
-  :: forall e
-  .  Fn2 ObjectStore String (Aff (idb :: IDB | e) Index)
+  :: forall e store
+  .  Fn2 store String (Aff (idb :: IDB | e) Index)
 
 
 foreign import _indexNames
@@ -244,8 +265,8 @@ foreign import _name
 
 
 foreign import _put
-  :: forall value e
-  .  Fn3 ObjectStore value (Nullable Foreign) (Aff (idb :: IDB | e) Foreign)
+  :: forall e key val store. (IDBKey key)
+  => Fn3 store val (Nullable Foreign) (Aff (idb :: IDB | e) key)
 
 
 foreign import _transaction

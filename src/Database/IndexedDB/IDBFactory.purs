@@ -1,7 +1,16 @@
 -- | Database objects are accessed through methods on the IDBFactory interface.
 -- | A single object implementing this interface is present in the global scope
 -- | of environments that support Indexed DB operations.
-module Database.IndexedDB.IDBFactory where
+module Database.IndexedDB.IDBFactory
+  -- * Types
+  ( Callbacks
+  , DatabaseName
+  , Version
+
+  -- * Interface
+  , deleteDatabase
+  , open
+  ) where
 
 import Prelude                 (Unit)
 
@@ -15,8 +24,9 @@ import Database.IndexedDB.Core
 
 
 --------------------
--- INTERFACE
+-- TYPES
 --
+
 -- Type alias for binding listeners to an initial open action.
 type Callbacks e =
   { onBlocked       :: Maybe (Eff (| e) Unit)
@@ -31,6 +41,10 @@ type DatabaseName = String
 -- | Type alias for Version.
 type Version = Int
 
+
+--------------------
+-- INTERFACE
+--
 
 -- | Attempts to delete the named database. If the database already exists
 -- | and there are open connections that don’t close in response to a

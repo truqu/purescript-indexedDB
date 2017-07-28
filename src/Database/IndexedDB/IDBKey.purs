@@ -5,4 +5,11 @@ module Database.IndexedDB.IDBKey
   ( module Database.IndexedDB.IDBKey.Internal
   ) where
 
-import Database.IndexedDB.IDBKey.Internal(class IDBKey, Key, none, toKey, fromKey, unsafeFromKey)
+import Database.IndexedDB.IDBKey.Internal
+  ( class IDBKey
+  , Key
+  , none
+  , toKey
+  , fromKey
+  , unsafeFromKey
+  )
