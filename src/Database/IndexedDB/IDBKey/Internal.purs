@@ -5,7 +5,6 @@ module Database.IndexedDB.IDBKey.Internal
   ( Key
   , class IDBKey, toKey , fromKey , unsafeFromKey
   , none
-  , toForeign
   ) where
 
 import Prelude
@@ -31,13 +30,6 @@ import Data.Traversable        (traverse)
 
 
 newtype Key = Key Foreign
-
-
-toForeign
-    :: Key
-    -> Foreign
-toForeign (Key f) =
-  f
 
 
 --------------------
@@ -113,6 +105,12 @@ instance idbKeyKey :: IDBKey Key where
   toKey         = id
   fromKey       = pure
   unsafeFromKey = id
+
+
+instance idbKeyForeign :: IDBKey Foreign where
+  toKey                 = Key
+  fromKey (Key f)       = pure f
+  unsafeFromKey (Key f) = f
 
 
 instance idbKeyInt :: IDBKey Int where

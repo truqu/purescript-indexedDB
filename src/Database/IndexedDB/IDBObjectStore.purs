@@ -36,7 +36,7 @@ import Data.Nullable                      (Nullable, toNullable)
 
 import Database.IndexedDB.Core
 import Database.IndexedDB.IDBIndex        (count, get, getAllKeys, getKey, openCursor, openKeyCursor)
-import Database.IndexedDB.IDBKey.Internal (class IDBKey, toForeign, toKey)
+import Database.IndexedDB.IDBKey.Internal (class IDBKey, Key, unsafeFromKey, toKey)
 
 --------------------
 -- TYPES
@@ -88,9 +88,9 @@ add
   => store
   -> val
   -> Maybe key
-  -> Aff (idb :: IDB | e) key
+  -> Aff (idb :: IDB | e) Key
 add store value key =
-  Fn.runFn3 _add store value (toNullable $ (toKey >>> toForeign) <$> key)
+  toKey <$> Fn.runFn3 _add store value (toNullable $ (toKey >>> unsafeFromKey) <$> key)
 
 
 -- | Deletes all records in store.
@@ -162,9 +162,9 @@ put
   => store
   -> val
   -> Maybe key
-  -> Aff (idb :: IDB | e) key
+  -> Aff (idb :: IDB | e) Key
 put store value key =
-  Fn.runFn3 _put store value (toNullable $ (toKey >>> toForeign) <$> key)
+  toKey <$> Fn.runFn3 _put store value (toNullable $ (toKey >>> unsafeFromKey) <$> key)
 
 
 --------------------
@@ -214,8 +214,8 @@ transaction =
 -- FFI
 --
 foreign import _add
-  :: forall e key val store. (IDBKey key)
-  => Fn3 store val (Nullable Foreign) (Aff (idb :: IDB | e) key)
+  :: forall e val store
+  .  Fn3 store val (Nullable Foreign) (Aff (idb :: IDB | e) Foreign)
 
 
 foreign import _autoIncrement
@@ -265,8 +265,8 @@ foreign import _name
 
 
 foreign import _put
-  :: forall e key val store. (IDBKey key)
-  => Fn3 store val (Nullable Foreign) (Aff (idb :: IDB | e) key)
+  :: forall e val store
+  .  Fn3 store val (Nullable Foreign) (Aff (idb :: IDB | e) Foreign)
 
 
 foreign import _transaction

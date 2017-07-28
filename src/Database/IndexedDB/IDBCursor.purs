@@ -27,7 +27,7 @@ import Data.Nullable                      (Nullable, toNullable)
 import Data.String.Read                   (read)
 
 import Database.IndexedDB.Core
-import Database.IndexedDB.IDBKey.Internal (class IDBKey, toKey)
+import Database.IndexedDB.IDBKey.Internal (class IDBKey, Key, toKey, unsafeFromKey)
 import Database.IndexedDB.IDBKey.Internal as IDBKey
 
 
@@ -52,7 +52,7 @@ continue
     -> Maybe k
     -> Aff (idb :: IDB | e) Unit
 continue c mk =
-  Fn.runFn2 _continue c (toNullable $ map (toKey >>> IDBKey.toForeign) mk)
+  Fn.runFn2 _continue c (toNullable $ map (toKey >>> unsafeFromKey) mk)
 
 
 -- | Advances the cursor to the next record in range matching or after key and primaryKey. Throws an "InvalidAccessError" DOMException if the source is not an index.
@@ -63,7 +63,7 @@ continuePrimaryKey
     -> k
     -> Aff (idb :: IDB | e) Unit
 continuePrimaryKey c k1 k2 =
-  Fn.runFn3 _continuePrimaryKey c (IDBKey.toForeign $ toKey k1) (IDBKey.toForeign $ toKey k2)
+  Fn.runFn3 _continuePrimaryKey c (unsafeFromKey $ toKey k1) (unsafeFromKey $ toKey k2)
 
 
 -- | Delete the record pointed at by the cursor with a new value.
@@ -80,12 +80,12 @@ delete =
 -- | Throws a "DataError" DOMException if the effective object store uses
 -- | in-line keys and the key would have changed.
 update
-    :: forall val e cursor key. (IDBCursor cursor) => (IDBKey key)
+    :: forall val e cursor. (IDBCursor cursor)
     => cursor
     -> val
-    -> Aff (idb :: IDB | e) key
+    -> Aff (idb :: IDB | e) Key
 update c =
-  toForeign >>> Fn.runFn2 _update c
+  toForeign >>> Fn.runFn2 _update c >>> map toKey
 
 
 --------------------
@@ -104,21 +104,21 @@ direction =
 -- | Returns the key of the cursor. Throws a "InvalidStateError" DOMException
 -- | if the cursor is advancing or is finished.
 key
-  :: forall e cursor key. (IDBConcreteCursor cursor) => (IDBKey key)
+  :: forall e cursor. (IDBConcreteCursor cursor)
   => cursor
-  -> Aff (idb :: IDB | e) key
+  -> Aff (idb :: IDB | e) Key
 key =
-  _key
+  _key >>> map toKey
 
 
 -- | Returns the effective key of the cursor. Throws a "InvalidStateError" DOMException
 -- | if the cursor is advancing or is finished.
 primaryKey
-  :: forall e cursor key. (IDBConcreteCursor cursor) => (IDBKey key)
+  :: forall e cursor. (IDBConcreteCursor cursor)
   => cursor
-  -> Aff (idb :: IDB | e) key
+  -> Aff (idb :: IDB | e) Key
 primaryKey =
-  _primaryKey
+  _primaryKey >>> map toKey
 
 
 -- | Returns the IDBObjectStore or IDBIndex the cursor was opened from.
@@ -169,15 +169,15 @@ foreign import _direction
 
 
 foreign import _key
-  :: forall cursor e key. (IDBKey key)
-  => cursor
-  -> Aff (idb :: IDB | e) key
+  :: forall cursor e
+  .  cursor
+  -> Aff (idb :: IDB | e) Key
 
 
 foreign import _primaryKey
-  :: forall cursor e key. (IDBKey key)
-  => cursor
-  -> Aff (idb :: IDB | e) key
+  :: forall cursor e
+  .  cursor
+  -> Aff (idb :: IDB | e) Key
 
 
 foreign import _source
@@ -186,8 +186,8 @@ foreign import _source
 
 
 foreign import _update
-  :: forall cursor e key. (IDBKey key)
-  => Fn2 cursor Foreign (Aff (idb :: IDB | e) key)
+  :: forall cursor e
+  .  Fn2 cursor Foreign (Aff (idb :: IDB | e) Foreign)
 
 
 foreign import _value

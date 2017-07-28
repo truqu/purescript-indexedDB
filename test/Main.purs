@@ -332,7 +332,7 @@ main = runMocha do
             putVar var true
 
       var           <- makeVar
-      { db, store } <- setup IDBObjectStore.defaultParameters
+      { db, store } <- setup IDBDatabase.defaultParameters
       IDBDatabase.close db
       db <- IDBFactory.open "db" (Just 999) { onUpgradeNeeded : Just (onUpgradeNeeded var)
                                             , onBlocked       : Nothing
@@ -396,7 +396,7 @@ main = runMocha do
 
     it "clear()" do
       { db } <- setup
-        { storeParams: IDBObjectStore.defaultParameters
+        { storeParams: IDBDatabase.defaultParameters
         , onUpgradeNeeded: Just $ \_ store -> launchAff' do
             key <- IDBObjectStore.add store "patate" (Just 14)
             _   <- IDBObjectStore.clear store
@@ -407,7 +407,7 @@ main = runMocha do
 
     it "count()" do
       { db } <- setup
-        { storeParams: IDBObjectStore.defaultParameters
+        { storeParams: IDBDatabase.defaultParameters
         , onUpgradeNeeded: Just $ \_ store -> launchAff' do
             key <- IDBObjectStore.add store "patate" (Just 14)
             key <- IDBObjectStore.add store "autruche" (Just 42)
@@ -418,7 +418,7 @@ main = runMocha do
 
     it "getKey()" do
       { db } <- setup
-        { storeParams: IDBObjectStore.defaultParameters
+        { storeParams: IDBDatabase.defaultParameters
         , onUpgradeNeeded: Just $ \_ store -> launchAff' do
             key  <- IDBObjectStore.add store "patate" (Just 14)
             mkey <- IDBObjectStore.getKey store (IDBKeyRange.only 14)
@@ -431,7 +431,7 @@ main = runMocha do
 
     it "getAllKeys()" do
       { db } <- setup
-        { storeParams: IDBObjectStore.defaultParameters
+        { storeParams: IDBDatabase.defaultParameters
         , onUpgradeNeeded: Just $ \_ store -> launchAff' do
             key1  <- IDBObjectStore.add store "patate" (Just 14)
             key2  <- IDBObjectStore.add store "autruche" (Just 42)
@@ -462,7 +462,7 @@ main = runMocha do
             , onComplete: pure unit
             }
       { db } <- setup
-        { storeParams: IDBObjectStore.defaultParameters
+        { storeParams: IDBDatabase.defaultParameters
         , onUpgradeNeeded: Just $ \_ store -> launchAff' do
             _ <- IDBObjectStore.openCursor store Nothing Next cb
             _ <- IDBObjectStore.openCursor store Nothing NextUnique cb
@@ -480,7 +480,7 @@ main = runMocha do
             , onComplete: pure unit
             }
       { db } <- setup
-        { storeParams: IDBObjectStore.defaultParameters
+        { storeParams: IDBDatabase.defaultParameters
         , onUpgradeNeeded: Just $ \_ store -> launchAff' do
             _ <- IDBObjectStore.openKeyCursor store Nothing Next cb
             _ <- IDBObjectStore.openKeyCursor store Nothing NextUnique cb
@@ -523,16 +523,16 @@ main = runMocha do
 
     it "returns an IDBIndex and the properties are set correctly" do
       { db, index } <- setup
-        { storeParams     : IDBObjectStore.defaultParameters
-        , indexParams     : IDBIndex.defaultParameters
+        { storeParams     : IDBDatabase.defaultParameters
+        , indexParams     : IDBObjectStore.defaultParameters
         , onUpgradeNeeded : Nothing
         , keyPath         : []
         , values          : []
         }
       IDBIndex.name index `shouldEqual` "index"
       IDBIndex.keyPath index `shouldEqual` []
-      IDBIndex.unique index `shouldEqual` IDBIndex.defaultParameters.unique
-      IDBIndex.multiEntry index `shouldEqual` IDBIndex.defaultParameters.multiEntry
+      IDBIndex.unique index `shouldEqual` IDBObjectStore.defaultParameters.unique
+      IDBIndex.multiEntry index `shouldEqual` IDBObjectStore.defaultParameters.multiEntry
       tearDown db
 
     it "attempt to create an index that requires unique values on an object store already contains duplicates" do
@@ -540,7 +540,7 @@ main = runMocha do
       txVar <- makeVar
       dbVar <- makeVar
       res   <- attempt $ setup
-        { storeParams     : IDBObjectStore.defaultParameters
+        { storeParams     : IDBDatabase.defaultParameters
         , indexParams     : { unique : true
                             , multiEntry : false
                             }
@@ -565,7 +565,7 @@ main = runMocha do
         { storeParams     : { keyPath       : ["key"]
                             , autoIncrement : false
                             }
-        , indexParams     : IDBIndex.defaultParameters
+        , indexParams     : IDBObjectStore.defaultParameters
         , keyPath         : ["indexedProperty"]
         , values          : [ { key: "key1", indexedProperty: "indexed_1" } :+: Nothing
                             , { key: "key2", indexedProperty: "indexed_2" } :+: Nothing
@@ -579,8 +579,8 @@ main = runMocha do
 
     it "empty keyPath" do
       { db } <- setup
-        { storeParams     : IDBObjectStore.defaultParameters
-        , indexParams     : IDBIndex.defaultParameters
+        { storeParams     : IDBDatabase.defaultParameters
+        , indexParams     : IDBObjectStore.defaultParameters
         , keyPath         : []
         , values          : [ "object_1" :+: (Just $ toKey 1)
                             , "object_2" :+: (Just $ toKey 2)
@@ -598,7 +598,7 @@ main = runMocha do
         { storeParams     : { keyPath: ["key"]
                             , autoIncrement: false
                             }
-        , indexParams     : IDBIndex.defaultParameters
+        , indexParams     : IDBObjectStore.defaultParameters
         , keyPath         : ["i"]
         , values          : [ { key: "date", i: (toKey date) } :+: Nothing
                             ]
@@ -614,7 +614,7 @@ main = runMocha do
         { storeParams     : { keyPath: ["key"]
                             , autoIncrement: false
                             }
-        , indexParams     : IDBIndex.defaultParameters
+        , indexParams     : IDBObjectStore.defaultParameters
         , keyPath         : ["i"]
         , values          : [ { key: "num", i: (toKey num) } :+: Nothing
                             ]
@@ -630,7 +630,7 @@ main = runMocha do
         { storeParams     : { keyPath: ["key"]
                             , autoIncrement: false
                             }
-        , indexParams     : IDBIndex.defaultParameters
+        , indexParams     : IDBObjectStore.defaultParameters
         , keyPath         : ["i"]
         , values          : [ { key: "array", i: (toKey array) } :+: Nothing
                             ]
@@ -643,7 +643,7 @@ main = runMocha do
     it "openKeyCursor() - throw InvalidStateError on index deleted by aborted upgrade" do
       res <- attempt $ setup
         { storeParams     : { keyPath: ["key"], autoIncrement: false }
-        , indexParams     : IDBIndex.defaultParameters
+        , indexParams     : IDBObjectStore.defaultParameters
         , keyPath         : ["indexedProperty"]
         , values          : [ { key: 14, indexedProperty: "patate" } :+: Nothing
                             ]
@@ -668,7 +668,7 @@ main = runMocha do
     it "openKeyCursor() - throw TransactionInactiveError on aborted transaction" do
       { db } <- setup
         { storeParams     : { keyPath: ["key"], autoIncrement: false }
-        , indexParams     : IDBIndex.defaultParameters
+        , indexParams     : IDBObjectStore.defaultParameters
         , keyPath         : ["indexedProperty"]
         , values          : [ { key: 14, indexedProperty: "patate" } :+: Nothing
                             ]
@@ -694,7 +694,7 @@ main = runMocha do
     it "openKeyCursor() - throw InvalidStateError when the index is deleted" do
       { db } <- setup
         { storeParams     : { keyPath: ["key"], autoIncrement: false }
-        , indexParams     : IDBIndex.defaultParameters
+        , indexParams     : IDBObjectStore.defaultParameters
         , keyPath         : ["indexedProperty"]
         , values          : [ { key: 14, indexedProperty: "patate" } :+: Nothing
                             ]
@@ -717,7 +717,7 @@ main = runMocha do
     it "openCursor() - throw InvalidStateError on index deleted by aborted upgrade" do
       res <- attempt $ setup
         { storeParams     : { keyPath: ["key"], autoIncrement: false }
-        , indexParams     : IDBIndex.defaultParameters
+        , indexParams     : IDBObjectStore.defaultParameters
         , keyPath         : ["indexedProperty"]
         , values          : [ { key: 14, indexedProperty: "patate" } :+: Nothing
                             ]
@@ -742,7 +742,7 @@ main = runMocha do
     it "openCursor() - throw TransactionInactiveError on aborted transaction" do
       { db } <- setup
         { storeParams     : { keyPath: ["key"], autoIncrement: false }
-        , indexParams     : IDBIndex.defaultParameters
+        , indexParams     : IDBObjectStore.defaultParameters
         , keyPath         : ["indexedProperty"]
         , values          : [ { key: 14, indexedProperty: "patate" } :+: Nothing
                             ]
@@ -768,7 +768,7 @@ main = runMocha do
     it "openCursor() - throw InvalidStateError when the index is deleted" do
       { db } <- setup
         { storeParams     : { keyPath: ["key"], autoIncrement: false }
-        , indexParams     : IDBIndex.defaultParameters
+        , indexParams     : IDBObjectStore.defaultParameters
         , keyPath         : ["indexedProperty"]
         , values          : [ { key: 14, indexedProperty: "patate" } :+: Nothing
                             ]
@@ -790,7 +790,7 @@ main = runMocha do
 
     it "getKey() - multiEntry - adding keys" do
       { db } <- setup
-        { storeParams     : IDBObjectStore.defaultParameters
+        { storeParams     : IDBDatabase.defaultParameters
         , indexParams     : { unique: false, multiEntry: true }
         , keyPath         : ["name"]
         , values          : [ { name: ["patate", "autruche"] } :+: (Just $ toKey 1)
@@ -812,7 +812,7 @@ main = runMocha do
     it "get() - returns the record with the first key in the range" do
       { db } <- setup
         { storeParams     : { keyPath: ["key"], autoIncrement: false }
-        , indexParams     : IDBIndex.defaultParameters
+        , indexParams     : IDBObjectStore.defaultParameters
         , keyPath         : ["indexedProperty"]
         , values          : [ { key: 14, indexedProperty: "patate" } :+: Nothing
                             , { key: 42, indexedProperty: "autruche" } :+: Nothing
@@ -860,8 +860,8 @@ main = runMocha do
 
     it "continue() - iterate to the next record" do
       { db } <- setup
-        { storeParams     : IDBObjectStore.defaultParameters
-        , indexParams     : IDBIndex.defaultParameters
+        { storeParams     : IDBDatabase.defaultParameters
+        , indexParams     : IDBObjectStore.defaultParameters
         , keyPath         : []
         , values          : [ "cupcake" :+: (Just $ toKey 4)
                             , "pancake" :+: (Just $ toKey 2)
@@ -899,8 +899,8 @@ main = runMocha do
 
     it "continue() - attempt to iterate in the wrong direction" do
       { db } <- setup
-        { storeParams     : IDBObjectStore.defaultParameters
-        , indexParams     : IDBIndex.defaultParameters
+        { storeParams     : IDBDatabase.defaultParameters
+        , indexParams     : IDBObjectStore.defaultParameters
         , keyPath         : []
         , values          : [ "cupcake" :+: (Just $ toKey 4)
                             , "pancake" :+: (Just $ toKey 2)
@@ -936,7 +936,7 @@ main = runMocha do
     it "advance() - iterate cursor number of times specified by count" do
       { db } <- setup
         { storeParams     : { keyPath: ["pKey"], autoIncrement: false }
-        , indexParams     : IDBIndex.defaultParameters
+        , indexParams     : IDBObjectStore.defaultParameters
         , keyPath         : []
         , values          : [ { pKey: "pkey_0", iKey: "ikey_0" } :+: Nothing
                             , { pKey: "pkey_1", iKey: "ikey_1" } :+: Nothing
@@ -975,7 +975,7 @@ main = runMocha do
     it "delete() - remove a record from the object store" do
       { db } <- setup
         { storeParams     : { keyPath: ["pKey"], autoIncrement: false }
-        , indexParams     : IDBIndex.defaultParameters
+        , indexParams     : IDBObjectStore.defaultParameters
         , keyPath         : []
         , values          : [ { pKey: "pkey_0", iKey: "ikey_0" } :+: Nothing
                             , { pKey: "pkey_1", iKey: "ikey_1" } :+: Nothing
@@ -1009,7 +1009,7 @@ main = runMocha do
     it "update() - modify a record in the object store" do
       { db } <- setup
         { storeParams     : { keyPath: ["pKey"], autoIncrement: false }
-        , indexParams     : IDBIndex.defaultParameters
+        , indexParams     : IDBObjectStore.defaultParameters
         , keyPath         : []
         , values          : [ { pKey: "pkey_0", iKey: "ikey_0" } :+: Nothing
                             ]
@@ -1041,7 +1041,7 @@ main = runMocha do
     it "update() - throw ReadOnlyError after update on ReadOnly transaction" do
       { db } <- setup
         { storeParams     : { keyPath: ["pKey"], autoIncrement: false }
-        , indexParams     : IDBIndex.defaultParameters
+        , indexParams     : IDBObjectStore.defaultParameters
         , keyPath         : []
         , values          : [ { pKey: "pkey_0", iKey: "ikey_0" } :+: Nothing
                             ]

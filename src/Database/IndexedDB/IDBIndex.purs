@@ -32,7 +32,7 @@ import Data.Maybe                         (Maybe)
 import Data.Nullable                      (Nullable, toMaybe, toNullable)
 
 import Database.IndexedDB.Core
-import Database.IndexedDB.IDBKey.Internal (class IDBKey, toKey)
+import Database.IndexedDB.IDBKey.Internal (Key, toKey)
 
 
 --------------------
@@ -77,23 +77,23 @@ get index range =
 -- | Retrieves the keys of records matching the given key range in query
 -- | (up to the number given if given).
 getAllKeys
-  :: forall e index key. (IDBIndex index) => (IDBKey key)
+  :: forall e index. (IDBIndex index)
   => index
   -> Maybe KeyRange
   -> Maybe Int
-  -> Aff (idb :: IDB | e) (Array key)
+  -> Aff (idb :: IDB | e) (Array Key)
 getAllKeys index range n =
-  Fn.runFn3 _getAllKeys index (toNullable range) (toNullable n)
+  map toKey <$> Fn.runFn3 _getAllKeys index (toNullable range) (toNullable n)
 
 
 -- | Retrieves the key of the first record matching the given key or key range in query.
 getKey
-  :: forall e index key. (IDBIndex index) => (IDBKey key)
+  :: forall e index. (IDBIndex index)
   => index
   -> KeyRange
-  -> Aff (idb :: IDB | e) (Maybe key)
+  -> Aff (idb :: IDB | e) (Maybe Key)
 getKey index range =
-  toMaybe <$> Fn.runFn2 _getKey index range
+  (toMaybe >>> map toKey) <$> Fn.runFn2 _getKey index range
 
 
 -- | Opens a ValueCursor over the records matching query, ordered by direction.
@@ -204,13 +204,13 @@ foreign import _get
 
 
 foreign import _getAllKeys
-    :: forall index e k. (IDBKey k)
-    => Fn3 index (Nullable KeyRange) (Nullable Int) (Aff (idb :: IDB | e) (Array k))
+    :: forall index e
+    .  Fn3 index (Nullable KeyRange) (Nullable Int) (Aff (idb :: IDB | e) (Array Foreign))
 
 
 foreign import _getKey
-    :: forall index e k. (IDBKey k)
-    => Fn2 index KeyRange (Aff (idb :: IDB | e) (Nullable k))
+    :: forall index e
+    .  Fn2 index KeyRange (Aff (idb :: IDB | e) (Nullable Foreign))
 
 
 foreign import _openCursor
