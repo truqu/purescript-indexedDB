@@ -7,7 +7,7 @@ import Control.Monad.Aff.AVar            (AVAR, makeVar, makeVar', modifyVar, pe
 import Control.Monad.Aff.Console         (log)
 import Control.Monad.Eff                 (Eff)
 import Control.Monad.Eff.Class           (liftEff)
-import Control.Monad.Eff.Exception       (EXCEPTION, message)
+import Control.Monad.Eff.Exception       (EXCEPTION, name)
 import Control.Monad.Eff.Now             (NOW, now)
 import Data.Date                          as Date
 import Data.DateTime                      as DateTime
@@ -659,7 +659,7 @@ main = runMocha do
             cursor <- attempt $ IDBIndex.openKeyCursor index Nothing Next cb
             case cursor of
               Right _  -> fail "expected InvalidStateError"
-              Left err -> message err `shouldEqual` "InvalidStateError"
+              Left err -> name err `shouldEqual` "InvalidStateError"
         }
       case res of
         Right _ -> fail "expected InvalidStateError"
@@ -687,7 +687,7 @@ main = runMocha do
       cursor <- attempt $ IDBIndex.openKeyCursor index Nothing Next cb
       case cursor of
         Right _  -> fail "expected TransactionInactiveError"
-        Left err -> message err `shouldEqual` "TransactionInactiveError"
+        Left err -> name err `shouldEqual` "TransactionInactiveError"
 
       tearDown db
 
@@ -709,7 +709,7 @@ main = runMocha do
             cursor <- attempt $ IDBIndex.openKeyCursor index Nothing Next cb
             case cursor of
               Right _  -> fail "expected InvalidStateError"
-              Left err -> message err `shouldEqual` "InvalidStateError"
+              Left err -> name err `shouldEqual` "InvalidStateError"
         }
 
       tearDown db
@@ -733,7 +733,7 @@ main = runMocha do
             cursor <- attempt $ IDBIndex.openCursor index Nothing Next cb
             case cursor of
               Right _  -> fail "expected InvalidStateError"
-              Left err -> message err `shouldEqual` "InvalidStateError"
+              Left err -> name err `shouldEqual` "InvalidStateError"
         }
       case res of
         Right _ -> fail "expected InvalidStateError"
@@ -761,7 +761,7 @@ main = runMocha do
       cursor <- attempt $ IDBIndex.openCursor index Nothing Next cb
       case cursor of
         Right _  -> fail "expected TransactionInactiveError"
-        Left err -> message err `shouldEqual` "TransactionInactiveError"
+        Left err -> name err `shouldEqual` "TransactionInactiveError"
 
       tearDown db
 
@@ -783,7 +783,7 @@ main = runMocha do
             cursor <- attempt $ IDBIndex.openCursor index Nothing Next cb
             case cursor of
               Right _  -> fail "expected InvalidStateError"
-              Left err -> message err `shouldEqual` "InvalidStateError"
+              Left err -> name err `shouldEqual` "InvalidStateError"
         }
 
       tearDown db
@@ -920,7 +920,7 @@ main = runMocha do
                 res <- attempt $ IDBCursor.continue cursor (Just 1)
                 case res of
                   Left err  -> do
-                    message err `shouldEqual` "DataError"
+                    name err `shouldEqual` "DataError"
                     putVar vdone unit
                   Right _ -> do
                     fail "expected continue to fail"
@@ -1058,7 +1058,7 @@ main = runMocha do
                 res <- attempt $ IDBCursor.update cursor "patate"
                 case res of
                   Left err -> do
-                    message err `shouldEqual` "ReadOnlyError"
+                    name err `shouldEqual` "ReadOnlyError"
                     putVar vdone unit
                   Right _ ->
                     fail $ "expected ReadOnlyError"

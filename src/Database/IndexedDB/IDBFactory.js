@@ -1,6 +1,6 @@
 const errorHandler = function errorHandler(cb) {
     return function _handler(e) {
-        cb(new Error(e.target.error.name));
+        cb(e.target.error);
     };
 };
 
@@ -26,7 +26,7 @@ exports._deleteDatabase = function _deleteDatabase(name) {
 
             request.onerror = errorHandler(error);
         } catch (e) {
-            error(new Error(e.name));
+            error(e);
         }
     };
 };
@@ -51,7 +51,7 @@ exports._open = function _open(fromMaybe, name, mver, req) {
 
             request.onerror = errorHandler(error);
         } catch (e) {
-            error(new Error(e.name));
+            error(e);
         }
     };
 };

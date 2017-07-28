@@ -1,6 +1,6 @@
 const errorHandler = function errorHandler(cb) {
     return function _handler(e) {
-        cb(new Error(e.target.error.name));
+        cb(e.target.error);
     };
 };
 
@@ -22,7 +22,7 @@ exports._add = function _add(store, value, key) {
             request.onsuccess = successHandler(success);
             request.onerror = errorHandler(error);
         } catch (e) {
-            error(new Error(e.name));
+            error(e);
         }
     };
 };
@@ -38,7 +38,7 @@ exports._clear = function _clear(store) {
             request.onsuccess = successHandler(success);
             request.onerror = errorHandler(error);
         } catch (e) {
-            error(new Error(e.name));
+            error(e);
         }
     };
 };
@@ -64,7 +64,7 @@ exports._createIndex = function _createIndex(store, name, path, params) {
             const index = store.createIndex(name, keyPath, params);
             success(index);
         } catch (e) {
-            error(new Error(e.name));
+            error(e);
         }
     };
 };
@@ -75,7 +75,7 @@ exports._deleteIndex = function _deleteIndex(store, name) {
             store.deleteIndex(name);
             success();
         } catch (e) {
-            error(new Error(e.name));
+            error(e);
         }
     };
 };
@@ -87,7 +87,7 @@ exports._delete = function _delete(store, query) {
             request.onsuccess = successHandler(success);
             request.onerror = errorHandler(error);
         } catch (e) {
-            error(new Error(e.name));
+            error(e);
         }
     };
 };
@@ -98,7 +98,7 @@ exports._index = function _index(store, name) {
             const index = store.index(name);
             success(index);
         } catch (e) {
-            error(new Error(e.name));
+            error(e);
         }
     };
 };
@@ -132,7 +132,7 @@ exports._put = function _put(store, value, key) {
             request.onsuccess = successHandler(success);
             request.onerror = errorHandler(error);
         } catch (e) {
-            error(new Error(e.name));
+            error(e);
         }
     };
 };

@@ -1,6 +1,6 @@
 const errorHandler = function errorHandler(cb) {
     return function _handler(e) {
-        cb(new Error(e.target.error.name));
+        cb(e.target.error);
     };
 };
 
@@ -48,7 +48,7 @@ exports._count = function _count(index, query) {
             request.onsuccess = successHandler(success);
             request.onerror = errorHandler(error);
         } catch (e) {
-            error(new Error(e.name));
+            error(e);
         }
     };
 };
@@ -60,7 +60,7 @@ exports._get = function _get(index, range) {
             request.onsuccess = successHandler(success);
             request.onerror = errorHandler(error);
         } catch (e) {
-            error(new Error(e.name));
+            error(e);
         }
     };
 };
@@ -87,7 +87,7 @@ exports._getAllKeys = function _getAllKeys(index, range, count) {
             request.onsuccess = successHandler(success);
             request.onerror = errorHandler(error);
         } catch (e) {
-            error(new Error(e.name));
+            error(e);
         }
     };
 };
@@ -99,7 +99,7 @@ exports._getKey = function _getKey(index, range) {
             request.onsuccess = successHandler(success);
             request.onerror = errorHandler(error);
         } catch (e) {
-            error(new Error(e.name));
+            error(e);
         }
     };
 };
@@ -116,11 +116,11 @@ exports._openCursor = function _openCursor(index, query, dir, cb) {
                 }
             };
             request.onerror = function onError(e) {
-                cb.onError(new Error(e.target.error.name));
+                cb.onError(e.target.error);
             };
             success();
         } catch (e) {
-            error(new Error(e.name));
+            error(e);
         }
     };
 };
@@ -137,11 +137,11 @@ exports._openKeyCursor = function _openKeyCursor(index, query, dir, cb) {
                 }
             };
             request.onerror = function onError(e) {
-                cb.onError(new Error(e.target.error.name));
+                cb.onError(e.target.error);
             };
             success();
         } catch (e) {
-            error(new Error(e.name));
+            error(e);
         }
     };
 };

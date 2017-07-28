@@ -4,7 +4,7 @@ exports._abort = function _abort(tx) {
             tx.abort();
             success();
         } catch (e) {
-            error(new Error(e.name));
+            error(e);
         }
     };
 };
@@ -16,7 +16,7 @@ exports._db = function _db(tx) {
 exports._error = function _error(tx) {
     return tx.error == null
         ? null
-        : new Error(tx.error.name);
+        : tx.error;
 };
 
 exports._mode = function _mode(ReadOnly, ReadWrite, VersionChange, tx) {
@@ -35,7 +35,7 @@ exports._objectStore = function _objectStore(tx, name) {
             const store = tx.objectStore(name);
             success(store);
         } catch (e) {
-            error(new Error(e.name));
+            error(e);
         }
     };
 };
@@ -65,7 +65,7 @@ exports._onComplete = function _onComplete(tx, f) {
 exports._onError = function _onError(tx, f) {
     return function aff(success) {
         tx.onerror = function onerror(e) {
-            f(new Error(e.target.error.name))();
+            f(e.target.error)();
         };
         success();
     };

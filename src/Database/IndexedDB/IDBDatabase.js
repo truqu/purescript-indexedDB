@@ -17,7 +17,7 @@ exports._close = function _close(db) {
             db.close();
             success();
         } catch (e) {
-            error(new Error(e.name));
+            error(e);
         }
     };
 };
@@ -47,7 +47,7 @@ exports._createObjectStore = function _createObjectStore(db, name, opts) {
             });
             success(store);
         } catch (e) {
-            error(new Error(e.name));
+            error(e);
         }
     };
 };
@@ -58,7 +58,7 @@ exports._deleteObjectStore = function _deleteObjectStore(db, name) {
             db.deleteObjectStore(name);
             success();
         } catch (e) {
-            error(new Error(e.name));
+            error(e);
         }
     };
 };
@@ -92,7 +92,7 @@ exports._onClose = function _onClose(db, f) {
 exports._onError = function _onError(db, f) {
     return function aff(success) {
         db.onerror = function onerror(e) {
-            f(new Error(e.target.error.name))();
+            f(e.target.error)();
         };
         success();
     };
@@ -113,7 +113,7 @@ exports._transaction = function _transaction(db, stores, mode) {
             const transaction = db.transaction(stores, mode);
             success(transaction);
         } catch (e) {
-            error(new Error(e.name));
+            error(e);
         }
     };
 };

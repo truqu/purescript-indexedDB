@@ -1,6 +1,6 @@
 const errorHandler = function errorHandler(cb) {
     return function _handler(e) {
-        cb(new Error(e.target.error.name));
+        cb(e.target.error);
     };
 };
 
@@ -16,7 +16,7 @@ exports._advance = function _advance(cursor, count) {
             cursor.advance(count);
             success();
         } catch (e) {
-            error(new Error(e.name));
+            error(e);
         }
     };
 };
@@ -27,7 +27,7 @@ exports._continue = function _continue(cursor, key) {
             cursor.continue(key || undefined);
             success();
         } catch (e) {
-            error(new Error(e.name));
+            error(e);
         }
     };
 };
@@ -38,7 +38,7 @@ exports._continuePrimaryKey = function _continuePrimaryKey(cursor, key, primaryK
             cursor.continuePrimaryKey(key, primaryKey);
             success();
         } catch (e) {
-            error(new Error(e.name));
+            error(e);
         }
     };
 };
@@ -50,7 +50,7 @@ exports._delete = function _delete(cursor) {
             request.onsuccess = successHandler(success);
             request.onerror = errorHandler(error);
         } catch (e) {
-            error(new Error(e.name));
+            error(e);
         }
     };
 };
@@ -64,7 +64,7 @@ exports._key = function _key(cursor) {
         try {
             success(cursor.key);
         } catch (e) {
-            error(new Error(e.name));
+            error(e);
         }
     };
 };
@@ -74,7 +74,7 @@ exports._primaryKey = function _primaryKey(cursor) {
         try {
             success(cursor.primaryKey);
         } catch (e) {
-            error(new Error(e.name));
+            error(e);
         }
     };
 };
@@ -86,7 +86,16 @@ exports._source = function _source(IDBObjectStore, IDBIndex, cursor) {
     case 'IDBObjectStore':
         return IDBObjectStore(cursor.source);
     default:
-        throw new Error('UnexpectedCursorSource');
+        throw Object.create(Error.prototype, {
+            message: {
+                enumerable: true,
+                value: 'Unable to retrieve the cursor\'s source constructor.',
+            },
+            name: {
+                enumerable: true,
+                value: 'UnexpectedCursorSource',
+            },
+        });
     }
 };
 
@@ -97,7 +106,7 @@ exports._update = function _update(cursor, value) {
             request.onsuccess = successHandler(success);
             request.onerror = errorHandler(error);
         } catch (e) {
-            error(new Error(e.name));
+            error(e);
         }
     };
 };
