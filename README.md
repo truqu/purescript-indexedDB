@@ -26,8 +26,8 @@ main = launchAff' do
   log $ maybe "not found" id val
 
 
-onUpgradeNeeded :: forall e. Database -> Transaction -> Eff (idb :: IDB, exception :: EXCEPTION | e) Unit
-onUpgradeNeeded db _ = launchAff' do
+onUpgradeNeeded :: forall e. Database -> Transaction -> { oldVersion :: Int } -> Eff (idb :: IDB, exception :: EXCEPTION | e) Unit
+onUpgradeNeeded db _ _ = launchAff' do
   store <- IDBDatabase.createObjectStore db "store" IDBObjectStore.defaultParameters
   _     <- IDBObjectStore.add store "patate" (Just 1)
   _     <- IDBObjectStore.add store { property: 42 } (Just 2)
@@ -50,6 +50,10 @@ Hence, it should be quite straightforward to translate any JavaScript example to
 one. 
 
 ## Changelog
+
+#### v3.0.0
+
+- callback to `onUpgradeNeeded` event now provide a record with the database old version.
 
 #### v2.0.0
 
