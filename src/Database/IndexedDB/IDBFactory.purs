@@ -30,7 +30,7 @@ import Database.IndexedDB.Core
 -- Type alias for binding listeners to an initial open action.
 type Callbacks e =
   { onBlocked       :: Maybe (Eff (| e) Unit)
-  , onUpgradeNeeded :: Maybe (Database -> Transaction -> Eff (| e) Unit)
+  , onUpgradeNeeded :: Maybe (Database -> Transaction -> { oldVersion :: Int } -> Eff (| e) Unit)
   }
 
 

@@ -14,6 +14,9 @@ const noOp2 = function noOp2() {
     return noOp;
 };
 
+const noOp3 = function noOp3() {
+    return noOp2;
+};
 
 exports._deleteDatabase = function _deleteDatabase(name) {
     return function aff(success, error) {
@@ -46,7 +49,8 @@ exports._open = function _open(fromMaybe, name, mver, req) {
             };
 
             request.onupgradeneeded = function onUpgradeNeeded(e) {
-                fromMaybe(noOp2)(req.onUpgradeNeeded)(e.target.result)(e.target.transaction)();
+                const meta = { oldVersion: e.oldVersion };
+                fromMaybe(noOp3)(req.onUpgradeNeeded)(e.target.result)(e.target.transaction)(meta)();
             };
 
             request.onerror = errorHandler(error);

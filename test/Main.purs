@@ -87,22 +87,24 @@ main = runMocha do
         }
       tearDown name version db
 
-
     it "open + onUpgradeNeed" do
       let name    = "db-upgrade-needed"
           version = 1
-          callback var db _ = do
-            _ <- launchAff $ modifyVar (const $ IDBDatabase.name db) var
+          callback (Tuple varName varVersion) db _ { oldVersion } = do
+            _ <- launchAff $ modifyVar (const $ IDBDatabase.name db) varName
+            _ <- launchAff $ modifyVar (const $ oldVersion) varVersion
             pure unit
-      var <- makeVar' "-"
-      db  <- IDBFactory.open name Nothing
-        { onUpgradeNeeded : Just (callback var)
+      varName <- makeVar' "-"
+      varVersion <- makeVar' (-1)
+      db <- IDBFactory.open name Nothing
+        { onUpgradeNeeded : Just (callback (Tuple varName varVersion))
         , onBlocked       : Nothing
         }
-      name <- peekVar var
-      name `shouldEqual` name
+      name' <- peekVar varName
+      version' <- peekVar varVersion
+      name' `shouldEqual` name
+      version' `shouldEqual` 0
       tearDown name version db
-
 
     it "open + onBlocked" do
       let name    = "db-blocked"
@@ -124,8 +126,8 @@ main = runMocha do
         { onUpgradeNeeded : Nothing
         , onBlocked       : Just (callback var)
         }
-      name <- peekVar var
-      name `shouldEqual` name
+      name' <- peekVar var
+      name' `shouldEqual` name
       tearDown name version db02
 
   describe "IDBKeyRange" do
@@ -289,7 +291,7 @@ main = runMocha do
           pure unit
 
         setup storeParams = do
-          let onUpgradeNeeded var db _ = launchAff' do
+          let onUpgradeNeeded var db _ _ = launchAff' do
                 store <- IDBDatabase.createObjectStore db "store" storeParams
                 _     <- putVar var { db, store }
                 pure unit
@@ -327,7 +329,7 @@ main = runMocha do
       tearDown db
 
     it "deleteObjectStore" do
-      let onUpgradeNeeded var db _ = launchAff' do
+      let onUpgradeNeeded var db _ _ = launchAff' do
             _ <- IDBDatabase.deleteObjectStore db "store"
             putVar var true
 
@@ -350,7 +352,7 @@ main = runMocha do
           pure unit
 
         setup { storeParams, onUpgradeNeeded } = do
-          let onUpgradeNeeded' var db _ = launchAff' do
+          let onUpgradeNeeded' var db _ _ = launchAff' do
                 store <- IDBDatabase.createObjectStore db "store" storeParams
                 liftEff $ maybe (pure unit) id (onUpgradeNeeded <*> pure db <*> pure store)
                 putVar var { db, store }
@@ -506,7 +508,7 @@ main = runMocha do
                  , onUpgradeNeeded :: Maybe (Database -> Transaction -> Index -> Eff (idb :: IDB, avar :: AVAR, exception :: EXCEPTION | e') Unit)
                } -> Aff (idb :: IDB, avar :: AVAR | e) { db :: Database, index :: Index, store :: ObjectStore }
         setup { storeParams, indexParams, values, keyPath, onUpgradeNeeded } = do
-          let onUpgradeNeeded' var db tx = launchAff' do
+          let onUpgradeNeeded' var db tx _ = launchAff' do
                 store <- IDBDatabase.createObjectStore db "store" storeParams
                 _     <- traverse (uncurry (IDBObjectStore.add store)) values
                 index <- IDBObjectStore.createIndex store "index" keyPath indexParams
@@ -844,7 +846,7 @@ main = runMocha do
                  , onUpgradeNeeded :: Maybe (Database -> Transaction -> Index -> Eff (idb :: IDB, avar :: AVAR, exception :: EXCEPTION | e') Unit)
                } -> Aff (idb :: IDB, avar :: AVAR | e) { db :: Database, index :: Index, store :: ObjectStore }
         setup { storeParams, indexParams, values, keyPath, onUpgradeNeeded } = do
-          let onUpgradeNeeded' var db tx = launchAff' do
+          let onUpgradeNeeded' var db tx _ = launchAff' do
                 store <- IDBDatabase.createObjectStore db "store" storeParams
                 _     <- traverse (uncurry (IDBObjectStore.add store)) values
                 index <- IDBObjectStore.createIndex store "index" keyPath indexParams
