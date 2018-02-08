@@ -25,7 +25,7 @@
     "url": "git://github.com/truqu/purescript-indexedDB.git"
   },
   "dependencies": {
-    "purescript-aff": "^3.1.0",
+    "purescript-aff": "^4.0.0",
     "purescript-datetime": "^3.2.0",
     "purescript-eff": "^3.1.0",
     "purescript-exceptions": "^3.1.0",
@@ -34,9 +34,15 @@
     "purescript-read": "^1.0.0"
   },
   "devDependencies": {
-    "purescript-spec": "^1.0.0",
+    "purescript-spec": "^2.0.0",
     "purescript-psci-support": "^3.0.0",
     "purescript-now": "^3.0.0",
     "purescript-spec-mocha": "https://github.com/truqu/purescript-spec-mocha.git#0.5.0"
+  },
+  "resolutions": {
+    "purescript-aff": "^4.0.0",
+    "purescript-spec": "^2.0.0",
+    "purescript-pipes": "^5.0.0",
+    "purescript-io": "^5.0.0"
   }
 }
