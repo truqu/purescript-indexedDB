@@ -14,9 +14,10 @@ module Database.IndexedDB.IDBTransaction
   , onError
   ) where
 
-import Prelude                     (Unit, (>>>))
+import Prelude                     (Unit, (>>>), ($))
 
 import Control.Monad.Aff           (Aff)
+import Control.Monad.Aff.Compat (EffFnAff, fromEffFnAff)
 import Control.Monad.Eff           (Eff)
 import Control.Monad.Eff.Exception (Error)
 import Data.Function.Uncurried      as Fn
@@ -48,7 +49,7 @@ objectStore
   -> String
   -> Aff (idb :: IDB | e) ObjectStore
 objectStore tx name =
-    Fn.runFn2 _objectStore tx name
+    fromEffFnAff $ Fn.runFn2 _objectStore tx name
 
 
 --------------------
@@ -100,7 +101,7 @@ onAbort
   -> Eff ( | e') Unit
   -> Aff (idb :: IDB | e) Unit
 onAbort db' f =
-  Fn.runFn2 _onAbort db' f
+  fromEffFnAff $ Fn.runFn2 _onAbort db' f
 
 
 -- | Event handler for the `complete` event.
@@ -110,7 +111,7 @@ onComplete
   -> Eff ( | e') Unit
   -> Aff (idb :: IDB | e) Unit
 onComplete db' f =
-  Fn.runFn2 _onComplete db' f
+  fromEffFnAff $ Fn.runFn2 _onComplete db' f
 
 
 -- | Event handler for the `error` event.
@@ -120,7 +121,7 @@ onError
   -> (Error -> Eff ( | e') Unit)
   -> Aff (idb :: IDB | e) Unit
 onError db' f =
-  Fn.runFn2 _onError db' f
+  fromEffFnAff $ Fn.runFn2 _onError db' f
 
 
 --------------------
@@ -154,19 +155,19 @@ foreign import _objectStoreNames
 
 foreign import _objectStore
   :: forall tx e
-  .  Fn2 tx String (Aff (idb :: IDB | e) ObjectStore)
+  .  Fn2 tx String (EffFnAff (idb :: IDB | e) ObjectStore)
 
 
 foreign import _onAbort
   :: forall tx e e'
-  . Fn2 tx (Eff ( | e') Unit) (Aff (idb :: IDB | e) Unit)
+  . Fn2 tx (Eff ( | e') Unit) (EffFnAff (idb :: IDB | e) Unit)
 
 
 foreign import _onComplete
   :: forall tx e e'
-  . Fn2 tx (Eff ( | e') Unit) (Aff (idb :: IDB | e) Unit)
+  . Fn2 tx (Eff ( | e') Unit) (EffFnAff (idb :: IDB | e) Unit)
 
 
 foreign import _onError
   :: forall tx e e'
-  . Fn2 tx (Error -> Eff ( | e') Unit) (Aff (idb :: IDB | e) Unit)
+  . Fn2 tx (Error -> Eff ( | e') Unit) (EffFnAff (idb :: IDB | e) Unit)

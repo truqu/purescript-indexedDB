@@ -34,6 +34,7 @@
     "purescript-read": "^1.0.0"
   },
   "devDependencies": {
+    "purescript-debug": "^3.0.0",
     "purescript-spec": "^2.0.0",
     "purescript-psci-support": "^3.0.0",
     "purescript-now": "^3.0.0",

@@ -24,9 +24,10 @@ module Database.IndexedDB.IDBDatabase
   , onVersionChange
   ) where
 
-import Prelude                     (Unit, show)
+import Prelude                     (Unit, show, ($))
 
 import Control.Monad.Aff           (Aff)
+import Control.Monad.Aff.Compat (EffFnAff, fromEffFnAff)
 import Control.Monad.Eff           (Eff)
 import Control.Monad.Eff.Exception (Error)
 import Data.Function.Uncurried      as Fn
@@ -92,7 +93,7 @@ deleteObjectStore
   -> StoreName
   -> Aff (idb :: IDB | e) ObjectStore
 deleteObjectStore db name' =
-  Fn.runFn2 _deleteObjectStore db name'
+  fromEffFnAff $ Fn.runFn2 _deleteObjectStore db name'
 
 
 -- | Returns a new transaction with the given mode (ReadOnly|ReadWrite)
@@ -104,7 +105,7 @@ transaction
   -> TransactionMode
   -> Aff (idb :: IDB | e) Transaction
 transaction db stores mode' =
-  Fn.runFn3 _transaction db stores (show mode')
+  fromEffFnAff $ Fn.runFn3 _transaction db stores (show mode')
 
 
 --------------------
@@ -145,7 +146,7 @@ onAbort
     -> Eff ( | e') Unit
     -> Aff (idb :: IDB | e) Unit
 onAbort db f =
-  Fn.runFn2 _onAbort db f
+  fromEffFnAff $ Fn.runFn2 _onAbort db f
 
 
 -- | Event handler for the `close` event.
@@ -155,7 +156,7 @@ onClose
     -> Eff ( | e') Unit
     -> Aff (idb :: IDB | e) Unit
 onClose db f =
-  Fn.runFn2 _onClose db f
+  fromEffFnAff $ Fn.runFn2 _onClose db f
 
 
 -- | Event handler for the `error` event.
@@ -165,7 +166,7 @@ onError
     -> (Error -> Eff ( | e') Unit)
     -> Aff (idb :: IDB | e) Unit
 onError db f =
-  Fn.runFn2 _onError db f
+  fromEffFnAff $ Fn.runFn2 _onError db f
 
 
 -- | Event handler for the `versionchange` event.
@@ -176,7 +177,7 @@ onVersionChange
     -> Eff ( | e') Unit)
     -> Aff (idb :: IDB | e) Unit
 onVersionChange db f =
-  Fn.runFn2 _onVersionChange db f
+  fromEffFnAff $ Fn.runFn2 _onVersionChange db f
 
 
 --------------------
@@ -196,7 +197,7 @@ foreign import _createObjectStore
 
 foreign import _deleteObjectStore
     :: forall db e
-    .  Fn2 db String (Aff (idb :: IDB | e) ObjectStore)
+    .  Fn2 db String (EffFnAff (idb :: IDB | e) ObjectStore)
 
 
 foreign import _name
@@ -211,27 +212,27 @@ foreign import _objectStoreNames
 
 foreign import _onAbort
     :: forall db e e'
-    .  Fn2 db (Eff ( | e') Unit) (Aff (idb :: IDB | e) Unit)
+    .  Fn2 db (Eff ( | e') Unit) (EffFnAff (idb :: IDB | e) Unit)
 
 
 foreign import _onClose
     :: forall db e e'
-    .  Fn2 db (Eff ( | e') Unit) (Aff (idb :: IDB | e) Unit)
+    .  Fn2 db (Eff ( | e') Unit) (EffFnAff (idb :: IDB | e) Unit)
 
 
 foreign import _onError
     :: forall db e e'
-    .  Fn2 db (Error -> Eff ( | e') Unit) (Aff (idb :: IDB | e) Unit)
+    .  Fn2 db (Error -> Eff ( | e') Unit) (EffFnAff (idb :: IDB | e) Unit)
 
 
 foreign import _onVersionChange
     :: forall db e e'
-    .  Fn2 db ({ oldVersion :: Int, newVersion :: Int } -> Eff ( | e') Unit) (Aff (idb :: IDB | e) Unit)
+    .  Fn2 db ({ oldVersion :: Int, newVersion :: Int } -> Eff ( | e') Unit) (EffFnAff (idb :: IDB | e) Unit)
 
 
 foreign import _transaction
     :: forall db e
-    .  Fn3 db (Array String) String (Aff (idb :: IDB | e) Transaction)
+    .  Fn3 db (Array String) String (EffFnAff (idb :: IDB | e) Transaction)
 
 
 foreign import _version
