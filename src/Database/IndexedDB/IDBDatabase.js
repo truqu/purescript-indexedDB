@@ -15,7 +15,7 @@ exports._close = function _close(db) {
 };
 
 exports._createObjectStore = function _createObjectStore(db, name, opts) {
-    return function aff(success, error) {
+    return function aff(error, success) {
         var keyPath;
 
         try {
@@ -40,6 +40,10 @@ exports._createObjectStore = function _createObjectStore(db, name, opts) {
             success(store);
         } catch (e) {
             error(e);
+        } finally {
+            return function(_,_,cancelerSuccess){
+                cancelerSuccess();
+            };
         }
     };
 };

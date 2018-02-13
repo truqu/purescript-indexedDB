@@ -81,7 +81,7 @@ createObjectStore
   -> ObjectStoreParameters
   -> Aff (idb :: IDB | e) ObjectStore
 createObjectStore db name' opts =
-  Fn.runFn3 _createObjectStore db name' opts
+  fromEffFnAff $ Fn.runFn3 _createObjectStore db name' opts
 
 
 -- | Deletes the object store with the given name.
@@ -192,7 +192,7 @@ foreign import _close
 
 foreign import _createObjectStore
     :: forall db e
-    .  Fn3 db String { keyPath :: Array String, autoIncrement :: Boolean } (Aff (idb :: IDB | e) ObjectStore)
+    .  Fn3 db String { keyPath :: Array String, autoIncrement :: Boolean } (EffFnAff (idb :: IDB | e) ObjectStore)
 
 
 foreign import _deleteObjectStore
