@@ -12,8 +12,6 @@ module Database.IndexedDB.IDBFactory
   , open
   ) where
 
-import Debug.Trace (traceAnyM)
-
 import Prelude                 (Unit, ($), (<<<), discard, void)
 
 import Control.Monad.Aff       (Aff)
@@ -75,7 +73,6 @@ open
     -> Callbacks e'
     -> Aff (idb :: IDB | e) Database
 open name mver req = do
-  void $ traceAnyM "running Factory _open..."
   fromEffFnAff $ Fn.runFn4 _open fromMaybe name mver req
 
 
