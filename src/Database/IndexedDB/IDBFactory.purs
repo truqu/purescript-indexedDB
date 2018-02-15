@@ -12,7 +12,7 @@ module Database.IndexedDB.IDBFactory
   , open
   ) where
 
-import Prelude                 (Unit, ($), (<<<), discard, void)
+import Prelude                 (Unit, ($), (<<<))
 
 import Control.Monad.Aff       (Aff)
 import Control.Monad.Eff       (Eff)

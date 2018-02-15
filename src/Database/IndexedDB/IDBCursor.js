@@ -18,7 +18,7 @@ exports._advance = function _advance(cursor, count) {
         } catch (e) {
             error(e);
         } finally {
-            return function (_,_,cancelerSuccess){
+            return function (_msg,_err,cancelerSuccess){
                 cancelerSuccess();
             };
         }
@@ -33,7 +33,7 @@ exports._continue = function _continue(cursor, key) {
         } catch (e) {
             error(e);
         } finally {
-            return function (_,_,cancelerSuccess){
+            return function (_msg,_err,cancelerSuccess){
                 cancelerSuccess();
             };
         }
@@ -48,7 +48,7 @@ exports._continuePrimaryKey = function _continuePrimaryKey(cursor, key, primaryK
         } catch (e) {
             error(e);
         } finally {
-            return function(_,_,cancelerSuccess){
+            return function(_msg,_err,cancelerSuccess){
                 cancelerSuccess();
             };
         }
@@ -64,7 +64,7 @@ exports._delete = function _delete(cursor) {
         } catch (e) {
             error(e);
         } finally {
-            return function (_,_,cancelerSuccess){
+            return function (_msg,_err,cancelerSuccess){
                 cancelerSuccess();
             };
         }
@@ -82,7 +82,7 @@ exports._key = function _key(cursor) {
         } catch (e) {
             error(e);
         } finally {
-            return function(_,_,cancelerSuccess){
+            return function(_msg,_err,cancelerSuccess){
                 cancelerSuccess();
             };
         }
@@ -96,7 +96,7 @@ exports._primaryKey = function _primaryKey(cursor) {
         } catch (e) {
             error(e);
         } finally {
-            return function(_,_,cancelerSuccess){
+            return function(_msg,_err,cancelerSuccess){
                 cancelerSuccess();
             };
         }
@@ -132,7 +132,7 @@ exports._update = function _update(cursor, value) {
         } catch (e) {
             error(e);
         } finally {
-            return function (_,_,cancelerSuccess){
+            return function (_msg,_err,cancelerSuccess){
                 cancelerSuccess();
             };
         }

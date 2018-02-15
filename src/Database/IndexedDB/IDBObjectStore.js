@@ -24,7 +24,7 @@ exports._add = function _add(store, value, key) {
         } catch (e) {
             error(e);
         } finally {
-            return function (_,_,cancelerSuccess){
+            return function (_msg,_err,cancelerSuccess){
                 cancelerSuccess();
             };
         }
@@ -44,7 +44,7 @@ exports._clear = function _clear(store) {
         } catch (e) {
             error(e);
         } finally {
-            return function (_,_,cancelerSuccess){
+            return function (_msg,_err,cancelerSuccess){
                 cancelerSuccess();
             }
         }
@@ -74,7 +74,7 @@ exports._createIndex = function _createIndex(store, name, path, params) {
         } catch (e) {
             error(e);
         } finally {
-            return function(_,_,cancelerSuccess){
+            return function(_msg,_err,cancelerSuccess){
                 cancelerSuccess();  
             };
         }
@@ -89,7 +89,7 @@ exports._deleteIndex = function _deleteIndex(store, name) {
         } catch (e) {
             error(e);
         } finally {
-            return function(_,_,cancelerSuccess){
+            return function(_msg,_err,cancelerSuccess){
                 cancelerSuccess();
             };
         }
@@ -105,7 +105,7 @@ exports._delete = function _delete(store, query) {
         } catch (e) {
             error(e);
         } finally {
-            return function(_,_,cancelerSuccess){
+            return function(_msg,_err,cancelerSuccess){
                 cancelerSuccess();
             };
         }
@@ -120,7 +120,7 @@ exports._index = function _index(store, name) {
         } catch (e) {
             error(e);
         } finally {
-            return function(_,_,cancelerSuccess){
+            return function(_msg,_err,cancelerSuccess){
                 cancelerSuccess();
             };
         }
@@ -158,7 +158,7 @@ exports._put = function _put(store, value, key) {
         } catch (e) {
             error(e);
         } finally {
-            return function(_,_,cancelerSuccess){
+            return function(_msg,_err,cancelerSuccess){
                 cancelerSuccess();
             };
         }

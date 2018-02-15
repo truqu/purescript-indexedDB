@@ -41,7 +41,7 @@ exports._createObjectStore = function _createObjectStore(db, name, opts) {
         } catch (e) {
             error(e);
         } finally {
-            return function(_,_,cancelerSuccess){
+            return function(_msg,_err,cancelerSuccess){
                 cancelerSuccess();
             };
         }
@@ -56,7 +56,7 @@ exports._deleteObjectStore = function _deleteObjectStore(db, name) {
         } catch (e) {
             error(e);
         } finally {
-            return function(_,_,f){f();};
+            return function(_msg,_err,f){f();};
         }
     };
 };
@@ -75,7 +75,7 @@ exports._onAbort = function _onAbort(db, f) {
             f();
         };
         success();
-        return function(_,_,succ){succ();};
+        return function(_msg,_err,succ){succ();};
     };
 };
 
@@ -85,7 +85,7 @@ exports._onClose = function _onClose(db, f) {
             f();
         };
         success();
-        return function(_,_, succ){ succ();};
+        return function(_msg,_err, succ){ succ();};
     };
 };
 
@@ -95,7 +95,7 @@ exports._onError = function _onError(db, f) {
             f(e.target.error)();
         };
         success();
-        return function(_,_,succ){succ();};
+        return function(_msg,_err,succ){succ();};
     };
 };
 
@@ -105,7 +105,7 @@ exports._onVersionChange = function _onVersionChange(db, f) {
             f({ oldVersion: e.oldVersion, newVersion: e.newVersion })();
         };
         success();
-        return function(_,_,succ){succ();};
+        return function(_msg,_err,succ){succ();};
     };
 };
 
@@ -117,7 +117,7 @@ exports._transaction = function _transaction(db, stores, mode) {
         } catch (e) {
             error(e);
         } finally {
-            return function(_,_,fn){fn();};
+            return function(_msg,_err,fn){fn();};
         }
     };
 };

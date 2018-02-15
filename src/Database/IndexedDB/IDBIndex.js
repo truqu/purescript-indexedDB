@@ -50,7 +50,7 @@ exports._count = function _count(index, query) {
         } catch (e) {
             error(e);
         } finally {
-            return function(_,_,cancelerSuccess){
+            return function(_msg,_err,cancelerSuccess){
                 cancelerSuccess();  
             };
         }
@@ -66,7 +66,7 @@ exports._get = function _get(index, range) {
         } catch (e) {
             error(e);
         } finally {
-            return function(_,_,cancelerSuccess){
+            return function(_msg,_err,cancelerSuccess){
                 cancelerSuccess();
             };
         }
@@ -97,7 +97,7 @@ exports._getAllKeys = function _getAllKeys(index, range, count) {
         } catch (e) {
             error(e);
         } finally {
-            return function (_,_,cancelerSuccess){
+            return function (_msg,_err,cancelerSuccess){
                 cancelerSuccess();
             };
         }
@@ -113,7 +113,7 @@ exports._getKey = function _getKey(index, range) {
         } catch (e) {
             error(e);
         } finally {
-            return function(_,_,cancelerSuccess){
+            return function(_msg,_err,cancelerSuccess){
                 cancelerSuccess();
             };
         }
@@ -138,7 +138,7 @@ exports._openCursor = function _openCursor(index, query, dir, cb) {
         } catch (e) {
             error(e);
         } finally {
-            return function (_,_,cancelerSuccess){
+            return function (_msg,_err,cancelerSuccess){
                 cancelerSuccess();
             };
         }
@@ -163,7 +163,7 @@ exports._openKeyCursor = function _openKeyCursor(index, query, dir, cb) {
         } catch (e) {
             error(e);
         } finally {
-            return function (_,_,cancelerSuccess){
+            return function (_msg,_err,cancelerSuccess){
                 cancelerSuccess();
             };
         }

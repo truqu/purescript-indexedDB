@@ -37,7 +37,7 @@ exports._objectStore = function _objectStore(tx, name) {
         } catch (e) {
             error(e);
         } finally {
-          return function(_,_,succ){
+          return function(_msg,_err,succ){
             succ();
           };
         }
@@ -54,7 +54,7 @@ exports._onAbort = function _onAbort(tx, f) {
             f();
         };
         success();
-        return function(_,_,succ){ return succ();};
+        return function(_msg,_err,succ){ return succ();};
     };
 };
 
@@ -64,7 +64,7 @@ exports._onComplete = function _onComplete(tx, f) {
             f();
         };
         success();
-        return function (_,_,succ){return succ();};
+        return function (_msg,_err,succ){return succ();};
     };
 };
 
@@ -74,6 +74,6 @@ exports._onError = function _onError(tx, f) {
             f(e.target.error)();
         };
         success();
-        return function (_,_,succ){return succ();};
+        return function (_msg,_err,succ){return succ();};
     };
 };
