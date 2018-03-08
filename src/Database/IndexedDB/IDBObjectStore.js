@@ -16,13 +16,17 @@ const toArray = function toArray(xs) {
 
 
 exports._add = function _add(store, value, key) {
-    return function aff(success, error) {
+    return function aff(error, success) {
         try {
             const request = store.add(value, key || undefined);
             request.onsuccess = successHandler(success);
             request.onerror = errorHandler(error);
         } catch (e) {
             error(e);
+        } finally {
+            return function (_msg,_err,cancelerSuccess){
+                cancelerSuccess();
+            };
         }
     };
 };
@@ -32,19 +36,23 @@ exports._autoIncrement = function _autoIncrement(store) {
 };
 
 exports._clear = function _clear(store) {
-    return function aff(success, error) {
+    return function aff(error, success) {
         try {
             const request = store.clear();
             request.onsuccess = successHandler(success);
             request.onerror = errorHandler(error);
         } catch (e) {
             error(e);
+        } finally {
+            return function (_msg,_err,cancelerSuccess){
+                cancelerSuccess();
+            };
         }
     };
 };
 
 exports._createIndex = function _createIndex(store, name, path, params) {
-    return function aff(success, error) {
+    return function aff(error, success) {
         var keyPath;
 
         try {
@@ -65,40 +73,56 @@ exports._createIndex = function _createIndex(store, name, path, params) {
             success(index);
         } catch (e) {
             error(e);
+        } finally {
+            return function(_msg,_err,cancelerSuccess){
+                cancelerSuccess();  
+            };
         }
     };
 };
 
 exports._deleteIndex = function _deleteIndex(store, name) {
-    return function aff(success, error) {
+    return function aff(error, success) {
         try {
             store.deleteIndex(name);
             success();
         } catch (e) {
             error(e);
+        } finally {
+            return function(_msg,_err,cancelerSuccess){
+                cancelerSuccess();
+            };
         }
     };
 };
 
 exports._delete = function _delete(store, query) {
-    return function aff(success, error) {
+    return function aff(error, success) {
         try {
             const request = store.delete(query);
             request.onsuccess = successHandler(success);
             request.onerror = errorHandler(error);
         } catch (e) {
             error(e);
+        } finally {
+            return function(_msg,_err,cancelerSuccess){
+                cancelerSuccess();
+            };
         }
     };
 };
 
 exports._index = function _index(store, name) {
-    return function aff(success, error) {
+    return function aff(error, success) {
         try {
             const index = store.index(name);
             success(index);
         } catch (e) {
             error(e);
+        } finally {
+            return function(_msg,_err,cancelerSuccess){
+                cancelerSuccess();
+            };
         }
     };
 };
@@ -126,13 +150,17 @@ exports._name = function _name(store) {
 };
 
 exports._put = function _put(store, value, key) {
-    return function aff(success, error) {
+    return function aff(error, success) {
         try {
             const request = store.put(value, key || undefined);
             request.onsuccess = successHandler(success);
             request.onerror = errorHandler(error);
         } catch (e) {
             error(e);
+        } finally {
+            return function(_msg,_err,cancelerSuccess){
+                cancelerSuccess();
+            };
         }
     };
 };

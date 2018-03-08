@@ -30,12 +30,16 @@ exports._mode = function _mode(ReadOnly, ReadWrite, VersionChange, tx) {
 };
 
 exports._objectStore = function _objectStore(tx, name) {
-    return function aff(success, error) {
+    return function aff(error, success) {
         try {
             const store = tx.objectStore(name);
             success(store);
         } catch (e) {
             error(e);
+        } finally {
+          return function(_msg,_err,succ){
+            succ();
+          };
         }
     };
 };
@@ -45,28 +49,31 @@ exports._objectStoreNames = function _objectStoreNames(tx) {
 };
 
 exports._onAbort = function _onAbort(tx, f) {
-    return function aff(success) {
+    return function (_, success) {
         tx.onabort = function onabort() {
             f();
         };
         success();
+        return function(_msg,_err,succ){ return succ();};
     };
 };
 
 exports._onComplete = function _onComplete(tx, f) {
-    return function aff(success) {
+    return function aff(_,success) {
         tx.oncomplete = function oncomplete() {
             f();
         };
         success();
+        return function (_msg,_err,succ){return succ();};
     };
 };
 
 exports._onError = function _onError(tx, f) {
-    return function aff(success) {
+    return function aff(_, success) {
         tx.onerror = function onerror(e) {
             f(e.target.error)();
         };
         success();
+        return function (_msg,_err,succ){return succ();};
     };
 };

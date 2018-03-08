@@ -42,25 +42,33 @@ exports._unique = function _unique(index) {
 };
 
 exports._count = function _count(index, query) {
-    return function aff(success, error) {
+    return function aff(error, success) {
         try {
             const request = index.count(query);
             request.onsuccess = successHandler(success);
             request.onerror = errorHandler(error);
         } catch (e) {
             error(e);
+        } finally {
+            return function(_msg,_err,cancelerSuccess){
+                cancelerSuccess();  
+            };
         }
     };
 };
 
 exports._get = function _get(index, range) {
-    return function aff(success, error) {
+    return function aff(error, success) {
         try {
             const request = index.get(range);
             request.onsuccess = successHandler(success);
             request.onerror = errorHandler(error);
         } catch (e) {
             error(e);
+        } finally {
+            return function(_msg,_err,cancelerSuccess){
+                cancelerSuccess();
+            };
         }
     };
 };
@@ -81,13 +89,17 @@ exports._getAll = function _getAll(index, query, count) {
 */
 
 exports._getAllKeys = function _getAllKeys(index, range, count) {
-    return function aff(success, error) {
+    return function aff(error, success) {
         try {
             const request = index.getAllKeys(range, count || undefined);
             request.onsuccess = successHandler(success);
             request.onerror = errorHandler(error);
         } catch (e) {
             error(e);
+        } finally {
+            return function (_msg,_err,cancelerSuccess){
+                cancelerSuccess();
+            };
         }
     };
 };
@@ -100,12 +112,16 @@ exports._getKey = function _getKey(index, range) {
             request.onerror = errorHandler(error);
         } catch (e) {
             error(e);
+        } finally {
+            return function(_msg,_err,cancelerSuccess){
+                cancelerSuccess();
+            };
         }
     };
 };
 
 exports._openCursor = function _openCursor(index, query, dir, cb) {
-    return function aff(success, error) {
+    return function aff(error, success) {
         try {
             const request = index.openCursor(query, dir);
             request.onsuccess = function onSuccess(e) {
@@ -121,12 +137,16 @@ exports._openCursor = function _openCursor(index, query, dir, cb) {
             success();
         } catch (e) {
             error(e);
+        } finally {
+            return function (_msg,_err,cancelerSuccess){
+                cancelerSuccess();
+            };
         }
     };
 };
 
 exports._openKeyCursor = function _openKeyCursor(index, query, dir, cb) {
-    return function aff(success, error) {
+    return function aff(error, success) {
         try {
             const request = index.openKeyCursor(query, dir);
             request.onsuccess = function onSuccess(e) {
@@ -142,6 +162,10 @@ exports._openKeyCursor = function _openKeyCursor(index, query, dir, cb) {
             success();
         } catch (e) {
             error(e);
+        } finally {
+            return function (_msg,_err,cancelerSuccess){
+                cancelerSuccess();
+            };
         }
     };
 };

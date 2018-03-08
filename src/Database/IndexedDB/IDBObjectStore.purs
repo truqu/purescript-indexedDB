@@ -28,9 +28,10 @@ module Database.IndexedDB.IDBObjectStore
 import Prelude                            (Unit, ($), (<$>), (>>>))
 
 import Control.Monad.Aff                  (Aff)
+import Control.Monad.Aff.Compat (EffFnAff, fromEffFnAff)
 import Data.Foreign                       (Foreign)
 import Data.Function.Uncurried             as Fn
-import Data.Function.Uncurried            (Fn2, Fn3, Fn4)
+import Data.Function.Uncurried            (Fn1, Fn2, Fn3, Fn4)
 import Data.Maybe                         (Maybe)
 import Data.Nullable                      (Nullable, toNullable)
 
@@ -90,7 +91,7 @@ add
   -> Maybe key
   -> Aff (idb :: IDB | e) Key
 add store value key =
-  toKey <$> Fn.runFn3 _add store value (toNullable $ (toKey >>> unsafeFromKey) <$> key)
+  toKey <$> fromEffFnAff (Fn.runFn3 _add store value (toNullable $ (toKey >>> unsafeFromKey) <$> key))
 
 
 -- | Deletes all records in store.
@@ -99,7 +100,7 @@ clear
   => store
   -> Aff (idb :: IDB | e) Unit
 clear =
-  _clear
+  Fn.runFn1 _clear >>> fromEffFnAff
 
 
 -- | Creates a new index in store with the given name, keyPath and options and
@@ -116,7 +117,7 @@ createIndex
   -> IndexParameters
   -> Aff (idb :: IDB | e) Index
 createIndex store name' path params =
-  Fn.runFn4 _createIndex store name' path params
+  fromEffFnAff $ Fn.runFn4 _createIndex store name' path params
 
 
 -- | Deletes records in store with the given key or in the given key range in query.
@@ -126,7 +127,7 @@ delete
   -> KeyRange
   -> Aff (idb :: IDB | e) Unit
 delete store range =
-  Fn.runFn2 _delete store range
+  fromEffFnAff $ Fn.runFn2 _delete store range
 
 
 -- | Deletes the index in store with the given name.
@@ -138,7 +139,7 @@ deleteIndex
   -> IndexName
   -> Aff (idb :: IDB | e) Unit
 deleteIndex store name' =
-  Fn.runFn2 _deleteIndex store name'
+  fromEffFnAff $ Fn.runFn2 _deleteIndex store name'
 
 
 -- | Returns an IDBIndex for the index named name in store.
@@ -148,7 +149,7 @@ index
   -> IndexName
   -> Aff (idb :: IDB | e) Index
 index store name' =
-  Fn.runFn2 _index store name'
+  fromEffFnAff $ Fn.runFn2 _index store name'
 
 
 -- | Adds or updates a record in store with the given value and key.
@@ -164,7 +165,7 @@ put
   -> Maybe key
   -> Aff (idb :: IDB | e) Key
 put store value key =
-  toKey <$> Fn.runFn3 _put store value (toNullable $ (toKey >>> unsafeFromKey) <$> key)
+  toKey <$> fromEffFnAff (Fn.runFn3 _put store value (toNullable $ (toKey >>> unsafeFromKey) <$> key))
 
 
 --------------------
@@ -215,7 +216,7 @@ transaction =
 --
 foreign import _add
   :: forall e val store
-  .  Fn3 store val (Nullable Foreign) (Aff (idb :: IDB | e) Foreign)
+  .  Fn3 store val (Nullable Foreign) (EffFnAff (idb :: IDB | e) Foreign)
 
 
 foreign import _autoIncrement
@@ -225,28 +226,27 @@ foreign import _autoIncrement
 
 foreign import _clear
   :: forall e store
-  .  store
-  -> Aff (idb :: IDB | e) Unit
+  .  Fn1 store (EffFnAff (idb :: IDB | e) Unit)
 
 
 foreign import _createIndex
   :: forall e store
-  .  Fn4 store String (Array String) { unique :: Boolean, multiEntry :: Boolean } (Aff (idb :: IDB | e) Index)
+  .  Fn4 store String (Array String) { unique :: Boolean, multiEntry :: Boolean } (EffFnAff (idb :: IDB | e) Index)
 
 
 foreign import _delete
   :: forall e store
-  .  Fn2 store KeyRange (Aff (idb :: IDB | e) Unit)
+  .  Fn2 store KeyRange (EffFnAff (idb :: IDB | e) Unit)
 
 
 foreign import _deleteIndex
   :: forall e store
-  .  Fn2 store String (Aff (idb :: IDB | e) Unit)
+  .  Fn2 store String (EffFnAff (idb :: IDB | e) Unit)
 
 
 foreign import _index
   :: forall e store
-  .  Fn2 store String (Aff (idb :: IDB | e) Index)
+  .  Fn2 store String (EffFnAff (idb :: IDB | e) Index)
 
 
 foreign import _indexNames
@@ -266,7 +266,7 @@ foreign import _name
 
 foreign import _put
   :: forall e val store
-  .  Fn3 store val (Nullable Foreign) (Aff (idb :: IDB | e) Foreign)
+  .  Fn3 store val (Nullable Foreign) (EffFnAff (idb :: IDB | e) Foreign)
 
 
 foreign import _transaction

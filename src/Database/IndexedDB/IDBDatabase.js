@@ -15,7 +15,7 @@ exports._close = function _close(db) {
 };
 
 exports._createObjectStore = function _createObjectStore(db, name, opts) {
-    return function aff(success, error) {
+    return function aff(error, success) {
         var keyPath;
 
         try {
@@ -40,17 +40,23 @@ exports._createObjectStore = function _createObjectStore(db, name, opts) {
             success(store);
         } catch (e) {
             error(e);
+        } finally {
+            return function(_msg,_err,cancelerSuccess){
+                cancelerSuccess();
+            };
         }
     };
 };
 
 exports._deleteObjectStore = function _deleteObjectStore(db, name) {
-    return function aff(success, error) {
+    return function aff(error, success) {
         try {
             db.deleteObjectStore(name);
             success();
         } catch (e) {
             error(e);
+        } finally {
+            return function(_msg,_err,f){f();};
         }
     };
 };
@@ -64,48 +70,54 @@ exports._objectStoreNames = function _objectStoreNames(db) {
 };
 
 exports._onAbort = function _onAbort(db, f) {
-    return function aff(success) {
+    return function aff(_,success) {
         db.onabort = function onabort() {
             f();
         };
         success();
+        return function(_msg,_err,succ){succ();};
     };
 };
 
 exports._onClose = function _onClose(db, f) {
-    return function aff(success) {
+    return function aff(_, success) {
         db.onclose = function onclose() {
             f();
         };
         success();
+        return function(_msg,_err, succ){ succ();};
     };
 };
 
 exports._onError = function _onError(db, f) {
-    return function aff(success) {
+    return function aff(_,success) {
         db.onerror = function onerror(e) {
             f(e.target.error)();
         };
         success();
+        return function(_msg,_err,succ){succ();};
     };
 };
 
 exports._onVersionChange = function _onVersionChange(db, f) {
-    return function aff(success) {
+    return function aff(_,success) {
         db.onversionchange = function onversionchange(e) {
             f({ oldVersion: e.oldVersion, newVersion: e.newVersion })();
         };
         success();
+        return function(_msg,_err,succ){succ();};
     };
 };
 
 exports._transaction = function _transaction(db, stores, mode) {
-    return function aff(success, error) {
+    return function aff(error, success) {
         try {
             const transaction = db.transaction(stores, mode);
             success(transaction);
         } catch (e) {
             error(e);
+        } finally {
+            return function(_msg,_err,fn){fn();};
         }
     };
 };
