@@ -36,7 +36,7 @@ exports._autoIncrement = function _autoIncrement(store) {
 };
 
 exports._clear = function _clear(store) {
-    return function aff(success, error) {
+    return function aff(error, success) {
         try {
             const request = store.clear();
             request.onsuccess = successHandler(success);
@@ -46,7 +46,7 @@ exports._clear = function _clear(store) {
         } finally {
             return function (_msg,_err,cancelerSuccess){
                 cancelerSuccess();
-            }
+            };
         }
     };
 };
