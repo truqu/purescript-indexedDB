@@ -31,7 +31,7 @@ import Control.Monad.Aff                  (Aff)
 import Control.Monad.Aff.Compat (EffFnAff, fromEffFnAff)
 import Data.Foreign                       (Foreign)
 import Data.Function.Uncurried             as Fn
-import Data.Function.Uncurried            (Fn2, Fn3, Fn4)
+import Data.Function.Uncurried            (Fn1, Fn2, Fn3, Fn4)
 import Data.Maybe                         (Maybe)
 import Data.Nullable                      (Nullable, toNullable)
 
@@ -100,7 +100,7 @@ clear
   => store
   -> Aff (idb :: IDB | e) Unit
 clear =
-  _clear >>> fromEffFnAff
+  Fn.runFn1 _clear >>> fromEffFnAff
 
 
 -- | Creates a new index in store with the given name, keyPath and options and
@@ -226,8 +226,7 @@ foreign import _autoIncrement
 
 foreign import _clear
   :: forall e store
-  .  store
-  -> EffFnAff (idb :: IDB | e) Unit
+  .  Fn1 store (EffFnAff (idb :: IDB | e) Unit)
 
 
 foreign import _createIndex
