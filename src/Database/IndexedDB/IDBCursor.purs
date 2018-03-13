@@ -16,9 +16,10 @@ module Database.IndexedDB.IDBCursor
   , value
   ) where
 
-import Prelude                            (Unit, ($), (>>>), map)
+import Prelude                            (Unit, ($), (>>>), (<<<), map)
 
 import Control.Monad.Aff                  (Aff)
+import Control.Monad.Aff.Compat           (fromEffFnAff, EffFnAff)
 import Data.Foreign                       (Foreign, toForeign, unsafeFromForeign)
 import Data.Function.Uncurried             as Fn
 import Data.Function.Uncurried            (Fn2, Fn3)
@@ -40,8 +41,8 @@ advance
     => cursor
     -> Int
     -> Aff (idb :: IDB | e) Unit
-advance =
-  Fn.runFn2 _advance
+advance c =
+  fromEffFnAff <<< Fn.runFn2 _advance c
 
 
 -- | Advances the cursor to the next record in range matching or after key.
@@ -51,7 +52,7 @@ continue
     -> Maybe k
     -> Aff (idb :: IDB | e) Unit
 continue c mk =
-  Fn.runFn2 _continue c (toNullable $ map (toKey >>> unsafeFromKey) mk)
+  fromEffFnAff $ Fn.runFn2 _continue c (toNullable $ map (toKey >>> unsafeFromKey) mk)
 
 
 -- | Advances the cursor to the next record in range matching or after key and primaryKey. Throws an "InvalidAccessError" DOMException if the source is not an index.
@@ -62,7 +63,7 @@ continuePrimaryKey
     -> k
     -> Aff (idb :: IDB | e) Unit
 continuePrimaryKey c k1 k2 =
-  Fn.runFn3 _continuePrimaryKey c (unsafeFromKey $ toKey k1) (unsafeFromKey $ toKey k2)
+  fromEffFnAff $ Fn.runFn3 _continuePrimaryKey c (unsafeFromKey $ toKey k1) (unsafeFromKey $ toKey k2)
 
 
 -- | Delete the record pointed at by the cursor with a new value.
@@ -71,7 +72,7 @@ delete
     => cursor
     -> Aff (idb :: IDB | e) Unit
 delete =
-  _delete
+  fromEffFnAff <<< _delete
 
 
 -- | Update the record pointed at by the cursor with a new value.
@@ -84,7 +85,7 @@ update
     -> val
     -> Aff (idb :: IDB | e) Key
 update c =
-  toForeign >>> Fn.runFn2 _update c >>> map toKey
+  map toKey <<< fromEffFnAff <<< Fn.runFn2 _update c <<< toForeign
 
 
 --------------------
@@ -107,7 +108,7 @@ key
   => cursor
   -> Aff (idb :: IDB | e) Key
 key =
-  _key >>> map toKey
+  map toKey <<< fromEffFnAff <<< _key
 
 
 -- | Returns the effective key of the cursor. Throws a "InvalidStateError" DOMException
@@ -117,7 +118,7 @@ primaryKey
   => cursor
   -> Aff (idb :: IDB | e) Key
 primaryKey =
-  _primaryKey >>> map toKey
+  map toKey <<< fromEffFnAff <<< _primaryKey
 
 
 -- | Returns the IDBObjectStore or IDBIndex the cursor was opened from.
@@ -143,23 +144,23 @@ value =
 
 foreign import _advance
   :: forall cursor e
-  .  Fn2 cursor Int (Aff (idb :: IDB | e) Unit)
+  .  Fn2 cursor Int (EffFnAff (idb :: IDB | e) Unit)
 
 
 foreign import _continue
   :: forall cursor e
-  .  Fn2 cursor (Nullable Foreign) (Aff (idb :: IDB | e) Unit)
+  .  Fn2 cursor (Nullable Foreign) (EffFnAff (idb :: IDB | e) Unit)
 
 
 foreign import _continuePrimaryKey
   :: forall cursor e
-  .  Fn3 cursor Foreign Foreign (Aff (idb :: IDB | e) Unit)
+  .  Fn3 cursor Foreign Foreign (EffFnAff (idb :: IDB | e) Unit)
 
 
 foreign import _delete
   :: forall cursor e
   .  cursor
-  -> (Aff (idb :: IDB | e) Unit)
+  -> (EffFnAff (idb :: IDB | e) Unit)
 
 
 foreign import _direction
@@ -170,13 +171,13 @@ foreign import _direction
 foreign import _key
   :: forall cursor e
   .  cursor
-  -> Aff (idb :: IDB | e) Key
+  -> EffFnAff (idb :: IDB | e) Key
 
 
 foreign import _primaryKey
   :: forall cursor e
   .  cursor
-  -> Aff (idb :: IDB | e) Key
+  -> EffFnAff (idb :: IDB | e) Key
 
 
 foreign import _source
@@ -186,7 +187,7 @@ foreign import _source
 
 foreign import _update
   :: forall cursor e
-  .  Fn2 cursor Foreign (Aff (idb :: IDB | e) Foreign)
+  .  Fn2 cursor Foreign (EffFnAff (idb :: IDB | e) Foreign)
 
 
 foreign import _value

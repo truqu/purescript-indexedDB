@@ -11,40 +11,52 @@ const successHandler = function successHandler(cb) {
 };
 
 exports._advance = function _advance(cursor, count) {
-    return function aff(success, error) {
+    return function aff(error, success) {
         try {
             cursor.advance(count);
             success();
         } catch (e) {
             error(e);
         }
+
+        return function canceler(_, cancelerError) {
+            cancelerError(new Error("Can't cancel IDB Effects"));
+        };
     };
 };
 
 exports._continue = function _continue(cursor, key) {
-    return function aff(success, error) {
+    return function aff(error, success) {
         try {
             cursor.continue(key || undefined);
             success();
         } catch (e) {
             error(e);
         }
+
+        return function canceler(_, cancelerError) {
+            cancelerError(new Error("Can't cancel IDB Effects"));
+        };
     };
 };
 
 exports._continuePrimaryKey = function _continuePrimaryKey(cursor, key, primaryKey) {
-    return function aff(success, error) {
+    return function aff(error, success) {
         try {
             cursor.continuePrimaryKey(key, primaryKey);
             success();
         } catch (e) {
             error(e);
         }
+
+        return function canceler(_, cancelerError) {
+            cancelerError(new Error("Can't cancel IDB Effects"));
+        };
     };
 };
 
 exports._delete = function _delete(cursor) {
-    return function aff(success, error) {
+    return function aff(error, success) {
         try {
             const request = cursor.delete();
             request.onsuccess = successHandler(success);
@@ -52,6 +64,10 @@ exports._delete = function _delete(cursor) {
         } catch (e) {
             error(e);
         }
+
+        return function canceler(_, cancelerError) {
+            cancelerError(new Error("Can't cancel IDB Effects"));
+        };
     };
 };
 
@@ -60,22 +76,30 @@ exports._direction = function _direction(fromString, cursor) {
 };
 
 exports._key = function _key(cursor) {
-    return function aff(success, error) {
+    return function aff(error, success) {
         try {
             success(cursor.key);
         } catch (e) {
             error(e);
         }
+
+        return function canceler(_, cancelerError) {
+            cancelerError(new Error("Can't cancel IDB Effects"));
+        };
     };
 };
 
 exports._primaryKey = function _primaryKey(cursor) {
-    return function aff(success, error) {
+    return function aff(error, success) {
         try {
             success(cursor.primaryKey);
         } catch (e) {
             error(e);
         }
+
+        return function canceler(_, cancelerError) {
+            cancelerError(new Error("Can't cancel IDB Effects"));
+        };
     };
 };
 
@@ -100,7 +124,7 @@ exports._source = function _source(IDBObjectStore, IDBIndex, cursor) {
 };
 
 exports._update = function _update(cursor, value) {
-    return function aff(success, error) {
+    return function aff(error, success) {
         try {
             const request = cursor.update(value);
             request.onsuccess = successHandler(success);
@@ -108,6 +132,10 @@ exports._update = function _update(cursor, value) {
         } catch (e) {
             error(e);
         }
+
+        return function canceler(_, cancelerError) {
+            cancelerError(new Error("Can't cancel IDB Effects"));
+        };
     };
 };
 
