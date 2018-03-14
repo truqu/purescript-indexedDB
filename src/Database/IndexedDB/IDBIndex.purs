@@ -20,9 +20,10 @@ module Database.IndexedDB.IDBIndex
   , unique
   ) where
 
-import Prelude                            (Unit, map, show, (<$>), (>>>))
+import Prelude                            (Unit, map, show, (<$>), (>>>), ($))
 
 import Control.Monad.Aff                  (Aff)
+import Control.Monad.Aff.Compat           (EffFnAff, fromEffFnAff)
 import Control.Monad.Eff                  (Eff)
 import Control.Monad.Eff.Exception        (Error)
 import Data.Foreign                       (Foreign, unsafeFromForeign)
@@ -58,7 +59,7 @@ count
   -> Maybe KeyRange
   -> Aff (idb :: IDB | e) Int
 count index range =
-  Fn.runFn2 _count index (toNullable range)
+  fromEffFnAff $ Fn.runFn2 _count index (toNullable range)
 
 
 -- | Retrieves the value of the first record matching the given key range in query.
@@ -71,7 +72,7 @@ get
   -> KeyRange
   -> Aff (idb :: IDB | e) (Maybe a)
 get index range =
-  (toMaybe >>> map unsafeFromForeign) <$> Fn.runFn2 _get index range
+  map (toMaybe >>> map unsafeFromForeign) $ fromEffFnAff $ Fn.runFn2 _get index range
 
 
 -- | Retrieves the keys of records matching the given key range in query
@@ -83,7 +84,7 @@ getAllKeys
   -> Maybe Int
   -> Aff (idb :: IDB | e) (Array Key)
 getAllKeys index range n =
-  map toKey <$> Fn.runFn3 _getAllKeys index (toNullable range) (toNullable n)
+  map (map toKey) $ fromEffFnAff $ Fn.runFn3 _getAllKeys index (toNullable range) (toNullable n)
 
 
 -- | Retrieves the key of the first record matching the given key or key range in query.
@@ -93,7 +94,7 @@ getKey
   -> KeyRange
   -> Aff (idb :: IDB | e) (Maybe Key)
 getKey index range =
-  (toMaybe >>> map toKey) <$> Fn.runFn2 _getKey index range
+  map (toMaybe >>> map toKey) $ fromEffFnAff $ Fn.runFn2 _getKey index range
 
 
 -- | Opens a ValueCursor over the records matching query, ordered by direction.
@@ -106,7 +107,7 @@ openCursor
   -> Callbacks ValueCursor e'
   -> Aff (idb :: IDB | e) Unit
 openCursor index range dir cb =
-  Fn.runFn4 _openCursor index (toNullable range) (show dir) cb
+  fromEffFnAff $ Fn.runFn4 _openCursor index (toNullable range) (show dir) cb
 
 
 -- | Opens a KeyCursor over the records matching query, ordered by direction.
@@ -119,7 +120,7 @@ openKeyCursor
     -> Callbacks KeyCursor e'
     -> Aff (idb :: IDB | e) Unit
 openKeyCursor index range dir cb =
-  Fn.runFn4 _openKeyCursor index (toNullable range) (show dir) cb
+  fromEffFnAff $ Fn.runFn4 _openKeyCursor index (toNullable range) (show dir) cb
 
 
 --------------------
@@ -195,29 +196,29 @@ foreign import _unique
 
 foreign import _count
     :: forall index e
-    .  Fn2 index (Nullable KeyRange) (Aff (idb :: IDB | e) Int)
+    .  Fn2 index (Nullable KeyRange) (EffFnAff (idb :: IDB | e) Int)
 
 
 foreign import _get
     :: forall index e
-    .  Fn2 index KeyRange (Aff (idb :: IDB | e) (Nullable Foreign))
+    .  Fn2 index KeyRange (EffFnAff (idb :: IDB | e) (Nullable Foreign))
 
 
 foreign import _getAllKeys
     :: forall index e
-    .  Fn3 index (Nullable KeyRange) (Nullable Int) (Aff (idb :: IDB | e) (Array Foreign))
+    .  Fn3 index (Nullable KeyRange) (Nullable Int) (EffFnAff (idb :: IDB | e) (Array Foreign))
 
 
 foreign import _getKey
     :: forall index e
-    .  Fn2 index KeyRange (Aff (idb :: IDB | e) (Nullable Foreign))
+    .  Fn2 index KeyRange (EffFnAff (idb :: IDB | e) (Nullable Foreign))
 
 
 foreign import _openCursor
     :: forall index e e'
-    .  Fn4 index (Nullable KeyRange) String (Callbacks ValueCursor e') (Aff (idb :: IDB | e) Unit)
+    .  Fn4 index (Nullable KeyRange) String (Callbacks ValueCursor e') (EffFnAff (idb :: IDB | e) Unit)
 
 
 foreign import _openKeyCursor
     :: forall index e e'
-    .  Fn4 index (Nullable KeyRange) String (Callbacks KeyCursor e') (Aff (idb :: IDB | e) Unit)
+    .  Fn4 index (Nullable KeyRange) String (Callbacks KeyCursor e') (EffFnAff (idb :: IDB | e) Unit)

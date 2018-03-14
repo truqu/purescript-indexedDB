@@ -1,11 +1,15 @@
 exports._abort = function _abort(tx) {
-    return function aff(success, error) {
+    return function aff(error, success) {
         try {
             tx.abort();
             success();
         } catch (e) {
             error(e);
         }
+
+        return function canceler(_, cancelerError) {
+            cancelerError(new Error("Can't cancel IDB Effects"));
+        };
     };
 };
 
@@ -30,13 +34,17 @@ exports._mode = function _mode(ReadOnly, ReadWrite, VersionChange, tx) {
 };
 
 exports._objectStore = function _objectStore(tx, name) {
-    return function aff(success, error) {
+    return function aff(error, success) {
         try {
             const store = tx.objectStore(name);
             success(store);
         } catch (e) {
             error(e);
         }
+
+        return function canceler(_, cancelerError) {
+            cancelerError(new Error("Can't cancel IDB Effects"));
+        };
     };
 };
 
@@ -45,28 +53,40 @@ exports._objectStoreNames = function _objectStoreNames(tx) {
 };
 
 exports._onAbort = function _onAbort(tx, f) {
-    return function aff(success) {
+    return function aff(error, success) {
         tx.onabort = function onabort() {
             f();
         };
         success();
+
+        return function canceler(_, cancelerError) {
+            cancelerError(new Error("Can't cancel IDB Effects"));
+        };
     };
 };
 
 exports._onComplete = function _onComplete(tx, f) {
-    return function aff(success) {
+    return function aff(error, success) {
         tx.oncomplete = function oncomplete() {
             f();
         };
         success();
+
+        return function canceler(_, cancelerError) {
+            cancelerError(new Error("Can't cancel IDB Effects"));
+        };
     };
 };
 
 exports._onError = function _onError(tx, f) {
-    return function aff(success) {
+    return function aff(error, success) {
         tx.onerror = function onerror(e) {
             f(e.target.error)();
         };
         success();
+
+        return function canceler(_, cancelerError) {
+            cancelerError(new Error("Can't cancel IDB Effects"));
+        };
     };
 };

@@ -19,7 +19,7 @@ const noOp3 = function noOp3() {
 };
 
 exports._deleteDatabase = function _deleteDatabase(name) {
-    return function aff(success, error) {
+    return function aff(error, success) {
         try {
             const request = indexedDB.deleteDatabase(name);
 
@@ -31,13 +31,17 @@ exports._deleteDatabase = function _deleteDatabase(name) {
         } catch (e) {
             error(e);
         }
+
+        return function canceler(_, cancelerError) {
+            cancelerError(new Error("Can't cancel IDB Effects"));
+        };
     };
 };
 
 exports._open = function _open(fromMaybe, name, mver, req) {
     const ver = fromMaybe(undefined)(mver);
 
-    return function aff(success, error) {
+    return function aff(error, success) {
         try {
             const request = indexedDB.open(name, ver);
             request.onsuccess = function onSuccess(e) {
@@ -50,6 +54,7 @@ exports._open = function _open(fromMaybe, name, mver, req) {
 
             request.onupgradeneeded = function onUpgradeNeeded(e) {
                 const meta = { oldVersion: e.oldVersion };
+                // eslint-disable-next-line max-len
                 fromMaybe(noOp3)(req.onUpgradeNeeded)(e.target.result)(e.target.transaction)(meta)();
             };
 
@@ -57,5 +62,9 @@ exports._open = function _open(fromMaybe, name, mver, req) {
         } catch (e) {
             error(e);
         }
+
+        return function canceler(_, cancelerError) {
+            cancelerError(new Error("Can't cancel IDB Effects"));
+        };
     };
 };

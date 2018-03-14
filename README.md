@@ -14,8 +14,27 @@ menaingful namespace (e.g `IDBIndex.get`, `IDBObjectStore.openCursor` ...)
 
 Here's a quick example of what it look likes. 
 ```purescript
+module Main where
+
+import Prelude
+
+import Control.Monad.Aff                 (Aff, launchAff_)
+import Control.Monad.Aff.Console         (CONSOLE, log)
+import Control.Monad.Eff.Exception       (EXCEPTION)
+import Control.Monad.Eff                 (Eff)
+import Data.Maybe                        (Maybe(..), maybe)
+
+import Database.IndexedDB.Core
+import Database.IndexedDB.IDBFactory      as IDBFactory
+import Database.IndexedDB.IDBDatabase     as IDBDatabase
+import Database.IndexedDB.IDBObjectStore  as IDBObjectStore
+import Database.IndexedDB.IDBIndex        as IDBIndex
+import Database.IndexedDB.IDBTransaction  as IDBTransaction
+import Database.IndexedDB.IDBKeyRange     as IDBKeyRange
+
+
 main :: Eff (idb :: IDB, exception :: EXCEPTION, console :: CONSOLE) Unit
-main = launchAff' do
+main = launchAff_ do
   db <- IDBFactory.open "db" Nothing { onBlocked       : Nothing
                                      , onUpgradeNeeded : Just onUpgradeNeeded
                                      }
@@ -27,11 +46,11 @@ main = launchAff' do
 
 
 onUpgradeNeeded :: forall e. Database -> Transaction -> { oldVersion :: Int } -> Eff (idb :: IDB, exception :: EXCEPTION | e) Unit
-onUpgradeNeeded db _ _ = launchAff' do
-  store <- IDBDatabase.createObjectStore db "store" IDBObjectStore.defaultParameters
+onUpgradeNeeded db _ _ = launchAff_ do
+  store <- IDBDatabase.createObjectStore db "store" IDBDatabase.defaultParameters
   _     <- IDBObjectStore.add store "patate" (Just 1)
   _     <- IDBObjectStore.add store { property: 42 } (Just 2)
-  _     <- IDBObjectStore.createIndex store "index" ["property"] IDBIndex.defaultParameters
+  _     <- IDBObjectStore.createIndex store "index" ["property"] IDBObjectStore.defaultParameters
   pure unit
 ```
 
