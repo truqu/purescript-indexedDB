@@ -2,7 +2,7 @@ module.exports = config => {
     config.set({
         autoWatch: true,
         singleRun: true,
-        browsers: ["Chrome"],
+        browsers: ["Chrome", "Firefox"],
         files: [
             "dist/karma/index.js",
         ],
