@@ -27,9 +27,9 @@ module Database.IndexedDB.IDBObjectStore
 
 import Prelude                            (Unit, map, ($), (<$>), (>>>), (<<<))
 
-import Control.Monad.Aff                  (Aff)
-import Control.Monad.Aff.Compat           (EffFnAff, fromEffFnAff)
-import Data.Foreign                       (Foreign)
+import Effect.Aff                         (Aff)
+import Effect.Aff.Compat                  (EffectFnAff, fromEffectFnAff)
+import Foreign                            (Foreign)
 import Data.Function.Uncurried             as Fn
 import Data.Function.Uncurried            (Fn2, Fn3, Fn4)
 import Data.Maybe                         (Maybe)
@@ -85,22 +85,22 @@ defaultParameters =
 -- | If add() is used, and if a record with the key already exists the request will fail,
 -- | with a "ConstraintError" DOMException.
 add
-  :: forall e key val store. (IDBKey key) => (IDBObjectStore store)
+  :: forall key val store. (IDBKey key) => (IDBObjectStore store)
   => store
   -> val
   -> Maybe key
-  -> Aff (idb :: IDB | e) Key
+  -> Aff Key
 add store value key =
-  map toKey $ fromEffFnAff $ Fn.runFn3 _add store value (toNullable $ (toKey >>> unsafeFromKey) <$> key)
+  map toKey $ fromEffectFnAff $ Fn.runFn3 _add store value (toNullable $ (toKey >>> unsafeFromKey) <$> key)
 
 
 -- | Deletes all records in store.
 clear
-  :: forall e store. (IDBObjectStore store)
+  :: forall store. (IDBObjectStore store)
   => store
-  -> Aff (idb :: IDB | e) Unit
+  -> Aff Unit
 clear =
-  fromEffFnAff <<< _clear
+  fromEffectFnAff <<< _clear
 
 
 -- | Creates a new index in store with the given name, keyPath and options and
@@ -110,46 +110,46 @@ clear =
 -- |
 -- | Throws an "InvalidStateError" DOMException if not called within an upgrade transaction.
 createIndex
-  :: forall e store. (IDBObjectStore store)
+  :: forall store. (IDBObjectStore store)
   => store
   -> IndexName
   -> KeyPath
   -> IndexParameters
-  -> Aff (idb :: IDB | e) Index
+  -> Aff Index
 createIndex store name' path params =
-  fromEffFnAff $ Fn.runFn4 _createIndex store name' path params
+  fromEffectFnAff $ Fn.runFn4 _createIndex store name' path params
 
 
 -- | Deletes records in store with the given key or in the given key range in query.
 delete
-  :: forall e store. (IDBObjectStore store)
+  :: forall store. (IDBObjectStore store)
   => store
   -> KeyRange
-  -> Aff (idb :: IDB | e) Unit
+  -> Aff Unit
 delete store range =
-  fromEffFnAff $ Fn.runFn2 _delete store range
+  fromEffectFnAff $ Fn.runFn2 _delete store range
 
 
 -- | Deletes the index in store with the given name.
 -- |
 -- | Throws an "InvalidStateError" DOMException if not called within an upgrade transaction.
 deleteIndex
-  :: forall e store. (IDBObjectStore store)
+  :: forall store. (IDBObjectStore store)
   => store
   -> IndexName
-  -> Aff (idb :: IDB | e) Unit
+  -> Aff Unit
 deleteIndex store name' =
-  fromEffFnAff $ Fn.runFn2 _deleteIndex store name'
+  fromEffectFnAff $ Fn.runFn2 _deleteIndex store name'
 
 
 -- | Returns an IDBIndex for the index named name in store.
 index
-  :: forall e store. (IDBObjectStore store)
+  :: forall store. (IDBObjectStore store)
   => store
   -> IndexName
-  -> Aff (idb :: IDB | e) Index
+  -> Aff Index
 index store name' =
-  fromEffFnAff $ Fn.runFn2 _index store name'
+  fromEffectFnAff $ Fn.runFn2 _index store name'
 
 
 -- | Adds or updates a record in store with the given value and key.
@@ -159,13 +159,13 @@ index store name' =
 -- |
 -- | If put() is used, any existing record with the key will be replaced.
 put
-  :: forall e val key store. (IDBKey key) => (IDBObjectStore store)
+  :: forall val key store. (IDBKey key) => (IDBObjectStore store)
   => store
   -> val
   -> Maybe key
-  -> Aff (idb :: IDB | e) Key
+  -> Aff Key
 put store value key =
-  map toKey $ fromEffFnAff $ Fn.runFn3 _put store value (toNullable $ (toKey >>> unsafeFromKey) <$> key)
+  map toKey $ fromEffectFnAff $ Fn.runFn3 _put store value (toNullable $ (toKey >>> unsafeFromKey) <$> key)
 
 
 --------------------
@@ -215,8 +215,8 @@ transaction =
 -- FFI
 --
 foreign import _add
-  :: forall e val store
-  .  Fn3 store val (Nullable Foreign) (EffFnAff (idb :: IDB | e) Foreign)
+  :: forall val store
+  .  Fn3 store val (Nullable Foreign) (EffectFnAff Foreign)
 
 
 foreign import _autoIncrement
@@ -225,29 +225,29 @@ foreign import _autoIncrement
 
 
 foreign import _clear
-  :: forall e store
+  :: forall store
   .  store
-  -> EffFnAff (idb :: IDB | e) Unit
+  -> EffectFnAff Unit
 
 
 foreign import _createIndex
-  :: forall e store
-  .  Fn4 store String (Array String) { unique :: Boolean, multiEntry :: Boolean } (EffFnAff (idb :: IDB | e) Index)
+  :: forall store
+  .  Fn4 store String (Array String) { unique :: Boolean, multiEntry :: Boolean } (EffectFnAff Index)
 
 
 foreign import _delete
-  :: forall e store
-  .  Fn2 store KeyRange (EffFnAff (idb :: IDB | e) Unit)
+  :: forall store
+  .  Fn2 store KeyRange (EffectFnAff Unit)
 
 
 foreign import _deleteIndex
-  :: forall e store
-  .  Fn2 store String (EffFnAff (idb :: IDB | e) Unit)
+  :: forall store
+  .  Fn2 store String (EffectFnAff Unit)
 
 
 foreign import _index
-  :: forall e store
-  .  Fn2 store String (EffFnAff (idb :: IDB | e) Index)
+  :: forall store
+  .  Fn2 store String (EffectFnAff Index)
 
 
 foreign import _indexNames
@@ -266,8 +266,8 @@ foreign import _name
 
 
 foreign import _put
-  :: forall e val store
-  .  Fn3 store val (Nullable Foreign) (EffFnAff (idb :: IDB | e) Foreign)
+  :: forall val store
+  .  Fn3 store val (Nullable Foreign) (EffectFnAff Foreign)
 
 
 foreign import _transaction

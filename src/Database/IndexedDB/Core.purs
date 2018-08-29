@@ -1,11 +1,8 @@
 -- | The Core module gathers types used across the library and provides basic Show instances for
 -- | those types.
 module Database.IndexedDB.Core
-  -- * Effects
-  ( IDB
-
-  -- * Types
-  , Database
+  ( -- * Types
+    Database
   , Index
   , KeyCursor
   , KeyRange
@@ -32,19 +29,10 @@ module Database.IndexedDB.Core
 
 import Prelude                     (class Show)
 
-import Control.Monad.Eff           (kind Effect)
 import Data.Maybe                  (Maybe(..))
 import Data.String.Read            (class Read)
 
 import Database.IndexedDB.IDBKey
-
-
---------------------
--- Effects
---
-
--- | IDB Effects, manifestation that something happened with the IndexedDB
-foreign import data IDB :: Effect
 
 
 --------------------
