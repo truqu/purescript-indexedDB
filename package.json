@@ -13,7 +13,7 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "bower": "1.8.0",
+    "bower": "1.8.8",
     "eslint": "3.19.0",
     "eslint-config-airbnb": "15.0.1",
     "eslint-plugin-import": "2.5.0",
