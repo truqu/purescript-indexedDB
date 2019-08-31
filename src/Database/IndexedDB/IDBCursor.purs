@@ -18,14 +18,14 @@ module Database.IndexedDB.IDBCursor
 
 import Prelude                            (Unit, ($), (>>>), (<<<), map)
 
-import Control.Monad.Aff                  (Aff)
-import Control.Monad.Aff.Compat           (fromEffFnAff, EffFnAff)
-import Data.Foreign                       (Foreign, toForeign, unsafeFromForeign)
+import Effect.Aff                         (Aff)
+import Effect.Aff.Compat                  (fromEffectFnAff, EffectFnAff)
 import Data.Function.Uncurried             as Fn
 import Data.Function.Uncurried            (Fn2, Fn3)
 import Data.Maybe                         (Maybe)
 import Data.Nullable                      (Nullable, toNullable)
 import Data.String.Read                   (read)
+import Foreign                            (Foreign, unsafeToForeign, unsafeFromForeign)
 
 import Database.IndexedDB.Core
 import Database.IndexedDB.IDBKey.Internal (class IDBKey, Key, toKey, unsafeFromKey)
@@ -37,42 +37,42 @@ import Database.IndexedDB.IDBKey.Internal (class IDBKey, Key, toKey, unsafeFromK
 
 -- | Advances the cursor through the next count records in range.
 advance
-    :: forall e cursor. (IDBCursor cursor)
+    :: forall cursor. (IDBCursor cursor)
     => cursor
     -> Int
-    -> Aff (idb :: IDB | e) Unit
+    -> Aff Unit
 advance c =
-  fromEffFnAff <<< Fn.runFn2 _advance c
+  fromEffectFnAff <<< Fn.runFn2 _advance c
 
 
 -- | Advances the cursor to the next record in range matching or after key.
 continue
-    :: forall e k cursor. (IDBKey k) => (IDBCursor cursor)
+    :: forall k cursor. (IDBKey k) => (IDBCursor cursor)
     => cursor
     -> Maybe k
-    -> Aff (idb :: IDB | e) Unit
+    -> Aff Unit
 continue c mk =
-  fromEffFnAff $ Fn.runFn2 _continue c (toNullable $ map (toKey >>> unsafeFromKey) mk)
+  fromEffectFnAff $ Fn.runFn2 _continue c (toNullable $ map (toKey >>> unsafeFromKey) mk)
 
 
 -- | Advances the cursor to the next record in range matching or after key and primaryKey. Throws an "InvalidAccessError" DOMException if the source is not an index.
 continuePrimaryKey
-    :: forall e k cursor. (IDBKey k) => (IDBCursor cursor)
+    :: forall k cursor. (IDBKey k) => (IDBCursor cursor)
     => cursor
     -> k
     -> k
-    -> Aff (idb :: IDB | e) Unit
+    -> Aff Unit
 continuePrimaryKey c k1 k2 =
-  fromEffFnAff $ Fn.runFn3 _continuePrimaryKey c (unsafeFromKey $ toKey k1) (unsafeFromKey $ toKey k2)
+  fromEffectFnAff $ Fn.runFn3 _continuePrimaryKey c (unsafeFromKey $ toKey k1) (unsafeFromKey $ toKey k2)
 
 
 -- | Delete the record pointed at by the cursor with a new value.
 delete
-    :: forall e cursor. (IDBCursor cursor)
+    :: forall cursor. (IDBCursor cursor)
     => cursor
-    -> Aff (idb :: IDB | e) Unit
+    -> Aff Unit
 delete =
-  fromEffFnAff <<< _delete
+  fromEffectFnAff <<< _delete
 
 
 -- | Update the record pointed at by the cursor with a new value.
@@ -80,12 +80,12 @@ delete =
 -- | Throws a "DataError" DOMException if the effective object store uses
 -- | in-line keys and the key would have changed.
 update
-    :: forall val e cursor. (IDBCursor cursor)
+    :: forall val cursor. (IDBCursor cursor)
     => cursor
     -> val
-    -> Aff (idb :: IDB | e) Key
+    -> Aff Key
 update c =
-  map toKey <<< fromEffFnAff <<< Fn.runFn2 _update c <<< toForeign
+  map toKey <<< fromEffectFnAff <<< Fn.runFn2 _update c <<< unsafeToForeign 
 
 
 --------------------
@@ -104,21 +104,21 @@ direction =
 -- | Returns the key of the cursor. Throws a "InvalidStateError" DOMException
 -- | if the cursor is advancing or is finished.
 key
-  :: forall e cursor. (IDBConcreteCursor cursor)
+  :: forall cursor. (IDBConcreteCursor cursor)
   => cursor
-  -> Aff (idb :: IDB | e) Key
+  -> Aff Key
 key =
-  map toKey <<< fromEffFnAff <<< _key
+  map toKey <<< fromEffectFnAff <<< _key
 
 
 -- | Returns the effective key of the cursor. Throws a "InvalidStateError" DOMException
 -- | if the cursor is advancing or is finished.
 primaryKey
-  :: forall e cursor. (IDBConcreteCursor cursor)
+  :: forall cursor. (IDBConcreteCursor cursor)
   => cursor
-  -> Aff (idb :: IDB | e) Key
+  -> Aff Key
 primaryKey =
-  map toKey <<< fromEffFnAff <<< _primaryKey
+  map toKey <<< fromEffectFnAff <<< _primaryKey
 
 
 -- | Returns the IDBObjectStore or IDBIndex the cursor was opened from.
@@ -143,24 +143,24 @@ value =
 --
 
 foreign import _advance
-  :: forall cursor e
-  .  Fn2 cursor Int (EffFnAff (idb :: IDB | e) Unit)
+  :: forall cursor
+  .  Fn2 cursor Int (EffectFnAff Unit)
 
 
 foreign import _continue
-  :: forall cursor e
-  .  Fn2 cursor (Nullable Foreign) (EffFnAff (idb :: IDB | e) Unit)
+  :: forall cursor
+  .  Fn2 cursor (Nullable Foreign) (EffectFnAff Unit)
 
 
 foreign import _continuePrimaryKey
-  :: forall cursor e
-  .  Fn3 cursor Foreign Foreign (EffFnAff (idb :: IDB | e) Unit)
+  :: forall cursor
+  .  Fn3 cursor Foreign Foreign (EffectFnAff Unit)
 
 
 foreign import _delete
-  :: forall cursor e
+  :: forall cursor
   .  cursor
-  -> (EffFnAff (idb :: IDB | e) Unit)
+  -> (EffectFnAff Unit)
 
 
 foreign import _direction
@@ -169,15 +169,15 @@ foreign import _direction
 
 
 foreign import _key
-  :: forall cursor e
+  :: forall cursor
   .  cursor
-  -> EffFnAff (idb :: IDB | e) Key
+  -> EffectFnAff Key
 
 
 foreign import _primaryKey
-  :: forall cursor e
+  :: forall cursor
   .  cursor
-  -> EffFnAff (idb :: IDB | e) Key
+  -> EffectFnAff Key
 
 
 foreign import _source
@@ -186,8 +186,8 @@ foreign import _source
 
 
 foreign import _update
-  :: forall cursor e
-  .  Fn2 cursor Foreign (EffFnAff (idb :: IDB | e) Foreign)
+  :: forall cursor
+  .  Fn2 cursor Foreign (EffectFnAff Foreign)
 
 
 foreign import _value

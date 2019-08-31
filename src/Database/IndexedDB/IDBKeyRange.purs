@@ -21,7 +21,6 @@ module Database.IndexedDB.IDBKeyRange
 
 import Prelude                            (($), (>>>), map)
 
-import Data.Foreign                       (Foreign)
 import Data.Function.Uncurried             as Fn
 import Data.Function.Uncurried            (Fn2, Fn4)
 import Data.Maybe                         (Maybe)
@@ -30,6 +29,7 @@ import Data.Nullable                      (Nullable, toMaybe)
 import Database.IndexedDB.Core            (class IDBKeyRange, KeyRange)
 import Database.IndexedDB.IDBKey.Internal (class IDBKey, Key, toKey, unsafeFromKey)
 
+import Foreign                            (Foreign)
 
 --------------------
 -- TYPES

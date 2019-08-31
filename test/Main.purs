@@ -1,31 +1,29 @@
 module Test.Main where
 
-import Prelude
+import Prelude (Unit, bind, const, discard, identity, map, negate, not, pure, show, unit, ($), (+), (-), (<$>), (<*>), (<>), (=<<), (>>=), (>>>))
 
-import Control.Monad.Aff                 (Aff, launchAff, launchAff_, forkAff, delay, attempt)
-import Control.Monad.Aff.AVar            (AVAR, AVar, makeVar, makeEmptyVar, readVar, putVar, takeVar)
-import Control.Monad.Aff.Console         (log)
-import Control.Monad.Eff                 (Eff)
-import Control.Monad.Eff.Class           (liftEff)
-import Control.Monad.Eff.Exception       (EXCEPTION, name)
-import Control.Monad.Eff.Now             (NOW, now)
+import Effect.Aff                        (Aff, launchAff, launchAff_, forkAff, delay, attempt)
+import Effect.Aff.AVar                   (AVar, new, empty, read, put, take)
+import Effect                            (Effect)
+import Effect.Class                      (liftEffect)
+import Effect.Exception                  (name)
+import Effect.Now                        (now)
 import Data.Date                          as Date
-import Data.DateTime                      as DateTime
 import Data.DateTime                     (DateTime(..), Time(..))
 import Data.DateTime.Instant             (toDateTime)
-import Data.Either                       (Either(..))
+import Data.Either                       (Either(..)) 
 import Data.Enum                         (toEnum)
 import Data.Maybe                        (Maybe(..), isNothing, maybe)
 import Data.Array                        (head, drop)
 import Data.Time.Duration                (Milliseconds(..))
 import Data.Traversable                  (traverse)
 import Data.Tuple                        (Tuple(..), uncurry)
-import Test.Spec                         (describe, describeOnly, it)
+import Test.Spec (describe, it)
 import Test.Spec.Assertions              (shouldEqual, fail)
-import Test.Spec.Mocha                   (MOCHA, runMocha)
+import Test.Spec.Mocha (runMocha)
 
-import Database.IndexedDB.Core
-import Database.IndexedDB.IDBKey
+import Database.IndexedDB.Core (CursorDirection(..), Database, Index, ObjectStore, Transaction, TransactionMode(..))
+import Database.IndexedDB.IDBKey (Key, none, toKey)
 import Database.IndexedDB.IDBCursor       as IDBCursor
 import Database.IndexedDB.IDBDatabase     as IDBDatabase
 import Database.IndexedDB.IDBFactory      as IDBFactory
@@ -37,18 +35,19 @@ import Database.IndexedDB.IDBTransaction  as IDBTransaction
 
 infixr 7 Tuple as :+:
 
-launchAff' :: forall a e. Aff e a -> Eff e Unit
+launchAff' :: forall a .  Aff a -> Effect Unit
 launchAff' =
   launchAff_
 
 
-modifyVar :: forall eff a. (a -> a) -> AVar a -> Aff (avar :: AVAR | eff) Unit
+modifyVar :: forall a . (a -> a) -> AVar a -> Aff Unit
 modifyVar fn v = do
-  val <- takeVar v
-  putVar (fn val) v
+  val <- take v
+  put (fn val) v
 
 
 -- main :: forall eff. Eff (now :: NOW, mocha :: MOCHA, idb :: IDB, exception :: EXCEPTION, avar :: AVAR | eff) Unit
+main :: Effect Unit
 main = runMocha do
   describe "IDBFactory" do
     let
@@ -101,14 +100,14 @@ main = runMocha do
             _ <- launchAff $ modifyVar (const $ IDBDatabase.name db) varName
             _ <- launchAff $ modifyVar (const $ oldVersion) varVersion
             pure unit
-      varName <- makeVar "-"
-      varVersion <- makeVar (-1)
+      varName <- new "-"
+      varVersion <- new (-1)
       db <- IDBFactory.open name Nothing
         { onUpgradeNeeded : Just (callback (Tuple varName varVersion))
         , onBlocked       : Nothing
         }
-      name' <- readVar varName
-      version' <- readVar varVersion
+      name' <- read varName
+      version' <- read varVersion
       name' `shouldEqual` name
       version' `shouldEqual` 0
       tearDown name version db
@@ -120,7 +119,7 @@ main = runMocha do
             _ <- launchAff $ modifyVar (const $ "db-blocked") var
             pure unit
 
-      var   <- makeVar "-"
+      var   <- new "-"
       db01  <- IDBFactory.open name Nothing
         { onUpgradeNeeded : Nothing
         , onBlocked       : Nothing
@@ -133,10 +132,10 @@ main = runMocha do
         { onUpgradeNeeded : Nothing
         , onBlocked       : Just (callback var)
         }
-      name' <- readVar var
+      name' <- read var
       name' `shouldEqual` name
       tearDown name version db02
-
+  
   describe "IDBKeyRange" do
     it "only(int)" do
       let key   = 14
@@ -300,16 +299,16 @@ main = runMocha do
         setup storeParams = do
           let onUpgradeNeeded var db _ _ = launchAff' do
                 store <- IDBDatabase.createObjectStore db "store" storeParams
-                _     <- putVar { db, store } var
+                _     <- put { db, store } var
                 pure unit
 
-          var <- makeEmptyVar
+          var <- empty 
           db  <- IDBFactory.open "db" Nothing
             { onUpgradeNeeded : Just (onUpgradeNeeded var)
             , onBlocked : Nothing
             }
 
-          takeVar var
+          take var
 
     it "createObjectStore (keyPath: [], autoIncrement: true)" do
       { db, store } <- setup { keyPath: [], autoIncrement: true }
@@ -338,15 +337,15 @@ main = runMocha do
     it "deleteObjectStore" do
       let onUpgradeNeeded var db _ _ = launchAff' do
             _ <- IDBDatabase.deleteObjectStore db "store"
-            putVar true var
+            put true var
 
-      var           <- makeEmptyVar
+      var           <- empty 
       { db, store } <- setup IDBDatabase.defaultParameters
       IDBDatabase.close db
       db' <- IDBFactory.open "db" (Just 999) { onUpgradeNeeded : Just (onUpgradeNeeded var)
                                             , onBlocked       : Nothing
                                             }
-      deleted <- takeVar var
+      deleted <- take var
       deleted `shouldEqual` true
       tearDown db'
 
@@ -361,19 +360,19 @@ main = runMocha do
         setup { storeParams, onUpgradeNeeded } = do
           let onUpgradeNeeded' var db _ _ = launchAff' do
                 store <- IDBDatabase.createObjectStore db "store" storeParams
-                liftEff $ maybe (pure unit) id (onUpgradeNeeded <*> pure db <*> pure store)
-                putVar { db, store } var
+                liftEffect $ maybe (pure unit) identity (onUpgradeNeeded <*> pure db <*> pure store)
+                put { db, store } var
 
-          var <- makeEmptyVar
+          var <- empty
           db  <- IDBFactory.open "db" Nothing
             { onUpgradeNeeded : Just (onUpgradeNeeded' var)
             , onBlocked : Nothing
             }
 
-          takeVar var
+          take var
 
     it "add()" do
-      date   <- liftEff $ toDateTime <$> now
+      date   <- liftEffect $ toDateTime <$> now
       { db } <- setup
         { storeParams: { autoIncrement: true, keyPath: [] }
         , onUpgradeNeeded: Just $ \_ store -> launchAff' do
@@ -507,27 +506,27 @@ main = runMocha do
           _ <- IDBFactory.deleteDatabase (IDBDatabase.name db)
           pure unit
 
-        setup :: forall value e e'.
+        setup :: forall value .
                  { storeParams     :: { keyPath :: Array String, autoIncrement :: Boolean }
                  , indexParams     :: { unique :: Boolean, multiEntry :: Boolean }
                  , values          :: Array (Tuple value (Maybe Key))
                  , keyPath         :: Array String
-                 , onUpgradeNeeded :: Maybe (Database -> Transaction -> Index -> Eff (idb :: IDB, avar :: AVAR, exception :: EXCEPTION | e') Unit)
-               } -> Aff (idb :: IDB, avar :: AVAR | e) { db :: Database, index :: Index, store :: ObjectStore }
+                 , onUpgradeNeeded :: Maybe (Database -> Transaction -> Index -> Effect Unit)
+               } -> Aff { db :: Database, index :: Index, store :: ObjectStore }
         setup { storeParams, indexParams, values, keyPath, onUpgradeNeeded } = do
           let onUpgradeNeeded' var db tx _ = launchAff' do
                 store <- IDBDatabase.createObjectStore db "store" storeParams
                 _     <- traverse (uncurry (IDBObjectStore.add store)) values
                 index <- IDBObjectStore.createIndex store "index" keyPath indexParams
-                liftEff $ maybe (pure unit) id (onUpgradeNeeded <*> pure db <*> pure tx <*> pure index)
-                putVar { db, index, store } var
+                liftEffect $ maybe (pure unit) identity (onUpgradeNeeded <*> pure db <*> pure tx <*> pure index)
+                put { db, index, store } var
 
-          var <- makeEmptyVar
+          var <- empty
           db  <- IDBFactory.open "db" Nothing
             { onUpgradeNeeded : Just (onUpgradeNeeded' var)
             , onBlocked : Nothing
             }
-          takeVar var
+          take var
 
 
     it "returns an IDBIndex and the properties are set correctly" do
@@ -545,9 +544,9 @@ main = runMocha do
       tearDown db
 
     it "attempt to create an index that requires unique values on an object store already contains duplicates" do
-      let onAbort var = launchAff' (putVar true var)
-      txVar <- makeEmptyVar
-      dbVar <- makeEmptyVar
+      let onAbort var = launchAff' (put true var)
+      txVar <- empty
+      dbVar <- empty
       res   <- attempt $ setup
         { storeParams     : IDBDatabase.defaultParameters
         , indexParams     : { unique : true
@@ -565,8 +564,8 @@ main = runMocha do
         Right _ ->
           fail "expected abort"
         _       -> do
-          shouldEqual true =<< takeVar txVar
-          shouldEqual true =<< takeVar dbVar
+          shouldEqual true =<< take txVar
+          shouldEqual true =<< take dbVar
 
 
     it "the index is usable right after being made" do
@@ -602,7 +601,7 @@ main = runMocha do
       tearDown db
 
     it "index can be valid keys [date]" do
-      date   <- liftEff $ toDateTime <$> now
+      date   <- liftEffect $ toDateTime <$> now
       { db } <- setup
         { storeParams     : { keyPath: ["key"]
                             , autoIncrement: false
@@ -845,27 +844,27 @@ main = runMocha do
           _ <- IDBFactory.deleteDatabase (IDBDatabase.name db)
           pure unit
 
-        setup :: forall value e e'.
+        setup :: forall value .
                  { storeParams     :: { keyPath :: Array String, autoIncrement :: Boolean }
                  , indexParams     :: { unique :: Boolean, multiEntry :: Boolean }
                  , values          :: Array (Tuple value (Maybe Key))
                  , keyPath         :: Array String
-                 , onUpgradeNeeded :: Maybe (Database -> Transaction -> Index -> Eff (idb :: IDB, avar :: AVAR, exception :: EXCEPTION | e') Unit)
-               } -> Aff (idb :: IDB, avar :: AVAR | e) { db :: Database, index :: Index, store :: ObjectStore }
+                 , onUpgradeNeeded :: Maybe (Database -> Transaction -> Index -> Effect Unit)
+               } -> Aff { db :: Database, index :: Index, store :: ObjectStore }
         setup { storeParams, indexParams, values, keyPath, onUpgradeNeeded } = do
           let onUpgradeNeeded' var db tx _ = launchAff' do
                 store <- IDBDatabase.createObjectStore db "store" storeParams
                 _     <- traverse (uncurry (IDBObjectStore.add store)) values
                 index <- IDBObjectStore.createIndex store "index" keyPath indexParams
-                liftEff $ maybe (pure unit) id (onUpgradeNeeded <*> pure db <*> pure tx <*> pure index)
-                putVar { db, index, store } var
+                liftEffect $ maybe (pure unit) identity (onUpgradeNeeded <*> pure db <*> pure tx <*> pure index)
+                put { db, index, store } var
 
-          var <- makeEmptyVar
+          var <- empty
           db  <- IDBFactory.open "db" Nothing
             { onUpgradeNeeded : Just (onUpgradeNeeded' var)
             , onBlocked : Nothing
             }
-          takeVar var
+          take var
 
     it "continue() - iterate to the next record" do
       { db } <- setup
@@ -881,20 +880,20 @@ main = runMocha do
         }
       let cb vdone vvals =
             { onComplete: launchAff' do
-                putVar unit vdone
+                put unit vdone
 
             , onError: \error  -> launchAff' do
                 fail $ "unexpected error: " <> show error
 
             , onSuccess: \cursor -> launchAff' do
-                vals <- takeVar vvals
+                vals <- take vvals
                 pure (IDBCursor.value cursor) >>= shouldEqual (maybe "" _.v $ head vals)
                 IDBCursor.primaryKey cursor   >>= shouldEqual (maybe (toKey 0) _.k $ head vals)
-                putVar (drop 1 vals) vvals
+                put (drop 1 vals) vvals
                 IDBCursor.continue cursor none
             }
-      vdone <- makeEmptyVar
-      vvals <- makeVar
+      vdone <- empty
+      vvals <- new 
         [ { v: "pie"    , k: toKey 1 }
         , { v: "pancake", k: toKey 2 }
         , { v: "pie"    , k: toKey 3 }
@@ -903,7 +902,7 @@ main = runMocha do
       tx    <- IDBDatabase.transaction db ["store"] ReadOnly
       store <- IDBTransaction.objectStore tx "store"
       IDBObjectStore.openCursor store Nothing Next (cb vdone vvals)
-      takeVar vdone
+      take vdone
       tearDown db
 
     it "continue() - attempt to iterate in the wrong direction" do
@@ -930,15 +929,15 @@ main = runMocha do
                 case res of
                   Left err  -> do
                     name err `shouldEqual` "DataError"
-                    putVar unit vdone
+                    put unit vdone
                   Right _ -> do
                     fail "expected continue to fail"
             }
-      vdone <- makeEmptyVar
+      vdone <- empty
       tx    <- IDBDatabase.transaction db ["store"] ReadOnly
       store <- IDBTransaction.objectStore tx "store"
       IDBObjectStore.openCursor store Nothing Next (cb vdone)
-      takeVar vdone
+      take vdone
       tearDown db
 
 
@@ -956,13 +955,13 @@ main = runMocha do
         }
       let cb vdone vjump =
             { onComplete: launchAff' do
-                putVar unit vdone
+                put unit vdone
 
             , onError: \error  -> launchAff' do
                 fail $ "unexpected error: " <> show error
 
             , onSuccess: \cursor -> launchAff' do
-                jump <- takeVar vjump
+                jump <- take vjump
                 if jump
                    then do
                      IDBCursor.advance cursor 3
@@ -971,14 +970,14 @@ main = runMocha do
                      value.pKey `shouldEqual` "pkey_3"
                      value.iKey `shouldEqual` "ikey_3"
                      IDBCursor.continue cursor none
-                putVar false vjump
+                put false vjump
             }
-      vdone <- makeEmptyVar
-      vjump <- makeVar true
+      vdone <- empty
+      vjump <- new true
       tx    <- IDBDatabase.transaction db ["store"] ReadOnly
       store <- IDBTransaction.objectStore tx "store"
       IDBObjectStore.openCursor store Nothing Next (cb vdone vjump)
-      takeVar vdone
+      take vdone
       tearDown db
 
     it "delete() - remove a record from the object store" do
@@ -997,7 +996,7 @@ main = runMocha do
             { onComplete: launchAff' do
                 mval <- map _.pKey <$> IDBIndex.get store (IDBKeyRange.only "pkey_0")
                 mval `shouldEqual` (Nothing :: Maybe String)
-                putVar unit vdone
+                put unit vdone
 
             , onError: \error  -> launchAff' do
                 fail $ "unexpected error: " <> show error
@@ -1008,11 +1007,11 @@ main = runMocha do
                 IDBCursor.delete cursor
                 IDBCursor.advance cursor 4
             }
-      vdone <- makeEmptyVar
+      vdone <- empty
       tx    <- IDBDatabase.transaction db ["store"] ReadWrite
       store <- IDBTransaction.objectStore tx "store"
       IDBObjectStore.openCursor store Nothing Next (cb vdone store)
-      takeVar vdone
+      take vdone
       tearDown db
 
     it "update() - modify a record in the object store" do
@@ -1028,7 +1027,7 @@ main = runMocha do
             { onComplete: launchAff' do
                 mval <- map _.iKey <$> IDBIndex.get store (IDBKeyRange.only "pkey_0")
                 mval `shouldEqual` (Just "patate")
-                putVar unit vdone
+                put unit vdone
 
             , onError: \error  -> launchAff' do
                 fail $ "unexpected error: " <> show error
@@ -1040,11 +1039,11 @@ main = runMocha do
                 key `shouldEqual` toKey "pkey_0"
                 IDBCursor.advance cursor 4
             }
-      vdone <- makeEmptyVar
+      vdone <- empty
       tx    <- IDBDatabase.transaction db ["store"] ReadWrite
       store <- IDBTransaction.objectStore tx "store"
       IDBObjectStore.openCursor store Nothing Next (cb vdone store)
-      takeVar vdone
+      take vdone
       tearDown db
 
     it "update() - throw ReadOnlyError after update on ReadOnly transaction" do
@@ -1068,13 +1067,13 @@ main = runMocha do
                 case res of
                   Left err -> do
                     name err `shouldEqual` "ReadOnlyError"
-                    putVar unit vdone
+                    put unit vdone
                   Right _ ->
                     fail $ "expected ReadOnlyError"
             }
-      vdone <- makeEmptyVar
+      vdone <- empty
       tx    <- IDBDatabase.transaction db ["store"] ReadOnly
       store <- IDBTransaction.objectStore tx "store"
       IDBObjectStore.openCursor store Nothing Next (cb vdone)
-      takeVar vdone
+      take vdone
       tearDown db

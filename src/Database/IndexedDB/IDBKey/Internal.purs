@@ -15,8 +15,6 @@ import Data.Date                as Date
 import Data.DateTime           (DateTime(..), Time(..))
 import Data.Either             (Either(..), either, isRight)
 import Data.Enum               (fromEnum, toEnum)
-import Data.Foreign             as Foreign
-import Data.Foreign            (Foreign, F)
 import Data.Function.Uncurried  as Fn
 import Data.Function.Uncurried (Fn2, Fn4, Fn7)
 import Data.Identity           (Identity(..))
@@ -27,6 +25,8 @@ import Data.NonEmpty           (NonEmpty(..))
 import Data.Nullable           (Nullable, toNullable)
 import Data.Time                as Time
 import Data.Traversable        (traverse)
+import Foreign                  as Foreign
+import Foreign                 (Foreign, F)
 
 
 newtype Key = Key Foreign
@@ -69,7 +69,7 @@ instance eqKey :: Eq Key where
 
 
 instance ordKey :: Ord Key where
-  compare a b = (runExceptT >>> runIdentity >>> either (const LT) id) $
+  compare a b = (runExceptT >>> runIdentity >>> either (const LT) identity) $
       compare <$> ((fromKey a) :: F Int) <*> fromKey b
     <|>
       compare <$> ((fromKey a) :: F Number) <*> fromKey b
@@ -102,9 +102,9 @@ instance showKey :: Show Key where
 
 
 instance idbKeyKey :: IDBKey Key where
-  toKey         = id
+  toKey         = identity
   fromKey       = pure
-  unsafeFromKey = id
+  unsafeFromKey = identity
 
 
 instance idbKeyForeign :: IDBKey Foreign where
@@ -114,19 +114,19 @@ instance idbKeyForeign :: IDBKey Foreign where
 
 
 instance idbKeyInt :: IDBKey Int where
-  toKey                 = Foreign.toForeign >>> Key
+  toKey                 = Foreign.unsafeToForeign >>> Key
   fromKey (Key f)       = Foreign.readInt f
   unsafeFromKey (Key f) = Foreign.unsafeFromForeign f
 
 
 instance idbKeyNumber :: IDBKey Number where
-  toKey                 = Foreign.toForeign >>> Key
+  toKey                 = Foreign.unsafeToForeign >>> Key
   fromKey (Key f)       = Foreign.readNumber f
   unsafeFromKey (Key f) = Foreign.unsafeFromForeign f
 
 
 instance idbKeyString :: IDBKey String where
-  toKey                 = Foreign.toForeign >>> Key
+  toKey                 = Foreign.unsafeToForeign >>> Key
   fromKey (Key f)       = Foreign.readString f
   unsafeFromKey (Key f) = Foreign.unsafeFromForeign f
 
@@ -145,7 +145,7 @@ instance idbKeyDate :: IDBKey DateTime where
 
 
 instance idbKeyArray :: IDBKey a => IDBKey (Array a) where
-  toKey                 = Foreign.toForeign >>> Key
+  toKey                 = Foreign.unsafeToForeign >>> Key
   fromKey (Key f)       = Foreign.readArray f >>= traverse (Key >>> fromKey)
   unsafeFromKey (Key f) = map unsafeFromKey (Foreign.unsafeFromForeign f)
 

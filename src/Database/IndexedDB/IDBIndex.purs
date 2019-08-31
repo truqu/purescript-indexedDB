@@ -20,17 +20,17 @@ module Database.IndexedDB.IDBIndex
   , unique
   ) where
 
-import Prelude                            (Unit, map, show, (<$>), (>>>), ($))
+import Prelude                            (Unit, map, show, (>>>), ($))
 
-import Control.Monad.Aff                  (Aff)
-import Control.Monad.Aff.Compat           (EffFnAff, fromEffFnAff)
-import Control.Monad.Eff                  (Eff)
-import Control.Monad.Eff.Exception        (Error)
-import Data.Foreign                       (Foreign, unsafeFromForeign)
+import Effect.Aff                         (Aff)
+import Effect.Aff.Compat                  (EffectFnAff, fromEffectFnAff)
+import Effect                             (Effect)
+import Effect.Exception                   (Error)
 import Data.Function.Uncurried             as Fn
 import Data.Function.Uncurried            (Fn2, Fn3, Fn4)
 import Data.Maybe                         (Maybe)
 import Data.Nullable                      (Nullable, toMaybe, toNullable)
+import Foreign                            (Foreign, unsafeFromForeign)
 
 import Database.IndexedDB.Core
 import Database.IndexedDB.IDBKey.Internal (Key, toKey)
@@ -41,10 +41,10 @@ import Database.IndexedDB.IDBKey.Internal (Key, toKey)
 --
 
 -- | Callbacks to manipulate a cursor from an Open*Cursor call
-type Callbacks cursor e =
-  { onSuccess  :: cursor -> Eff ( | e) Unit
-  , onError    :: Error -> Eff ( | e) Unit
-  , onComplete :: Eff ( | e) Unit
+type Callbacks cursor =
+  { onSuccess  :: cursor -> Effect Unit
+  , onError    :: Error -> Effect Unit
+  , onComplete :: Effect Unit
   }
 
 
@@ -54,12 +54,12 @@ type Callbacks cursor e =
 
 -- | Retrieves the number of records matching the key range in query.
 count
-  :: forall e index. (IDBIndex index)
+  :: forall index. (IDBIndex index)
   =>  index
   -> Maybe KeyRange
-  -> Aff (idb :: IDB | e) Int
+  -> Aff Int
 count index range =
-  fromEffFnAff $ Fn.runFn2 _count index (toNullable range)
+  fromEffectFnAff $ Fn.runFn2 _count index (toNullable range)
 
 
 -- | Retrieves the value of the first record matching the given key range in query.
@@ -67,60 +67,60 @@ count index range =
 -- | NOTE
 -- | The coercion from `a` to any type is unsafe and might throw a runtime error if incorrect.
 get
-  :: forall a e index. (IDBIndex index)
+  :: forall a index. (IDBIndex index)
   => index
   -> KeyRange
-  -> Aff (idb :: IDB | e) (Maybe a)
+  -> Aff (Maybe a)
 get index range =
-  map (toMaybe >>> map unsafeFromForeign) $ fromEffFnAff $ Fn.runFn2 _get index range
+  map (toMaybe >>> map unsafeFromForeign) $ fromEffectFnAff $ Fn.runFn2 _get index range
 
 
 -- | Retrieves the keys of records matching the given key range in query
 -- | (up to the number given if given).
 getAllKeys
-  :: forall e index. (IDBIndex index)
+  :: forall index. (IDBIndex index)
   => index
   -> Maybe KeyRange
   -> Maybe Int
-  -> Aff (idb :: IDB | e) (Array Key)
+  -> Aff (Array Key)
 getAllKeys index range n =
-  map (map toKey) $ fromEffFnAff $ Fn.runFn3 _getAllKeys index (toNullable range) (toNullable n)
+  map (map toKey) $ fromEffectFnAff $ Fn.runFn3 _getAllKeys index (toNullable range) (toNullable n)
 
 
 -- | Retrieves the key of the first record matching the given key or key range in query.
 getKey
-  :: forall e index. (IDBIndex index)
+  :: forall index. (IDBIndex index)
   => index
   -> KeyRange
-  -> Aff (idb :: IDB | e) (Maybe Key)
+  -> Aff (Maybe Key)
 getKey index range =
-  map (toMaybe >>> map toKey) $ fromEffFnAff $ Fn.runFn2 _getKey index range
+  map (toMaybe >>> map toKey) $ fromEffectFnAff $ Fn.runFn2 _getKey index range
 
 
 -- | Opens a ValueCursor over the records matching query, ordered by direction.
 -- | If query is `Nothing`, all records in index are matched.
 openCursor
-  :: forall e e' index. (IDBIndex index)
+  :: forall index. (IDBIndex index)
   =>  index
   -> Maybe KeyRange
   -> CursorDirection
-  -> Callbacks ValueCursor e'
-  -> Aff (idb :: IDB | e) Unit
+  -> Callbacks ValueCursor
+  -> Aff Unit
 openCursor index range dir cb =
-  fromEffFnAff $ Fn.runFn4 _openCursor index (toNullable range) (show dir) cb
+  fromEffectFnAff $ Fn.runFn4 _openCursor index (toNullable range) (show dir) cb
 
 
 -- | Opens a KeyCursor over the records matching query, ordered by direction.
 -- | If query is `Nothing`, all records in index are matched.
 openKeyCursor
-  :: forall e e' index. (IDBIndex index)
+  :: forall index. (IDBIndex index)
     => index
     -> Maybe KeyRange
     -> CursorDirection
-    -> Callbacks KeyCursor e'
-    -> Aff (idb :: IDB | e) Unit
+    -> Callbacks KeyCursor
+    -> Aff Unit
 openKeyCursor index range dir cb =
-  fromEffFnAff $ Fn.runFn4 _openKeyCursor index (toNullable range) (show dir) cb
+  fromEffectFnAff $ Fn.runFn4 _openKeyCursor index (toNullable range) (show dir) cb
 
 
 --------------------
@@ -195,30 +195,30 @@ foreign import _unique
 
 
 foreign import _count
-    :: forall index e
-    .  Fn2 index (Nullable KeyRange) (EffFnAff (idb :: IDB | e) Int)
+    :: forall index
+    .  Fn2 index (Nullable KeyRange) (EffectFnAff Int)
 
 
 foreign import _get
-    :: forall index e
-    .  Fn2 index KeyRange (EffFnAff (idb :: IDB | e) (Nullable Foreign))
+    :: forall index
+    .  Fn2 index KeyRange (EffectFnAff (Nullable Foreign))
 
 
 foreign import _getAllKeys
-    :: forall index e
-    .  Fn3 index (Nullable KeyRange) (Nullable Int) (EffFnAff (idb :: IDB | e) (Array Foreign))
+    :: forall index
+    .  Fn3 index (Nullable KeyRange) (Nullable Int) (EffectFnAff (Array Foreign))
 
 
 foreign import _getKey
-    :: forall index e
-    .  Fn2 index KeyRange (EffFnAff (idb :: IDB | e) (Nullable Foreign))
+    :: forall index
+    .  Fn2 index KeyRange (EffectFnAff (Nullable Foreign))
 
 
 foreign import _openCursor
-    :: forall index e e'
-    .  Fn4 index (Nullable KeyRange) String (Callbacks ValueCursor e') (EffFnAff (idb :: IDB | e) Unit)
+    :: forall index
+    .  Fn4 index (Nullable KeyRange) String (Callbacks ValueCursor) (EffectFnAff Unit)
 
 
 foreign import _openKeyCursor
-    :: forall index e e'
-    .  Fn4 index (Nullable KeyRange) String (Callbacks KeyCursor e') (EffFnAff (idb :: IDB | e) Unit)
+    :: forall index
+    .  Fn4 index (Nullable KeyRange) String (Callbacks KeyCursor) (EffectFnAff Unit)

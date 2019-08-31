@@ -16,10 +16,10 @@ module Database.IndexedDB.IDBTransaction
 
 import Prelude                     (Unit, ($), (<<<), (>>>))
 
-import Control.Monad.Aff           (Aff)
-import Control.Monad.Aff.Compat    (EffFnAff, fromEffFnAff)
-import Control.Monad.Eff           (Eff)
-import Control.Monad.Eff.Exception (Error)
+import Effect.Aff                  (Aff)
+import Effect.Aff.Compat           (EffectFnAff, fromEffectFnAff)
+import Effect                      (Effect)
+import Effect.Exception            (Error)
 import Data.Function.Uncurried      as Fn
 import Data.Function.Uncurried     (Fn2, Fn4)
 import Data.Maybe                  (Maybe)
@@ -35,20 +35,20 @@ import Database.IndexedDB.Core
 -- | Aborts the transaction. All pending requests will fail with a "AbortError"
 -- | DOMException and all changes made to the database will be reverted.
 abort
-  :: forall e tx. (IDBTransaction tx)
+  :: forall tx. (IDBTransaction tx)
   => tx
-  -> Aff (idb :: IDB | e) Unit
+  -> Aff Unit
 abort =
-  fromEffFnAff <<< _abort
+  fromEffectFnAff <<< _abort
 
 -- | Returns an IDBObjectStore in the transaction's scope.
 objectStore
-  :: forall e tx. (IDBTransaction tx)
+  :: forall tx. (IDBTransaction tx)
   => tx
   -> String
-  -> Aff (idb :: IDB | e) ObjectStore
+  -> Aff ObjectStore
 objectStore tx name =
-  fromEffFnAff $ Fn.runFn2 _objectStore tx name
+  fromEffectFnAff $ Fn.runFn2 _objectStore tx name
 
 
 --------------------
@@ -95,32 +95,29 @@ objectStoreNames =
 
 -- | Event handler for the `abort` event.
 onAbort
-  :: forall e e'
-  .  Transaction
-  -> Eff ( | e') Unit
-  -> Aff (idb :: IDB | e) Unit
+  ::  Transaction
+  -> Effect Unit
+  -> Aff Unit
 onAbort db' f =
-  fromEffFnAff $ Fn.runFn2 _onAbort db' f
+  fromEffectFnAff $ Fn.runFn2 _onAbort db' f
 
 
 -- | Event handler for the `complete` event.
 onComplete
-  :: forall e e'
-  .  Transaction
-  -> Eff ( | e') Unit
-  -> Aff (idb :: IDB | e) Unit
+  :: Transaction
+  -> Effect Unit
+  -> Aff Unit
 onComplete db' f =
-  fromEffFnAff $ Fn.runFn2 _onComplete db' f
+  fromEffectFnAff $ Fn.runFn2 _onComplete db' f
 
 
 -- | Event handler for the `error` event.
-onError
-  :: forall e e'
-  .  Transaction
-  -> (Error -> Eff ( | e') Unit)
-  -> Aff (idb :: IDB | e) Unit
+onError 
+  :: Transaction
+  -> (Error -> Effect Unit)
+  -> Aff Unit
 onError db' f =
-  fromEffFnAff $ Fn.runFn2 _onError db' f
+  fromEffectFnAff $ Fn.runFn2 _onError db' f
 
 
 --------------------
@@ -128,9 +125,9 @@ onError db' f =
 --
 
 foreign import _abort
-  :: forall tx e
+  :: forall tx 
   .  tx
-  -> EffFnAff (idb :: IDB | e) Unit
+  -> EffectFnAff Unit
 
 
 foreign import _db
@@ -153,20 +150,20 @@ foreign import _objectStoreNames
 
 
 foreign import _objectStore
-  :: forall tx e
-  .  Fn2 tx String (EffFnAff (idb :: IDB | e) ObjectStore)
+  :: forall tx
+  .  Fn2 tx String (EffectFnAff ObjectStore)
 
 
 foreign import _onAbort
-  :: forall tx e e'
-  . Fn2 tx (Eff ( | e') Unit) (EffFnAff (idb :: IDB | e) Unit)
+  :: forall tx
+  . Fn2 tx (Effect Unit) (EffectFnAff Unit)
 
 
 foreign import _onComplete
-  :: forall tx e e'
-  . Fn2 tx (Eff ( | e') Unit) (EffFnAff (idb :: IDB | e) Unit)
+  :: forall tx 
+  . Fn2 tx (Effect Unit) (EffectFnAff Unit)
 
 
 foreign import _onError
-  :: forall tx e e'
-  . Fn2 tx (Error -> Eff ( | e') Unit) (EffFnAff (idb :: IDB | e) Unit)
+  :: forall tx 
+  . Fn2 tx (Error -> Effect Unit) (EffectFnAff Unit)
