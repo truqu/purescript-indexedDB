@@ -14,19 +14,17 @@ module Database.IndexedDB.IDBTransaction
   , onError
   ) where
 
-import Prelude                     (Unit, ($), (<<<), (>>>))
-
-import Control.Monad.Aff           (Aff)
-import Control.Monad.Aff.Compat    (EffFnAff, fromEffFnAff)
-import Control.Monad.Eff           (Eff)
-import Control.Monad.Eff.Exception (Error)
-import Data.Function.Uncurried      as Fn
-import Data.Function.Uncurried     (Fn2, Fn4)
-import Data.Maybe                  (Maybe)
-import Data.Nullable               (Nullable, toMaybe)
-
 import Database.IndexedDB.Core
 
+import Data.Function.Uncurried (Fn2, Fn4)
+import Data.Function.Uncurried as Fn
+import Data.Maybe (Maybe)
+import Data.Nullable (Nullable, toMaybe)
+import Effect (Effect)
+import Effect.Aff (Aff)
+import Effect.Aff.Compat (EffectFnAff, fromEffectFnAff)
+import Effect.Exception (Error)
+import Prelude (Unit, ($), (<<<), (>>>))
 
 --------------------
 -- INTERFACES
@@ -35,21 +33,22 @@ import Database.IndexedDB.Core
 -- | Aborts the transaction. All pending requests will fail with a "AbortError"
 -- | DOMException and all changes made to the database will be reverted.
 abort
-  :: forall e tx. (IDBTransaction tx)
+  :: forall tx
+   . (IDBTransaction tx)
   => tx
-  -> Aff (idb :: IDB | e) Unit
+  -> Aff Unit
 abort =
-  fromEffFnAff <<< _abort
+  fromEffectFnAff <<< _abort
 
 -- | Returns an IDBObjectStore in the transaction's scope.
 objectStore
-  :: forall e tx. (IDBTransaction tx)
+  :: forall tx
+   . (IDBTransaction tx)
   => tx
   -> String
-  -> Aff (idb :: IDB | e) ObjectStore
+  -> Aff ObjectStore
 objectStore tx name =
-  fromEffFnAff $ Fn.runFn2 _objectStore tx name
-
+  fromEffectFnAff $ Fn.runFn2 _objectStore tx name
 
 --------------------
 -- ATTRIBUTES
@@ -62,14 +61,12 @@ db
 db =
   _db
 
-
 -- | If the transaction was aborted, returns the error (a DOMException) providing the reason.
 error
   :: Transaction
   -> Maybe Error
 error =
   _error >>> toMaybe
-
 
 -- | Returns the mode the transaction was created with (`ReadOnly|ReadWrite`)
 -- | , or `VersionChange` for an upgrade transaction.
@@ -79,7 +76,6 @@ mode
 mode =
   Fn.runFn4 _mode ReadOnly ReadWrite VersionChange
 
-
 -- | Returns a list of the names of object stores in the transaction’s scope.
 -- | For an upgrade transaction this is all object stores in the database.
 objectStoreNames
@@ -88,85 +84,70 @@ objectStoreNames
 objectStoreNames =
   _objectStoreNames
 
-
 --------------------
 -- EVENT HANDLERS
 --
 
 -- | Event handler for the `abort` event.
 onAbort
-  :: forall e e'
-  .  Transaction
-  -> Eff ( | e') Unit
-  -> Aff (idb :: IDB | e) Unit
+  :: Transaction
+  -> Effect Unit
+  -> Aff Unit
 onAbort db' f =
-  fromEffFnAff $ Fn.runFn2 _onAbort db' f
-
+  fromEffectFnAff $ Fn.runFn2 _onAbort db' f
 
 -- | Event handler for the `complete` event.
 onComplete
-  :: forall e e'
-  .  Transaction
-  -> Eff ( | e') Unit
-  -> Aff (idb :: IDB | e) Unit
+  :: Transaction
+  -> Effect Unit
+  -> Aff Unit
 onComplete db' f =
-  fromEffFnAff $ Fn.runFn2 _onComplete db' f
-
+  fromEffectFnAff $ Fn.runFn2 _onComplete db' f
 
 -- | Event handler for the `error` event.
 onError
-  :: forall e e'
-  .  Transaction
-  -> (Error -> Eff ( | e') Unit)
-  -> Aff (idb :: IDB | e) Unit
+  :: Transaction
+  -> (Error -> Effect Unit)
+  -> Aff Unit
 onError db' f =
-  fromEffFnAff $ Fn.runFn2 _onError db' f
-
+  fromEffectFnAff $ Fn.runFn2 _onError db' f
 
 --------------------
 -- FFI
 --
 
 foreign import _abort
-  :: forall tx e
-  .  tx
-  -> EffFnAff (idb :: IDB | e) Unit
-
+  :: forall tx
+   . tx
+  -> EffectFnAff Unit
 
 foreign import _db
   :: Transaction
   -> Database
 
-
 foreign import _error
   :: Transaction
   -> (Nullable Error)
 
-
 foreign import _mode
   :: Fn4 TransactionMode TransactionMode TransactionMode Transaction TransactionMode
-
 
 foreign import _objectStoreNames
   :: Transaction
   -> Array String
 
-
 foreign import _objectStore
-  :: forall tx e
-  .  Fn2 tx String (EffFnAff (idb :: IDB | e) ObjectStore)
-
+  :: forall tx
+   . Fn2 tx String (EffectFnAff ObjectStore)
 
 foreign import _onAbort
-  :: forall tx e e'
-  . Fn2 tx (Eff ( | e') Unit) (EffFnAff (idb :: IDB | e) Unit)
-
+  :: forall tx
+   . Fn2 tx (Effect Unit) (EffectFnAff Unit)
 
 foreign import _onComplete
-  :: forall tx e e'
-  . Fn2 tx (Eff ( | e') Unit) (EffFnAff (idb :: IDB | e) Unit)
-
+  :: forall tx
+   . Fn2 tx (Effect Unit) (EffectFnAff Unit)
 
 foreign import _onError
-  :: forall tx e e'
-  . Fn2 tx (Error -> Eff ( | e') Unit) (EffFnAff (idb :: IDB | e) Unit)
+  :: forall tx
+   . Fn2 tx (Error -> Effect Unit) (EffectFnAff Unit)

@@ -12,36 +12,31 @@ module Database.IndexedDB.IDBFactory
   , open
   ) where
 
-import Prelude                  (Unit, ($), (<<<))
-
-import Control.Monad.Aff        (Aff)
-import Control.Monad.Aff.Compat (fromEffFnAff, EffFnAff)
-import Control.Monad.Eff        (Eff)
-import Data.Function.Uncurried   as Fn
-import Data.Function.Uncurried  (Fn4)
-import Data.Maybe               (Maybe, fromMaybe)
-
 import Database.IndexedDB.Core
 
+import Data.Function.Uncurried (Fn4)
+import Data.Function.Uncurried as Fn
+import Data.Maybe (Maybe, fromMaybe)
+import Effect (Effect)
+import Effect.Aff (Aff)
+import Effect.Aff.Compat (EffectFnAff, fromEffectFnAff)
+import Prelude (Unit, ($), (<<<))
 
 --------------------
 -- TYPES
 --
 
 -- Type alias for binding listeners to an initial open action.
-type Callbacks e =
-  { onBlocked       :: Maybe (Eff (| e) Unit)
-  , onUpgradeNeeded :: Maybe (Database -> Transaction -> { oldVersion :: Int } -> Eff (| e) Unit)
+type Callbacks =
+  { onBlocked :: Maybe (Effect Unit)
+  , onUpgradeNeeded :: Maybe (Database -> Transaction -> { oldVersion :: Int } -> Effect Unit)
   }
-
 
 -- | Type alias for DatabaseName.
 type DatabaseName = String
 
-
 -- | Type alias for Version.
 type Version = Int
-
 
 --------------------
 -- INTERFACE
@@ -51,12 +46,10 @@ type Version = Int
 -- | and there are open connections that don’t close in response to a
 -- | `versionchange` event, the request will be blocked until all they close.
 deleteDatabase
-    :: forall e
-    .  DatabaseName
-    -> Aff (idb :: IDB | e) Int
+  :: DatabaseName
+  -> Aff Int
 deleteDatabase =
-  fromEffFnAff <<< _deleteDatabase
-
+  fromEffectFnAff <<< _deleteDatabase
 
 -- | Attempts to open a connection to the named database with the specified version.
 -- | If the database already exists with a lower version and there are open connections
@@ -67,24 +60,20 @@ deleteDatabase =
 -- | When the version isn't provided (`Nothing`), attempts to open a connection to the
 -- | named database with the current version, or 1 if it does not already exist.
 open
-    :: forall e e'
-    .  DatabaseName
-    -> Maybe Version
-    -> Callbacks e'
-    -> Aff (idb :: IDB | e) Database
+  :: DatabaseName
+  -> Maybe Version
+  -> Callbacks
+  -> Aff Database
 open name mver req =
-  fromEffFnAff $ Fn.runFn4 _open fromMaybe name mver req
-
+  fromEffectFnAff $ Fn.runFn4 _open fromMaybe name mver req
 
 --------------------
 -- FFI
 --
 foreign import _deleteDatabase
-    :: forall e
-    .  String
-    -> EffFnAff (idb :: IDB | e) Int
-
+  :: String
+  -> EffectFnAff Int
 
 foreign import _open
-    :: forall a e e'
-    .  Fn4 (a -> Maybe a -> a) String (Maybe Int) (Callbacks e') (EffFnAff (idb :: IDB | e) Database)
+  :: forall a
+   . Fn4 (a -> Maybe a -> a) String (Maybe Int) (Callbacks) (EffectFnAff Database)

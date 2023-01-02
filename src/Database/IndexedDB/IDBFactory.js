@@ -18,7 +18,7 @@ const noOp3 = function noOp3() {
     return noOp2;
 };
 
-exports._deleteDatabase = function _deleteDatabase(name) {
+export function _deleteDatabase(name) {
     return function aff(error, success) {
         try {
             const request = indexedDB.deleteDatabase(name);
@@ -38,7 +38,7 @@ exports._deleteDatabase = function _deleteDatabase(name) {
     };
 };
 
-exports._open = function _open(fromMaybe, name, mver, req) {
+export function _open(fromMaybe, name, mver, req) {
     const ver = fromMaybe(undefined)(mver);
 
     return function aff(error, success) {
