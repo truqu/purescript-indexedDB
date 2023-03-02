@@ -77,3 +77,5 @@ releases
 .purs*
 .psa*
 dist
+.spago
+test.js

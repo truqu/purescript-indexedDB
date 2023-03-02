@@ -3,7 +3,7 @@ const toArray = function toArray(xs) {
 };
 
 
-exports._close = function _close(db) {
+export function _close(db) {
     return function aff(error, success) {
         try {
             db.close();
@@ -18,7 +18,7 @@ exports._close = function _close(db) {
     };
 };
 
-exports._createObjectStore = function _createObjectStore(db, name, opts) {
+export function _createObjectStore(db, name, opts) {
     return function aff(error, success) {
         var keyPath;
 
@@ -52,7 +52,7 @@ exports._createObjectStore = function _createObjectStore(db, name, opts) {
     };
 };
 
-exports._deleteObjectStore = function _deleteObjectStore(db, name) {
+export function _deleteObjectStore(db, name) {
     return function aff(error, success) {
         try {
             db.deleteObjectStore(name);
@@ -67,15 +67,15 @@ exports._deleteObjectStore = function _deleteObjectStore(db, name) {
     };
 };
 
-exports._name = function _name(db) {
+export function _name(db) {
     return db.name;
 };
 
-exports._objectStoreNames = function _objectStoreNames(db) {
+export function _objectStoreNames(db) {
     return toArray(db.objectStoreNames);
 };
 
-exports._onAbort = function _onAbort(db, f) {
+export function _onAbort(db, f) {
     return function aff(error, success) {
         db.onabort = function onabort() {
             f();
@@ -88,7 +88,7 @@ exports._onAbort = function _onAbort(db, f) {
     };
 };
 
-exports._onClose = function _onClose(db, f) {
+export function _onClose(db, f) {
     return function aff(error, success) {
         db.onclose = function onclose() {
             f();
@@ -101,7 +101,7 @@ exports._onClose = function _onClose(db, f) {
     };
 };
 
-exports._onError = function _onError(db, f) {
+export function _onError(db, f) {
     return function aff(error, success) {
         db.onerror = function onerror(e) {
             f(e.target.error)();
@@ -114,7 +114,7 @@ exports._onError = function _onError(db, f) {
     };
 };
 
-exports._onVersionChange = function _onVersionChange(db, f) {
+export function _onVersionChange(db, f) {
     return function aff(error, success) {
         db.onversionchange = function onversionchange(e) {
             f({ oldVersion: e.oldVersion, newVersion: e.newVersion })();
@@ -127,7 +127,7 @@ exports._onVersionChange = function _onVersionChange(db, f) {
     };
 };
 
-exports._transaction = function _transaction(db, stores, mode) {
+export function _transaction(db, stores, mode) {
     return function aff(error, success) {
         var transaction;
         try {
@@ -144,6 +144,6 @@ exports._transaction = function _transaction(db, stores, mode) {
     };
 };
 
-exports._version = function _version(db) {
+export function _version(db) {
     return db.version;
 };

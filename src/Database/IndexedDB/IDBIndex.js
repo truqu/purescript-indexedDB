@@ -11,7 +11,7 @@ const successHandler = function successHandler(cb) {
 };
 
 
-exports._keyPath = function _keyPath(index) {
+export function _keyPath(index) {
     const path = index.keyPath;
 
     if (Array.isArray(path)) {
@@ -25,23 +25,23 @@ exports._keyPath = function _keyPath(index) {
     return [];
 };
 
-exports._multiEntry = function _multiEntry(index) {
+export function _multiEntry(index) {
     return index.multiEntry;
 };
 
-exports._name = function _name(index) {
+export function _name(index) {
     return index.name;
 };
 
-exports._objectStore = function _objectStore(index) {
+export function _objectStore(index) {
     return index.obectStore;
 };
 
-exports._unique = function _unique(index) {
+export function _unique(index) {
     return index.unique;
 };
 
-exports._count = function _count(index, query) {
+export function _count(index, query) {
     return function aff(error, success) {
         try {
             const request = index.count(query);
@@ -57,7 +57,7 @@ exports._count = function _count(index, query) {
     };
 };
 
-exports._get = function _get(index, range) {
+export function _get(index, range) {
     return function aff(error, success) {
         try {
             const request = index.get(range);
@@ -79,7 +79,7 @@ exports._get = function _get(index, range) {
  *
  * However, it may be doable to convert the result to some key / value structure with values of
  * different types.
-exports._getAll = function _getAll(index, query, count) {
+export function _getAll(index, query, count) {
     return function aff(error, success) {
         const request = index.getAll(query, count);
         request.onsuccess = successHandler(success);
@@ -88,7 +88,7 @@ exports._getAll = function _getAll(index, query, count) {
 };
 */
 
-exports._getAllKeys = function _getAllKeys(index, range, count) {
+export function _getAllKeys(index, range, count) {
     return function aff(error, success) {
         try {
             const request = index.getAllKeys(range, count || undefined);
@@ -104,7 +104,7 @@ exports._getAllKeys = function _getAllKeys(index, range, count) {
     };
 };
 
-exports._getKey = function _getKey(index, range) {
+export function _getKey(index, range) {
     return function aff(error, success) {
         try {
             const request = index.getKey(range);
@@ -120,7 +120,7 @@ exports._getKey = function _getKey(index, range) {
     };
 };
 
-exports._openCursor = function _openCursor(index, query, dir, cb) {
+export function _openCursor(index, query, dir, cb) {
     return function aff(error, success) {
         try {
             const request = index.openCursor(query, dir);
@@ -145,7 +145,7 @@ exports._openCursor = function _openCursor(index, query, dir, cb) {
     };
 };
 
-exports._openKeyCursor = function _openKeyCursor(index, query, dir, cb) {
+export function _openKeyCursor(index, query, dir, cb) {
     return function aff(error, success) {
         try {
             const request = index.openKeyCursor(query, dir);

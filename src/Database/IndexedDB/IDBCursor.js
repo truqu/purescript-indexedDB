@@ -10,7 +10,7 @@ const successHandler = function successHandler(cb) {
     };
 };
 
-exports._advance = function _advance(cursor, count) {
+export function _advance(cursor, count) {
     return function aff(error, success) {
         try {
             cursor.advance(count);
@@ -25,7 +25,7 @@ exports._advance = function _advance(cursor, count) {
     };
 };
 
-exports._continue = function _continue(cursor, key) {
+export function _continue(cursor, key) {
     return function aff(error, success) {
         try {
             cursor.continue(key || undefined);
@@ -40,7 +40,7 @@ exports._continue = function _continue(cursor, key) {
     };
 };
 
-exports._continuePrimaryKey = function _continuePrimaryKey(cursor, key, primaryKey) {
+export function _continuePrimaryKey(cursor, key, primaryKey) {
     return function aff(error, success) {
         try {
             cursor.continuePrimaryKey(key, primaryKey);
@@ -55,7 +55,7 @@ exports._continuePrimaryKey = function _continuePrimaryKey(cursor, key, primaryK
     };
 };
 
-exports._delete = function _delete(cursor) {
+export function _delete(cursor) {
     return function aff(error, success) {
         try {
             const request = cursor.delete();
@@ -71,11 +71,11 @@ exports._delete = function _delete(cursor) {
     };
 };
 
-exports._direction = function _direction(fromString, cursor) {
+export function _direction(fromString, cursor) {
     return fromString(cursor.direction);
 };
 
-exports._key = function _key(cursor) {
+export function _key(cursor) {
     return function aff(error, success) {
         try {
             success(cursor.key);
@@ -89,7 +89,7 @@ exports._key = function _key(cursor) {
     };
 };
 
-exports._primaryKey = function _primaryKey(cursor) {
+export function _primaryKey(cursor) {
     return function aff(error, success) {
         try {
             success(cursor.primaryKey);
@@ -103,7 +103,7 @@ exports._primaryKey = function _primaryKey(cursor) {
     };
 };
 
-exports._source = function _source(IDBObjectStore, IDBIndex, cursor) {
+export function _source(IDBObjectStore, IDBIndex, cursor) {
     switch (cursor.source.constructor.name) {
     case 'IDBIndex':
         return IDBIndex(cursor.source);
@@ -123,7 +123,7 @@ exports._source = function _source(IDBObjectStore, IDBIndex, cursor) {
     }
 };
 
-exports._update = function _update(cursor, value) {
+export function _update(cursor, value) {
     return function aff(error, success) {
         try {
             const request = cursor.update(value);
@@ -139,6 +139,6 @@ exports._update = function _update(cursor, value) {
     };
 };
 
-exports._value = function _value(cursor) {
+export function _value(cursor) {
     return cursor.value;
 };

@@ -1,4 +1,4 @@
-exports._abort = function _abort(tx) {
+export function _abort(tx) {
     return function aff(error, success) {
         try {
             tx.abort();
@@ -13,17 +13,17 @@ exports._abort = function _abort(tx) {
     };
 };
 
-exports._db = function _db(tx) {
+export function _db(tx) {
     return tx.db;
 };
 
-exports._error = function _error(tx) {
+export function _error(tx) {
     return tx.error == null
         ? null
         : tx.error;
 };
 
-exports._mode = function _mode(ReadOnly, ReadWrite, VersionChange, tx) {
+export function _mode(ReadOnly, ReadWrite, VersionChange, tx) {
     if (tx.mode === 'readwrite') {
         return ReadWrite;
     } else if (tx.mode === 'versionchange') {
@@ -33,7 +33,7 @@ exports._mode = function _mode(ReadOnly, ReadWrite, VersionChange, tx) {
     return ReadOnly;
 };
 
-exports._objectStore = function _objectStore(tx, name) {
+export function _objectStore(tx, name) {
     return function aff(error, success) {
         try {
             const store = tx.objectStore(name);
@@ -48,11 +48,11 @@ exports._objectStore = function _objectStore(tx, name) {
     };
 };
 
-exports._objectStoreNames = function _objectStoreNames(tx) {
+export function _objectStoreNames(tx) {
     return tx.objectStoreNames;
 };
 
-exports._onAbort = function _onAbort(tx, f) {
+export function _onAbort(tx, f) {
     return function aff(error, success) {
         tx.onabort = function onabort() {
             f();
@@ -65,7 +65,7 @@ exports._onAbort = function _onAbort(tx, f) {
     };
 };
 
-exports._onComplete = function _onComplete(tx, f) {
+export function _onComplete(tx, f) {
     return function aff(error, success) {
         tx.oncomplete = function oncomplete() {
             f();
@@ -78,7 +78,7 @@ exports._onComplete = function _onComplete(tx, f) {
     };
 };
 
-exports._onError = function _onError(tx, f) {
+export function _onError(tx, f) {
     return function aff(error, success) {
         tx.onerror = function onerror(e) {
             f(e.target.error)();
