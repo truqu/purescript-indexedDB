@@ -102,19 +102,4 @@ in  upstream
 let upstream =
       https://github.com/purescript/package-sets/releases/download/psc-0.15.4-20221124/packages.dhall
         sha256:792255bbd8e2141468d967325f3e78246cb7e500bf3ab6d76d5b22dffbb09d49
-
-  with spec-mocha =
-    {  repo =
-       "https://github.com/ilyakooo0/purescript-spec-mocha"
-    , version = "v4.0.2", dependencies =
-    [ "aff"
-    , "datetime"
-    , "effect"
-    , "either"
-    , "foldable-traversable"
-    , "maybe"
-    , "prelude"
-    , "spec"
-    ]
-    }
 in  upstream

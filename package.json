@@ -1,0 +1,15 @@
+{
+  "name": "purescript-indexed-DB",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/ilyakooo0/purescript-indexed-DB.git",
+  "author": "iko <mail@iko.soy>",
+  "license": "MIT",
+  "scripts": {
+    "test": "spago build && node index.js"
+  },
+  "dependencies": {
+    "fake-indexeddb": "^4.0.1"
+  },
+  "type": "module"
+}
